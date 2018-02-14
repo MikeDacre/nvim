@@ -1,0 +1,285 @@
+snippet impstring "Import c++ string" b
+from libcpp.string cimport string
+endsnippet
+
+global !p
+def first_blank_line():
+	""" Search current vim buffer for first blank line. If not found return current line """
+	b = snip.buffer
+	index = 0
+	break_index = 100
+	com_delim  = re.compile(r'^(\s+)?(""")')
+	in_comment = False
+	for line in b:
+		index += 1
+		if index == break_index:
+			return -1
+		if com_delim.match(line):
+			in_comment = False if in_comment else True
+		if in_comment:
+			continue
+		if re.match(r'^\s*$', line):
+			return index
+	return -1
+
+def search_imports(impt, frm='', end=True):
+	""" Look for first instance of import impt or from frm import impt in the currrent
+	    vim buffer, if found return -1. If not found return start of imports, if end
+	    is true, return end of imports instead. """
+	b = snip.buffer
+	if frm:
+		sch = re.compile(r'^from ' + frm + r' import ' + impt)
+	else:
+		sch = re.compile(r'^(from \w )?import ' + impt)
+	index = 0
+	start = 0
+	imp_found = False
+	break_len = 2  # Maximum number of line breaks between imports before termination
+	break_ind = 0
+	last_ind  = 0
+	for line in b:
+		index += 1
+		if sch.match(line):
+			return -1
+		elif re.match(r'^(from \w )?import \w', line):
+			if not imp_found:
+				start = index
+			imp_found = True
+			break_ind = 0
+			last_ind  = index
+		else:
+			if imp_found:
+				if not last_ind:
+					last_ind = index
+				if break_ind == break_len:
+					break
+				else:
+					break_ind += 1
+	if imp_found:
+		if end:
+			return last_ind + 1 if last_ind else index + 1
+		else:
+			return start
+	else:
+		return -2
+
+def add_import(impt, frm='', end=True):
+	""" Add an import if it does not already exist, default is to add to end """
+	imp_loc = search_imports(impt, frm, end)
+	if imp_loc == -1:
+		return
+	if imp_loc == -2:
+		imp_loc = first_blank_line()
+	if imp_loc == -1:
+		imp_loc = vim.current.window.cursor[0]
+	imp_loc = imp_loc - 1
+	imp_string = 'from {} import {}'.format(frm, impt) if frm else 'import {}'.format(impt)
+	snip.buffer.append(imp_string, imp_loc)
+
+def add_imports(impts, end=True):
+	""" Add a list of imports
+	    If you want to import as from ... import ..., then use a tuple for the import:
+	    [(import, from), import, (import, from), ...] """
+	for impt in impts:
+		if type(impt) is tuple:
+			add_import(*impt, end=end)
+		else:
+			add_import(impt, end=end)
+endglobal
+
+snippet ffile "For i in file, split" b
+for i in ${1:infile}:
+	f = i.rstrip().split('${2:\t}')
+	$0
+endsnippet
+
+snippet longdesc "Long Description" b
+"""
+============================================================================
+${1:
+          FILE: ${2:`!v expand('%:t')`}}${3:
+           DIR: ${4:`!v expand('%:p:h')`}}${5:
+        AUTHOR: Michael D Dacre, mike.dacre@gmail.com}${6:
+  ORGANIZATION: Stanford University}${7:
+       LICENSE: MIT License, property of Stanford, use as you wish}${8:
+       VERSION: ${9:0.1}}
+       CREATED: `date +"%Y-%M-%d %H:%m"`
+ Last modified: 2016-01-11 13:17 ${10:
+
+   DESCRIPTION: ${11}}${12:
+
+         USAGE: ${13:Import as a module or run as a script}}
+
+============================================================================
+"""
+endsnippet
+
+snippet desc "Short Docstring" b
+"""
+       CREATED: `date +"%Y-%M-%d %H:%m"`
+ Last modified:
+
+ ${1}
+"""
+endsnippet
+
+snippet cl "Make a cell from a block of text" b
+##
+${VISUAL}${1}
+##
+endsnippet
+
+snippet bamfile
+bamfile = subprocess.Popen('samtools view '+BAMFILE, stdout=subprocess.PIPE, shell=True)
+for line in bamfile.stdout:
+endsnippet
+
+pre_expand "add_imports(['gzip', 'bz2'])"
+snippet zipped
+def open_zipped(infile, mode='r'):
+	""" Return file handle of file regardless of zipped or not
+	    Text mode enforced for compatibility with python2 """
+	mode   = mode[0] + 't'
+	p2mode = mode
+	if hasattr(infile, 'write'):
+		return infile
+	if isinstance(infile, str):
+		if infile.endswith('.gz'):
+			return gzip.open(infile, mode)
+		if infile.endswith('.bz2'):
+			if hasattr(bz2, 'open'):
+				return bz2.open(infile, mode)
+			else:
+				return bz2.BZ2File(infile, p2mode)
+		return open(infile, p2mode)
+$0
+endsnippet
+
+snippet parg "Positional argument" b
+	${1:parser}.add_argument('${2:file}'${3:, type=argparse.FileType('${4:r}'),}
+	              ${1/./ /g}help="${5:Input file}")
+endsnippet
+
+snippet oarg "Optional argument" b
+	${1:parser}.add_argument('-${2:v}', '--${3:verbose}'${4:, action="${5:store_true}"},
+	              ${1/./ /g}help="${6:Verbose output}")
+endsnippet
+
+snippet garg1 "Argument group one member" b
+	# ${1:Arguments}
+	${2:group} = parser.add_argument_group('${3:Group}')
+	$2.add_argument(${4:'-${5:b}', }'${4/.+/--/}${6:bob}',
+	              ${2/./ /g}help="${6:Input file, Default STDIN}")
+endsnippet
+
+snippet garg2 "Argument group two members" b
+	# ${1:Arguments}
+	${2:group} = parser.add_argument_group('${3:Group}')
+	$2.add_argument(${4:'-${5:b}', }'${4/.+/--/}${6:bob}',
+	              ${2/./ /g}help="$7")
+	$2.add_argument(${8:'-${9:b}', }'${8/.+/--/}${10:bob}',
+	              ${2/./ /g}help="$11")
+endsnippet
+
+snippet garg3 "Argument group three members" b
+	# ${1:Arguments}
+	${2:group} = parser.add_argument_group('${3:Group}')
+	$2.add_argument(${4:'-${5:b}', }'${4/.+/--/}${6:bob}',
+	              ${2/./ /g}help="$7")
+	$2.add_argument(${8:'-${9:b}', }'${8/.+/--/}${10:bob}',
+	              ${2/./ /g}help="$11")
+	$2.add_argument(${12:'-${13:b}', }'${12/.+/--/}${14:bob}',
+	              ${2/./ /g}help="$15")
+endsnippet
+
+snippet garg4 "Argument group four members" b
+	# ${1:Arguments}
+	${2:group} = parser.add_argument_group('${3:Group}')
+	$2.add_argument(${4:'-${5:b}', }'${4/.+/--/}${6:bob}',
+	              ${2/./ /g}help="$7")
+	$2.add_argument(${8:'-${9:b}', }'${8/.+/--/}${10:bob}',
+	              ${2/./ /g}help="$11")
+	$2.add_argument(${12:'-${13:b}', }'${12/.+/--/}${14:bob}',
+	              ${2/./ /g}help="$15")
+	$2.add_argument(${16:'-${17:b}', }'${16/.+/--/}${18:bob}',
+	              ${2/./ /g}help="$19")
+endsnippet
+
+pre_expand "add_imports(['sys', 'argparse'])"
+snippet args "General Command Line Arguments"
+${2:import sys
+
+
+}def main(argv=None):
+	""" ${3:Run as a script} """
+	if not argv:
+	    argv = sys.argv[1:]
+
+	parser  = argparse.ArgumentParser(
+	    description=__doc__,
+	    formatter_class=argparse.RawDescriptionHelpFormatter)
+${4:
+	# ${5:Positional arguments}
+	parser.add_argument('${6:files}'${7:, nargs='+',}
+	                    help="${8:Input files}")}
+${9:
+	# ${10:Optional flags}
+	parser.add_argument('-${11:b}', '--${12:bob}'${13:, action="${14:store_true}"},
+	                    help="${15:Verbose output}")}
+${16:
+	# ${17:Optional Files}
+	optfiles = parser.add_argument_group('${18:Optional Files}')${19:
+	optfiles.add_argument('-${20:i}', '--${21:infile}', default=sys.stdin,
+	                      help="${22:Input file, Default STDIN}")}${23:
+	optfiles.add_argument('-${24:o}', '--${25:outfile}', default=sys.stdout,
+	                      help="${26:Output file, Default STDOUT}")}${27:
+	optfiles.add_argument('-l', '--logfile', default=sys.stderr,
+	                      help="${28:Log File, Default STDERR (append mode)}")}}
+
+	args = parser.parse_args(argv)
+
+	$0
+
+if __name__ == '__main__' and '__file__' in globals():
+	sys.exit(main())
+endsnippet
+
+pre_expand "add_imports(['sys', 'argparse'])"
+snippet stdarg "Optional positional files" b
+def ${20/=[^,)]+|args.//g}:
+	""" ${23:Run everything} """
+	$0
+
+
+def main(argv=None):
+	""" ${1:Run as a script} """
+	if not argv:
+	    argv = sys.argv[1:]
+
+	parser  = argparse.ArgumentParser(
+	    description=__doc__,
+	    formatter_class=argparse.RawDescriptionHelpFormatter)${2:
+
+	# Optional arguments
+	parser.add_argument('-${3:f}', '--${4:flag}',${5: action='store_true',}
+	                    help='${6:A flag}')}
+
+	# Optional files${7:
+	parser.add_argument(${8:'-i', }'${8/.+/--/}${9:infile}'${10:, nargs='?'}, default=sys.stdin,
+	                    type=argparse.FileType('r'),
+	                    help="${11:Input file} (Default: STDIN)")}${12:
+	parser.add_argument(${13:'-o', }'${13/.+/--/}${14:outfile}'${15:, nargs='?'}, default=sys.stdout,
+	                    type=argparse.FileType('w'),
+	                    help="${16:Output file} (Default: STDOUT)")}${17:
+	parser.add_argument('-l', '--${18:logfile}', default=sys.stderr,
+	                    type=argparse.FileType('a'),
+	                    help="${19:Log file} (Default: STDERR)")}
+
+	args = parser.parse_args(argv)
+
+	${20:${21:`!v expand('%:r')`}(${7/.+/args./}$9${7/.+/, /}${12/.+/args./}$14${18/.+/, logfile=args./}$18${2/.+/,
+	 /}${22:${21/./ /g}}${2/.+/args./}$4)}
+
+if __name__ == '__main__' and '__file__' in globals():
+	sys.exit(main())
+endsnippet

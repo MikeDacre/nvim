@@ -1,0 +1,455 @@
+global !p
+def first_blank_line():
+	""" Search current vim buffer for first blank line. If not found return current line """
+	b = snip.buffer
+	index = 0
+	break_index = 100
+	com_delim  = re.compile(r'^(\s+)?(""")')
+	in_comment = False
+	for line in b:
+		index += 1
+		if index == break_index:
+			return -1
+		if com_delim.match(line):
+			in_comment = False if in_comment else True
+		if in_comment:
+			continue
+		if re.match(r'^\s*$', line):
+			return index
+	return -1
+
+def search_imports(impt, frm='', end=True):
+	""" Look for first instance of import impt or from frm import impt in the currrent
+	    vim buffer, if found return -1. If not found return start of imports, if end
+	    is true, return end of imports instead. """
+	b = snip.buffer
+	if frm:
+		sch = re.compile(r'^from ' + frm + r' import ' + impt)
+	else:
+		sch = re.compile(r'^(from \w )?import ' + impt)
+	index = 0
+	start = 0
+	imp_found = False
+	break_len = 2  # Maximum number of line breaks between imports before termination
+	break_ind = 0
+	last_ind  = 0
+	for line in b:
+		index += 1
+		if sch.match(line):
+			return -1
+		elif re.match(r'^(from \w )?import \w', line):
+			if not imp_found:
+				start = index
+			imp_found = True
+			break_ind = 0
+			last_ind  = index
+		else:
+			if imp_found:
+				if not last_ind:
+					last_ind = index
+				if break_ind == break_len:
+					break
+				else:
+					break_ind += 1
+	if imp_found:
+		if end:
+			return last_ind + 1 if last_ind else index + 1
+		else:
+			return start
+	else:
+		return -2
+
+def add_import(impt, frm='', asstr='',end=True):
+	"""Add an import if it does not already exist, default is to add to end."""
+	imp_loc = search_imports(impt, frm, end)
+	impt = impt.strip()
+	if imp_loc == -1:
+		return
+	if imp_loc == -2:
+		imp_loc = first_blank_line()
+	if imp_loc == -1:
+		imp_loc = vim.current.window.cursor[0]
+	imp_loc = imp_loc - 1
+	imp_string = 'from {} import {}'.format(frm, impt) if frm else 'import {}'.format(impt)
+	if asstr:
+		imp_string = imp_string + ' as ' + asstr
+	snip.buffer.append(imp_string, imp_loc)
+
+def add_imports(impts, end=True):
+	"""Add a list of imports.
+
+	If you want to import as from ... import ..., then use a tuple for the import:
+	[(import, from), import, (import, from), ...]
+	"""
+	for impt in impts:
+		if isinstance(impt, tuple):
+			add_import(*impt, end=end)
+		elif isinstance(impt, dict):
+			add_import(**impt, end=end)
+		else:
+			add_import(impt, end=end)
+
+def add_import_and_delete():
+	cur = int(vim.current.window.cursor[0])
+	col = int(vim.current.window.cursor[1])
+	pos = snip.cursor.preserve()
+	line, column = snip.line, snip.column
+	ln = vim.current.line.strip()
+	indent = re.findall(r'^(\W*)', vim.current.line.rstrip())[0]
+	if ln:
+		add_import(ln)
+		snip.buffer[cur] = indent
+		snip.cursor.set(line + 1, column)
+
+def plot_import():
+	add_import('numpy', asstr='np')
+	add_import('matplotlib.pyplot', asstr='plt')
+endglobal
+
+post_jump "add_import_and_delete()"
+snippet imptop "Import at top" b
+$1
+endsnippet
+
+post_jump "plot_import()"
+snippet plot "Import at top" b
+$1
+endsnippet
+
+pre_expand "add_import('logging', asstr='_log')"
+snippet log
+_log_format = (
+	"%(asctime)s [%(name)s] %(levelname)s – %(message)s"
+)
+_log.basicConfig(
+	level=_log.INFO, format=_log_format, stream=_sys.stderr
+)
+
+log = _log.getLogger(${1:__file__})
+
+_log_formatter = _log.Formatter(_log_format)
+
+# handler = _log.StreamHandler('hello.log')
+# handler.setLevel(_log.DEBUG)
+# handler.setFormatter(_log_formatter)
+# log.addHandler(handler)
+endsnippet
+
+pre_expand "add_import('subprocess', asstr='_sub')"
+snippet run
+def run(command, raise_on_error=False):
+	"""Run a command with subprocess the way it should be.
+
+	Parameters
+	----------
+	command : str
+		A command to execute, piping is fine.
+	raise_on_error : bool
+		Raise a subprocess.CalledProcessError on exit_code != 0
+	
+	Returns
+	-------
+	stdout : str
+	stderr : str
+	exit_code : int
+	"""
+	pp = _sub.Popen(command, shell=True, universal_newlines=True,
+	                stdout=_sub.PIPE, stderr=_sub.PIPE)
+	out, err = pp.communicate()
+	code = pp.returncode
+	if raise_on_error and code != 0:
+		raise _sub.CalledProcessError(
+			returncode=code, cmd=command, output=out, stderr=err
+		)
+	return out.decode(), err.decode(), code
+endsnippet
+
+snippet ffile "For i in file, split" b
+for i in ${1:infile}:
+	f = i.rstrip().split('${2:\t}')
+	$0
+endsnippet
+
+snippet tqdm "Import tqdm" b
+try:
+	from tqdm import tqdm, tqdm_notebook
+	try:
+		if str(type(get_ipython())) == "<class 'ipykernel.zmqshell.ZMQInteractiveShell'>":
+			pb = tqdm_notebook
+		else:
+			pb = tqdm
+	except NameError:
+		pb = tqdm
+except ImportError:
+	pb = None
+endsnippet
+
+snippet longdesc "Long Description" b
+"""
+${1:What am I?}
+
+Info
+----
+File: ${2:`!v expand('%:t')`}}${3:
+Dir: ${4:`!v expand('%:p:h')`}}${5:
+Author: Michael D Dacre, mike.dacre@gmail.com}${6:
+Organization: Stanford University}${7:
+License: MIT License, property of Stanford, use as you wish}${8:
+Version: ${9:0.1.0a}}
+Created: `date +"%Y-%M-%d %H:%m"`
+Last modified: `date +"%Y-%M-%d %H:%m"`
+"""
+__version__ = '$9'
+endsnippet
+
+snippet desc "Short Docstring" b
+"""
+$1
+
+       Created: `date +"%Y-%M-%d %H:%m"`
+ Last modified: ${2:
+
+ $3}
+"""
+endsnippet
+
+snippet cl "Make a cell from a block of text" b
+##
+${VISUAL}${1}
+##
+endsnippet
+
+snippet bamfile
+bamfile = subprocess.Popen('samtools view '+BAMFILE, stdout=subprocess.PIPE, shell=True)
+for line in bamfile.stdout:
+endsnippet
+
+pre_expand "add_imports([{'impt': 'bz2', 'asstr': '_bz2'}, {'impt': 'gzip', 'asstr': '_gzip'}])"
+snippet zipped
+def open_zipped(infile, mode='r'):
+	"""Return file handle of file regardless of compressed or not.
+	
+	Also returns already opened files unchanged, text mode automatic for
+	compatibility with python2.
+	"""
+	# Return already open files
+	if hasattr(infile, 'write'):
+		return infile
+	# Make text mode automatic
+	if len(mode) == 1:
+		mode = mode + 't'
+	if not isinstance(infile, str):
+		raise ValueError('I cannot open a filename that isn't a string.')
+	if infile.endswith('.gz'):
+		return _gzip.open(infile, mode)
+	if infile.endswith('.bz2'):
+		if hasattr(_bz2, 'open'):
+			return _bz2.open(infile, mode)
+		else:
+			return _bz2.BZ2File(infile, mode)
+	return open(infile, mode)
+$0
+endsnippet
+
+snippet parg "Positional argument" b
+	${1:parser}.add_argument('${2:file}'${3:, type=argparse.FileType('${4:r}'),}
+	              ${1/./ /g}help="${5:Input file}")
+endsnippet
+
+snippet oarg "Optional argument" b
+	${1:parser}.add_argument('-${2:v}', '--${3:verbose}'${4:, action="${5:store_true}"},
+	              ${1/./ /g}help="${6:Verbose output}")
+endsnippet
+
+snippet garg1 "Argument group one member" b
+# ${1:Arguments}
+${2:group} = parser.add_argument_group('${3:Group}')
+$2.add_argument(${4:'-${5:b}', }'${4/.+/--/}${6:bob}',
+              ${2/./ /g}help="${6:Input file, Default STDIN}")
+endsnippet
+
+snippet garg2 "Argument group two members" b
+# ${1:Arguments}
+${2:group} = parser.add_argument_group('${3:Group}')
+$2.add_argument(${4:'-${5:b}', }'${4/.+/--/}${6:bob}',
+              ${2/./ /g}help="$7")
+$2.add_argument(${8:'-${9:b}', }'${8/.+/--/}${10:bob}',
+              ${2/./ /g}help="$11")
+endsnippet
+
+snippet garg3 "Argument group three members" b
+# ${1:Arguments}
+${2:group} = parser.add_argument_group('${3:Group}')
+$2.add_argument(${4:'-${5:b}', }'${4/.+/--/}${6:bob}',
+              ${2/./ /g}help="$7")
+$2.add_argument(${8:'-${9:b}', }'${8/.+/--/}${10:bob}',
+              ${2/./ /g}help="$11")
+$2.add_argument(${12:'-${13:b}', }'${12/.+/--/}${14:bob}',
+              ${2/./ /g}help="$15")
+endsnippet
+
+snippet garg4 "Argument group four members" b
+# ${1:Arguments}
+${2:group} = parser.add_argument_group('${3:Group}')
+$2.add_argument(${4:'-${5:b}', }'${4/.+/--/}${6:bob}',
+              ${2/./ /g}help="$7")
+$2.add_argument(${8:'-${9:b}', }'${8/.+/--/}${10:bob}',
+              ${2/./ /g}help="$11")
+$2.add_argument(${12:'-${13:b}', }'${12/.+/--/}${14:bob}',
+              ${2/./ /g}help="$15")
+$2.add_argument(${16:'-${17:b}', }'${16/.+/--/}${18:bob}',
+              ${2/./ /g}help="$19")
+endsnippet
+
+pre_expand "add_imports(['sys', 'argparse'])"
+snippet args "General Command Line Arguments"
+def main(argv=None):
+	""" ${1:Run as a script} """
+	if not argv:
+	    argv = sys.argv[1:]
+
+	parser  = argparse.ArgumentParser(
+	    description=__doc__,
+	    formatter_class=argparse.RawDescriptionHelpFormatter)
+${2:
+	# ${3:Positional arguments}
+	parser.add_argument('${4:files}'${5:, nargs='+',}
+	                    help="${6:Input files}")}
+${7:
+	# ${8:Optional flags}
+	parser.add_argument('-${9:b}', '--${10:bob}'${11:, action="${12:store_true}"},
+	                    help="${13:Verbose output}")}
+${14:
+	# ${15:Optional Files}
+	optfiles = parser.add_argument_group('${16:Optional Files}')${17:
+	optfiles.add_argument('-${18:i}', '--${19:infile}', default=sys.stdin,
+	                      help="${20:Input file, Default STDIN}")}${21:
+	optfiles.add_argument('-${22:o}', '--${23:outfile}', default=sys.stdout,
+	                      help="${24:Output file, Default STDOUT}")}${25:
+	optfiles.add_argument('-l', '--logfile', default=sys.stderr,
+	                      help="${26:Log File, Default STDERR (append mode)}")}}
+
+	args = parser.parse_args(argv)
+
+	$0
+
+if __name__ == '__main__' and '__file__' in globals():
+	sys.exit(main())
+endsnippet
+
+pre_expand "add_imports([{'impt': 'sys', 'asstr': '_sys'}, {'impt': 'bz2', 'asstr': '_bz2'}, {'impt': 'gzip', 'asstr': '_gzip'}, {'impt': 'argparse', 'asstr': '_argparse'}, {'impt': 'logging', 'asstr': '_log'}])"
+snippet stdarg "Optional positional files" b
+
+__version__ = '0.1'
+
+# Setup logging
+_log_formatter = _log.Formatter(
+	"%(asctime)s [%(name)s] %(levelname)s – %(message)s"
+)
+_log_formatter_simp = _log.Formatter(
+	"%(asctime)s %(levelname)s – %(message)s"
+)
+log = _log.getLogger(__file__)
+_log_out = _log.StreamHandler()
+_log_out.setFormatter(_log_formatter_simp)
+log.addHandler(_log_out)
+log.setLevel(_log.INFO)
+
+
+def ${1:parse_file}(${2:infile}, ${3:outfile}):
+	"""File parser."""
+	with _open_zipped($1) as fin, _open_zipped($2, 'w') as fout:
+		for line in fin:
+			for f in line.split('\t'):
+				$0
+
+
+def _open_zipped(infile, mode='r'):
+	"""Return file handle of file regardless of compressed or not.
+
+	Also returns already opened files unchanged, text mode automatic for
+	compatibility with python2.
+	"""
+	# Return already open files
+	if hasattr(infile, 'write'):
+		return infile
+	# Make text mode automatic
+	if len(mode) == 1:
+		mode = mode + 't'
+	if not isinstance(infile, str):
+		raise ValueError("I cannot open a filename that isn't a string.")
+	if infile.endswith('.gz'):
+		return _gzip.open(infile, mode)
+	if infile.endswith('.bz2'):
+		if hasattr(_bz2, 'open'):
+			return _bz2.open(infile, mode)
+		else:
+			return _bz2.BZ2File(infile, mode)
+	return open(infile, mode)
+
+
+def main(argv=None):
+	"""Run as a script."""
+	if not argv:
+		argv = _sys.argv[1:]
+
+	parser  = _argparse.ArgumentParser(
+		description=__doc__,
+		formatter_class=_argparse.RawDescriptionHelpFormatter
+	)
+
+	# Optional files
+	parser.add_argument('$2', nargs='?',
+	                    help="${4:Input file} (Default: STDIN)")
+	parser.add_argument('$3', nargs='?',
+	                    help="${5:Output file} (Default: STDOUT)")${6:
+	parser.add_argument('-l', '--logfile',
+	                    help="${7:Log file} (Default: STDERR)")}
+
+	${8:
+	# Options
+	parser.add_argument('-v', '--verbose', action="store_true",
+											help="Verbose output to log")}
+
+	args = parser.parse_args(argv)
+
+	ifl = args.$2 if args.$2 else _sys.stdin
+	ofl = args.$3 if args.$3 else _sys.stdout
+
+	${9:
+	# Adjust logging
+	if args.verbose:
+		log.setLevel(_log.DEBUG)
+	loghandle = None
+	if args.logfile:
+		# Setup file
+		loghandle = _open_zipped(args.logfile, '${10:a}')
+		handler = _log.StreamHandler(loghandle)
+		handler.setFormatter(_log_formatter)
+		if args.verbose:
+			handler.setLevel(_log.DEBUG)
+		log.addHandler(handler)
+		log.info('%s Starting Run', __file__)
+	elif args.verbose:
+		# Set STDERR logger to debug if no logfile
+		log.handlers = []
+		_log_out.setLevel(_log.DEBUG)
+		log.addHandler(_log_out)}
+
+	$1(ifl, ofl)
+
+
+if __name__ == '__main__' and '__file__' in globals():
+	_sys.exit(main())
+endsnippet
+
+snippet sqlimp
+import sqlalchemy
+from sqlalchemy import create_engine
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+engine = create_engine('sqlite:///:memory:', echo=False)
+Base = declarative_base()
+Session = sessionmaker(bind=engine)
+endsnippet
