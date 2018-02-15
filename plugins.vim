@@ -6,6 +6,7 @@
 call plug#begin(g:vimdir_path . '/plugged')
 
 Plug 'tpope/vim-sensible'
+Plug 'mhinz/vim-startify'
 
 Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
 Plug 'vim-scripts/taglist.vim'
