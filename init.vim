@@ -6,30 +6,70 @@ let g:vimdir_path = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 
 exec "source " . g:vimdir_path . "/plugins.vim"
 
+" Fundamental settings
+set encoding=utf-8
+set fileencoding=utf-8
+set fileencodings=ucs-bom,utf-8,gbk,cp936,latin-1
+set fileformat=unix
+set fileformats=unix,dos,mac
+filetype on
+filetype plugin on
 filetype plugin indent on
- 
-" Fix issues with vanilla vim
-if !has('nvim')
-  exec "source " . g:vimdir_path . "/vim_fixes.vim"
-else
+syntax on 
+
+" Color and vim mouse
+set background=dark
+if has('nvim')
   set termguicolors
+	let $NVIM_TUI_ENABLE_TRUE_COLOR=1
+  colo wombatmikemod
+else
+	set ttymouse=xterm2 
+  set viminfo='100,\"1000,:200,%,n~/.temp/viminfo"' 
+  if has("gui_running") || &term == "xterm-256color" || &term == "screen-256color"
+    set t_Co=256
+    colo wombatmikemod
+  else
+    colo wombat
+  endif
 endif
  
-" Color
-set background = "dark"
-colo wombatmikemod
-
-" Some defaults
-set ruler
-set number
-set nowrap
-set virtualedit=all
-
 " Mouse support
 if has('mouse')
   set mouse=a
 endif
+  
+" Some useful settings
+set smartindent
+set expandtab         " tab to spaces
+set foldenable
+set foldmethod=indent " folding by indent
+set foldlevel=99
+set ignorecase        " ignore the case when search texts
+set smartcase         " if searching text contains uppercase case will not be ignored
+set ai                " autoindent
+set si                " smartindent
 
+" Lookings
+set ruler
+set number            " line number
+set cursorline        " hilight the line of the cursor
+set cursorcolumn      " hilight the column of the cursor
+set nowrap            " no line wrapping
+set virtualedit=all
+
+" Tab default
+set tabstop=4
+set shiftwidth=4
+set cindent shiftwidth=4
+
+" Enable CTRL-A/CTRL-X to work on octal and hex numbers, as well as characters
+set nrformats=octal,hex,alpha
+set expandtab
+
+" Enable omnicomplete in all vim versions
+set ofu=syntaxcomplete#Complete
+ 
 " Allow continual indent/dedent in visual block
 vnoremap < <gv
 vnoremap > >gv
@@ -92,7 +132,6 @@ au FileType snakemake setlocal tw=99 tabstop=4 shiftwidth=4 softtabstop=4
 " Text
 autocmd FileType tex setlocal textwidth=80
 autocmd BufNewFile,BufRead *.txt setlocal textwidth=80
-
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "                            Plugin Configuration                             "

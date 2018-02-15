@@ -20,6 +20,9 @@ Plug 'jamessan/vim-gnupg'
 Plug 'othree/html5.vim'
 Plug 'milkypostman/vim-togglelist'
 
+" Multiple cursor edits with <C-n>, <C-x>, and <C-p>
+Plug 'terryma/vim-multiple-cursors'
+
 " Markdown writing
 Plug 'junegunn/goyo.vim', { 'for': 'markdown' }
 Plug 'reedes/vim-pencil', { 'for': 'markdown' }
