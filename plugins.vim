@@ -44,6 +44,8 @@ if has('nvim')
   Plug 'neomake/neomake' 
   " Clipboard
   Plug 'cazador481/fakeclip.neovim'
+  " Git Realtime Info
+  Plug 'airblade/vim-gitgutter'
 else
   Plug 'scrooloose/syntastic'
 endif
@@ -66,7 +68,22 @@ Plug 'bling/vim-airline'
 Plug 'benmills/vimux'
 Plug 'tmux-plugins/vim-tmux-focus-events'
 Plug 'christoomey/vim-tmux-navigator'
+Plug 'roxma/vim-tmux-clipboard'
+
+" Markdown Composer
+if $VIM_MARKDOWN
+  function! BuildComposer(info)
+    if a:info.status != 'unchanged' || a:info.force
+      if has('nvim')
+        !cargo build --release
+      else
+        !cargo build --release --no-default-features --features json-rpc
+      endif
+    endif
+  endfunction
+
+  Plug 'euclio/vim-markdown-composer', { 'for': 'markdown', 'do': function('BuildComposer') }
+endif
 
 " Initialize plugin system
 call plug#end()
-

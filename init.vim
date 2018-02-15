@@ -17,6 +17,8 @@ filetype plugin on
 filetype plugin indent on
 syntax on 
 
+set updatetime=100  " How often to update events
+
 " Color and vim mouse
 set background=dark
 if has('nvim')
@@ -209,3 +211,6 @@ exec "source " . g:vimdir_path . "/linters.vim"
 
 " Tmux clipboard
 let g:vim_fakeclip_tmux_plus=1 
+
+" Git status line
+

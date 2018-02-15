@@ -200,8 +200,8 @@ endfunction
 noremap <silent> <Leader>ww :call ToggleWrap()<CR>
 
 " Pencil and Goyo for writing
-if &filetype == 'markdown'
-  func! WordProcessorMode() 
+func! WordProcessorMode() 
+  if &filetype == 'markdown'
 		setlocal formatoptions=1 
 		setlocal noexpandtab 
 		map j gj 
@@ -221,7 +221,7 @@ if &filetype == 'markdown'
 		endif
 		:Goyo
 		:PencilSoft
-  endfu 
-endif
+  endif
+endfu 
 
 com! WordProcessor call WordProcessorMode()
