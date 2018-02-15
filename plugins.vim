@@ -55,8 +55,12 @@ if !$VIM_MINIMAL
   if $USE_YCM
     Plug 'Valloric/YouCompleteMe'
   else
-    Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-    Plug 'zchee/deoplete-jedi', { 'do': ':UpdateRemotePlugins' } 
+    if has('nvim') || v:version >= 800
+      Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+      Plug 'zchee/deoplete-jedi', { 'do': ':UpdateRemotePlugins' } 
+    else
+      Plug 'ajh17/VimCompletesMe'
+    endif
   endif
  
   " Markdown writing

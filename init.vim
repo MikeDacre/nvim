@@ -142,8 +142,10 @@ autocmd BufNewFile,BufRead *.txt setlocal textwidth=80
 "                            Plugin Configuration                             "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " deoplete
-let g:deoplete#enable_at_startup = 1
-inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"
+if !$VIM_YCM
+  let g:deoplete#enable_at_startup = 1
+  inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"
+endif
 
 " Tmux and IPython
 let g:VimuxOrientation = "v"
