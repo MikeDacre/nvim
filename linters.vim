@@ -51,7 +51,7 @@ if has('nvim')
   nmap <silent> <LocalLeader>pu :call CleanCheckers()<cr>
 
   " Initialize neomake
-  call neomake#configure#automake('rnw', 750)
+  call neomake#configure#automake('rnw', 250)
 else
   "" Syntastic for vanilla vim
   set statusline+=%#warningmsg#

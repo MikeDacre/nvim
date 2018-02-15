@@ -42,6 +42,8 @@ if has('nvim')
   Plug 'vimlab/split-term.vim'
   " Linters
   Plug 'neomake/neomake' 
+  " Clipboard
+  Plug 'cazador481/fakeclip.neovim'
 else
   Plug 'scrooloose/syntastic'
 endif
@@ -50,11 +52,11 @@ endif
 Plug 'tpope/vim-fugitive'
 
 " Completion
-if has('nvim')
+if $USE_YCM
+  Plug 'Valloric/YouCompleteMe'
+else
   Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
   Plug 'zchee/deoplete-jedi', { 'do': ':UpdateRemotePlugins' } 
-else
-  Plug 'Valloric/YouCompleteMe'
 endif
 
 " Status bar

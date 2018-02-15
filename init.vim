@@ -206,3 +206,6 @@ nmap <script> <silent> <leader>lq :call ToggleQuickfixList()<CR>
 
 " Neomake and Syntastic
 exec "source " . g:vimdir_path . "/linters.vim"
+
+" Tmux clipboard
+let g:vim_fakeclip_tmux_plus=1 
