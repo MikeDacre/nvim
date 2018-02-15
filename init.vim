@@ -7,7 +7,6 @@ let g:vimdir_path = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 exec "source " . g:vimdir_path . "/plugins.vim"
 
 " Fundamental settings
-set encoding=utf-8
 set fileencoding=utf-8
 set fileencodings=ucs-bom,utf-8,gbk,cp936,latin-1
 set fileformat=unix
@@ -17,7 +16,9 @@ filetype plugin on
 filetype plugin indent on
 syntax on 
 
-set updatetime=100  " How often to update events
+" How often to update events
+set updatetime=300  
+set timeoutlen=800 ttimeoutlen=0
 
 " Color and vim mouse
 set background=dark
@@ -100,7 +101,9 @@ if has('nvim')
 endif
 
 " Custom Functions
-exec "source " . g:vimdir_path . "/functions.vim"
+if !$VIM_MINIMAL
+  exec "source " . g:vimdir_path . "/functions.vim"
+endif
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "                           Filetype Configuration                            "
@@ -207,10 +210,9 @@ nmap <script> <silent> <leader>ll :call ToggleLocationList()<CR>
 nmap <script> <silent> <leader>lq :call ToggleQuickfixList()<CR>
 
 " Neomake and Syntastic
-exec "source " . g:vimdir_path . "/linters.vim"
+if !$VIM_MINIMAL
+  exec "source " . g:vimdir_path . "/linters.vim"
+endif
 
 " Tmux clipboard
 let g:vim_fakeclip_tmux_plus=1 
-
-" Git status line
-
