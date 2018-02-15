@@ -13,6 +13,7 @@ Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
 Plug 'scrooloose/nerdcommenter'
 
 if !$VIM_MINIMAL
+  Plug 'tpope/vim-speeddating'  " Increment dates and times
   Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
   Plug 'vim-scripts/taglist.vim'
   Plug 'nathanaelkane/vim-indent-guides'
