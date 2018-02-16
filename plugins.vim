@@ -8,6 +8,7 @@ call plug#begin(g:vimdir_path . '/plugged')
 " Plugins that work everywhere
 Plug 'tpope/vim-sensible'
 Plug 'mhinz/vim-startify'
+Plug 'tpope/vim-obsession'
 Plug 'jlanzarotta/bufexplorer', { 'on': 'BufExplorer' }
 Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
 Plug 'scrooloose/nerdcommenter'
