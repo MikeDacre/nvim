@@ -30,6 +30,10 @@ Now open first `nvim` and run `:PlugInstall` and then `vim` and run
 `:PlugInstall` again, this is because there are slightly different plugins in
 vim and nvim to provide the same functionality.
 
+**Note**: The tmux plugins will only be installed if you are in a tmux
+environment, so make sure that you are inside tmux if you want to install or
+update those plugins.
+
 Two plugins are controlled by environmental variables, the autocompleter, which
 defaults to deoplete and switches to YouCompleteMe if `$VIM_YCM` is set, and
 markdown-preview, which requires the rust language and is only on if
