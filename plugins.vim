@@ -90,7 +90,9 @@ Plug 'bling/vim-airline'
 
 " Tmux integration
 Plug 'benmills/vimux'
-Plug 'tmux-plugins/vim-tmux-focus-events'
+if has('nvim') || v:version >= 705
+  Plug 'tmux-plugins/vim-tmux-focus-events'
+endif
 Plug 'christoomey/vim-tmux-navigator'
 Plug 'roxma/vim-tmux-clipboard'
  
