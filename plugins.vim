@@ -31,6 +31,26 @@ if !$VIM_MINIMAL
   Plug 'jamessan/vim-gnupg'
   Plug 'othree/html5.vim'
   Plug 'milkypostman/vim-togglelist'
+ 
+  " Markdown writing
+  Plug 'junegunn/goyo.vim', { 'for': 'markdown' }
+  Plug 'reedes/vim-pencil', { 'for': 'markdown' }
+  Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
+
+  " Markdown Composer
+  if $VIM_MARKDOWN && !exists('g:gui_oni')
+    function! BuildComposer(info)
+      if a:info.status != 'unchanged' || a:info.force
+        if has('nvim')
+          !cargo build --release
+        else
+          !cargo build --release --no-default-features --features json-rpc
+        endif
+      endif
+    endfunction
+
+    Plug 'euclio/vim-markdown-composer', { 'for': 'markdown', 'do': function('BuildComposer') }
+  endif  
 
   " Multiple cursor edits with <C-n>, <C-x>, and <C-p>
   Plug 'terryma/vim-multiple-cursors'
@@ -69,26 +89,6 @@ if !$VIM_MINIMAL
       Plug 'ajh17/VimCompletesMe'
     endif
   endif
-
-  " Markdown writing
-  Plug 'junegunn/goyo.vim', { 'for': 'markdown' }
-  Plug 'reedes/vim-pencil', { 'for': 'markdown' }
-  Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
-
-  " Markdown Composer
-  if $VIM_MARKDOWN && !exists('g:gui_oni')
-    function! BuildComposer(info)
-      if a:info.status != 'unchanged' || a:info.force
-        if has('nvim')
-          !cargo build --release
-        else
-          !cargo build --release --no-default-features --features json-rpc
-        endif
-      endif
-    endfunction
-
-    Plug 'euclio/vim-markdown-composer', { 'for': 'markdown', 'do': function('BuildComposer') }
-  endif
 endif
 
 " Status bar
@@ -106,7 +106,6 @@ endif
  
 " Git support
 Plug 'tpope/vim-fugitive'
-                 
 
 " Initialize plugin system
 call plug#end()
