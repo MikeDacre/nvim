@@ -58,9 +58,6 @@ if !$VIM_MINIMAL
     Plug 'scrooloose/syntastic'
   endif
 
-  " Git support
-  Plug 'tpope/vim-fugitive'
-
   " Completion
   if $VIM_YCM && !exists('g:gui_oni')
     Plug 'Valloric/YouCompleteMe'
@@ -106,6 +103,10 @@ if !exists('g:gui_oni')
   Plug 'christoomey/vim-tmux-navigator'
   Plug 'roxma/vim-tmux-clipboard'
 endif
+ 
+" Git support
+Plug 'tpope/vim-fugitive'
+                 
 
 " Initialize plugin system
 call plug#end()
