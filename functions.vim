@@ -99,70 +99,75 @@ if has('nvim')
   map <silent> <LocalLeader>rl :call StartIron()<CR>
 endif
 
-fun VimuxSendLine()
-  let c = getline('.')
-  call VimuxSendText(c)
-  call VimuxSendKeys("Enter")
-endfun
-
-fun VimuxSendCell()
-  :?#%%\|##\|\#^?;/#%%\|##\|\#$/y b
-  call VimuxSendText(@b)
-  call VimuxSendKeys("Enter")
-endfun
-       
-
 " Vimux
-let g:vimux_running = 0
-fun ToggleVimux()
-  if g:vimux_running
-    call VimuxCloseRunner()
-    if &filetype == 'python'
-      nunmap <Space>
-      vunmap <Space>
-      if has('nvim')
-        map <silent> <Leader>sl :call IronSendLine()<CR>
-        map <silent> <Leader>sc :call IronSendCell()<CR>
-        map <silent> <Leader>sb :call IronSendCell()<CR>
-      else
-        unmap <Leader>sl
-        unmap <Leader>sc
-        unmap <Leader>sb
+if $TMUX
+  fun VimuxSendLine()
+    let c = getline('.')
+    call VimuxSendText(c)
+    call VimuxSendKeys("Enter")
+  endfun
+
+  fun VimuxSendCell()
+    :?#%%\|##\|\#^?;/#%%\|##\|\#$/y b
+    call VimuxSendText(@b)
+    call VimuxSendKeys("Enter")
+  endfun
+         
+  let g:vimux_running = 0
+  fun ToggleVimux()
+    if g:vimux_running
+      call VimuxCloseRunner()
+      if &filetype == 'python'
+        nunmap <Space>
+        vunmap <Space>
+        if has('nvim')
+          map <silent> <Leader>sl :call IronSendLine()<CR>
+          map <silent> <Leader>sc :call IronSendCell()<CR>
+          map <silent> <Leader>sb :call IronSendCell()<CR>
+        else
+          unmap <Leader>sl
+          unmap <Leader>sc
+          unmap <Leader>sb
+        endif
       endif
-    endif
-    let g:vimux_running = 0
-  else
-    if &filetype == 'python'
-      " Send the current line in normal and visual mode with space
-      nmap <silent> <Space> :call VimuxSendLine()<cr>
-      vmap <silent> <Space> :call VimuxSendLine()<CR>
-      smap <silent> <Space> <Nop>
-      map <silent> <Leader>sl :call VimuxSendLine()<CR>
-      map <silent> <Leader>sc :call VimuxSendCell()<CR>
-
-      " nmap <silent> <Space> :call RunTmuxPythonLine()<cr>
-      " vmap <silent> <Space> :call RunTmuxPythonChunk()<CR>
-      " smap <silent> <Space> <Nop>
-      " map <silent> <Leader>sl :call RunTmuxPythonLine(0)<CR>
-      " map <silent> <Leader>sc :call RunTmuxPythonCell(0)<CR>
-      " map <silent> <Leader>sb :call RunTmuxPythonCell(1)<CR>
-
-      call VimuxRunCommand('ipython')
+      let g:vimux_running = 0
     else
-      nmap <silent> <Space> :call RunTmuxPythonLine()<cr>
-      vmap <silent> <Space> :call RunTmuxPythonChunk()<CR>
-      smap <silent> <Space> <Nop>
-      map <silent> <Leader>sl :call RunTmuxPythonLine(0)<CR>
-      map <silent> <Leader>sc :call RunTmuxPythonCell(0)<CR>
-      map <silent> <Leader>sb :call RunTmuxPythonCell(1)<CR>
+      if &filetype == 'python'
+        " Send the current line in normal and visual mode with space
+        nmap <silent> <Space> :call VimuxSendLine()<cr>
+        vmap <silent> <Space> :call VimuxSendLine()<CR>
+        smap <silent> <Space> <Nop>
+        map <silent> <Leader>sl :call VimuxSendLine()<CR>
+        map <silent> <Leader>sc :call VimuxSendCell()<CR>
 
-      call VimuxRunCommand('ipython')
-      call VimuxRunCommand('zsh')
+        " nmap <silent> <Space> :call RunTmuxPythonLine()<cr>
+        " vmap <silent> <Space> :call RunTmuxPythonChunk()<CR>
+        " smap <silent> <Space> <Nop>
+        " map <silent> <Leader>sl :call RunTmuxPythonLine(0)<CR>
+        " map <silent> <Leader>sc :call RunTmuxPythonCell(0)<CR>
+        " map <silent> <Leader>sb :call RunTmuxPythonCell(1)<CR>
+
+        if executable('module')
+          call VimuxRunCommand('module load anaconda && ipython')
+        else
+          call VimuxRunCommand('ipython')
+        endif
+      else
+        nmap <silent> <Space> :call RunTmuxPythonLine()<cr>
+        vmap <silent> <Space> :call RunTmuxPythonChunk()<CR>
+        smap <silent> <Space> <Nop>
+        map <silent> <Leader>sl :call RunTmuxPythonLine(0)<CR>
+        map <silent> <Leader>sc :call RunTmuxPythonCell(0)<CR>
+        map <silent> <Leader>sb :call RunTmuxPythonCell(1)<CR>
+
+        call VimuxRunCommand('ipython')
+        call VimuxRunCommand('zsh')
+      endif
+      let g:vimux_running = 1
     endif
-    let g:vimux_running = 1
-  endif
-endfun
-map  <silent> <C-e> :call ToggleVimux()<cr>
+  endfun
+  map  <silent> <C-e> :call ToggleVimux()<cr>
+endif
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "                         Word Processor/Writing Mode                         "

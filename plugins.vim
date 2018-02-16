@@ -95,7 +95,7 @@ endif
 Plug 'bling/vim-airline'
 
 " Tmux integration
-if !exists('g:gui_oni')
+if $TMUX && !exists('g:gui_oni')
   Plug 'benmills/vimux'
   if has('nvim') || v:version >= 705
     Plug 'tmux-plugins/vim-tmux-focus-events'
