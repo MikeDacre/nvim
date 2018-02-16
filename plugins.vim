@@ -49,11 +49,22 @@ if !$VIM_MINIMAL
     Plug 'scrooloose/syntastic'
   endif
 
+  " NyaoVim Only
+  if exists('g:nyaovim_version')
+    " MiniBrowser
+    Plug 'rhysd/nyaovim-mini-browser'
+
+    " RunGopher
+    Plug 'rhysd/nyaovim-running-gopher'
+    " Popup tooltips
+    Plug 'rhysd/nyaovim-popup-tooltip'
+  endif
+
   " Git support
   Plug 'tpope/vim-fugitive'
 
   " Completion
-  if $VIM_YCM
+  if $VIM_YCM || exists('g:nyaovim_version')
     Plug 'Valloric/YouCompleteMe'
   else
     if has('nvim')

@@ -218,3 +218,29 @@ endif
 
 " Tmux clipboard
 let g:vim_fakeclip_tmux_plus=1 
+
+
+"""""""""""""
+"  NyaoVim  "
+"""""""""""""
+
+if exists('v:nyaovim_version')
+  " Open the URL under the cursor
+  nnoremap <Leader>o :<C-u>MiniBrowser <C-r><C-p><CR>
+
+  " Access DevDocs.IO quickly
+  function! s:devdocs(query) abort
+      if a:query ==# ''
+          let cword = expand('<cword>')
+          if cword ==# ''
+              MiniBrowser http://devdocs.io/
+          else
+              execute 'MiniBrowser' 'http://devdocs.io/#q='.escape(cword, ' \')
+          endif
+          return
+      endif
+
+      execute 'MiniBrowser' 'http://devdocs.io/#q='.escape(a:query, ' \')
+  endfunction
+  command! -nargs=* DevDocs call <SID>devdocs(<q-args>)
+endif
