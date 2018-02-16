@@ -52,10 +52,10 @@ if !$VIM_MINIMAL
   Plug 'tpope/vim-fugitive'
 
   " Completion
-  if $USE_YCM
+  if $VIM_YCM
     Plug 'Valloric/YouCompleteMe'
   else
-    if has('nvim') || v:version >= 800
+    if has('nvim')
       Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
       Plug 'zchee/deoplete-jedi', { 'do': ':UpdateRemotePlugins' } 
     else

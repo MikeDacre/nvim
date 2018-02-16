@@ -142,7 +142,7 @@ autocmd BufNewFile,BufRead *.txt setlocal textwidth=80
 "                            Plugin Configuration                             "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " deoplete
-if !$VIM_YCM
+if !$VIM_YCM && has('nvim')
   let g:deoplete#enable_at_startup = 1
   inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"
 endif
