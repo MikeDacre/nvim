@@ -46,8 +46,7 @@ endif
 set smartindent
 set expandtab         " tab to spaces
 set foldenable
-set foldmethod=indent " folding by indent
-set foldlevel=99
+set foldmethod=syntax " folding by syntax
 set ignorecase        " ignore the case when search texts
 set smartcase         " if searching text contains uppercase case will not be ignored
 set ai                " autoindent
@@ -72,6 +71,9 @@ set expandtab
 
 " Enable omnicomplete in all vim versions
 set ofu=syntaxcomplete#Complete
+
+" Automatically conceal, particularly for markdown
+set conceallevel=2
 
 " Allow continual indent/dedent in visual block
 vnoremap < <gv
@@ -168,6 +170,7 @@ endif
 " Pencil and markdown
 let g:pencil#autoformat = 0
 let g:vim_markdown_frontmatter = 1
+let g:vim_markdown_toc_autofit = 1
 
 " Indent guides
 let g:indent_guides_enable_on_vim_startup = 1
@@ -177,7 +180,7 @@ autocmd VimEnter,Colorscheme * :hi IndentGuidesEven ctermbg=darkgrey
 
 " NERDtree
 noremap <F5> :NERDTree<CR>
-let g:NERDTreeWinPos = "right"
+let g:NERDTreeWinPos = "left"
 
 " SnipMate/UltiSnpis
 let g:snips_author = 'Mike Dacre'
@@ -190,7 +193,7 @@ noremap <F6> :TlistToggle<CR>
 map <leader>to :TlistSessionLoad .tlist<cr>
 map <leader>ts :TlistSessionSave .tlist<cr>y<cr>
 let Tlist_GainFocus_On_ToggleOpen = 0
-let Tlist_Use_Right_Window = 0
+let Tlist_Use_Right_Window = 1
 let Tlist_Process_file_Always = 1
 let tlist_php_settings = 'php;c:class;d:constant;f:function'
 let tlist_python3_settings = 'Python;c:classes;f:functions;m:class_members;v:variables;i:imports'

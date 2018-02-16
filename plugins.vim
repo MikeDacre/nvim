@@ -10,7 +10,9 @@ Plug 'tpope/vim-sensible'
 Plug 'mhinz/vim-startify'
 Plug 'tpope/vim-obsession'
 Plug 'jlanzarotta/bufexplorer', { 'on': 'BufExplorer' }
-Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
+if !exists('g:gui_oni')
+    Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
+endif
 Plug 'scrooloose/nerdcommenter'
 
 " Extra targets and actions
@@ -47,7 +49,9 @@ if !$VIM_MINIMAL
     " Linters
     Plug 'neomake/neomake'
     " Clipboard
-    Plug 'cazador481/fakeclip.neovim'
+    if !exists('g:gui_oni')
+        Plug 'cazador481/fakeclip.neovim'
+    endif
     " Git Realtime Info
     Plug 'airblade/vim-gitgutter'
   else
@@ -58,7 +62,7 @@ if !$VIM_MINIMAL
   Plug 'tpope/vim-fugitive'
 
   " Completion
-  if $VIM_YCM
+  if $VIM_YCM && !exists('g:gui_oni')
     Plug 'Valloric/YouCompleteMe'
   else
     if has('nvim')
@@ -75,7 +79,7 @@ if !$VIM_MINIMAL
   Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
 
   " Markdown Composer
-  if $VIM_MARKDOWN
+  if $VIM_MARKDOWN && !exists('g:gui_oni')
     function! BuildComposer(info)
       if a:info.status != 'unchanged' || a:info.force
         if has('nvim')
@@ -94,12 +98,14 @@ endif
 Plug 'bling/vim-airline'
 
 " Tmux integration
-Plug 'benmills/vimux'
-if has('nvim') || v:version >= 705
-  Plug 'tmux-plugins/vim-tmux-focus-events'
+if !exists('g:gui_oni')
+  Plug 'benmills/vimux'
+  if has('nvim') || v:version >= 705
+    Plug 'tmux-plugins/vim-tmux-focus-events'
+  endif
+  Plug 'christoomey/vim-tmux-navigator'
+  Plug 'roxma/vim-tmux-clipboard'
 endif
-Plug 'christoomey/vim-tmux-navigator'
-Plug 'roxma/vim-tmux-clipboard'
 
 " Initialize plugin system
 call plug#end()

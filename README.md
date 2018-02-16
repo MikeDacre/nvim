@@ -6,10 +6,25 @@ and vim was getting just too damned slow.
 
 ## Installation
 
-This can be used with either nvim or vanilla vim (preferably over version 8).
-To do both, clone this repo to `$HOME/nvim`, symlink it to your config location
-(e.g. `$HOME/.config/nvim`) and then symlink the vimrc `ln -s $HOME/nvim
-~/.vimrc`.
+This config contains files for nvim, vanilla vim, and
+[ONI](https://github.com/onivim/oni). The core init file `nvim.ini`, can be
+used directly as a vimrc. To install this package directly for all vims, do
+the following:
+
+```shell
+cd $HOME
+git clone https://github.com/MikeDacre/nvim $HOME/nvim
+ln -s nvim .vim
+ln -s nvim/init.vim .vimrc
+mkdir -p .oni
+ln -s $HOME/nvim/config.js $HOME/.oni/config.js
+# Unnecessary on some systems
+mkdir -p .config
+cd .config
+ln -s $HOME/nvim nvim
+```
+
+### Installing plugins
 
 Now open first `nvim` and run `:PlugInstall` and then `vim` and run
 `:PlugInstall` again, this is because there are slightly different plugins in
@@ -20,6 +35,10 @@ defaults to deoplete and switches to YouCompleteMe if `$VIM_YCM` is set, and
 markdown-preview, which requires the rust language and is only on if
 `$VIM_MARKDOWN` is set. To install both of these, export those two
 environmental variables prior to running `PlugInstall` or `PlugUpdate`.
+
+**Note**: Markdown preview requires the rust language to build and
+YouCompleteMe requires a modern version of CMAKE, I can't get it to install
+on most CentOS systems, which is why the VimCompletesMe fallback exists.
 
 ## Little tricks
 
