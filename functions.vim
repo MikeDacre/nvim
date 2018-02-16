@@ -100,7 +100,7 @@ if has('nvim')
 endif
 
 " Vimux
-if $TMUX
+if $TMUX != ''
   fun VimuxSendLine()
     let c = getline('.')
     call VimuxSendText(c)

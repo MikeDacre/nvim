@@ -150,10 +150,10 @@ if !$VIM_YCM && has('nvim')
 endif
 
 " Tmux and IPython
-let g:VimuxOrientation = "v"
-let g:VimuxHeight = "30"
-let g:cellmode_default_mappings='0'
-let g:cellmode_tmux_panenumber='1'
+if $TMUX
+  let g:VimuxOrientation = "v"
+  let g:VimuxHeight = "30"
+endif
 
 " Iron Vim
 if has('nvim')
@@ -219,5 +219,7 @@ if !$VIM_MINIMAL
   exec "source " . g:vimdir_path . "/linters.vim"
 endif
 
-" Tmux clipboard
-let g:vim_fakeclip_tmux_plus=1
+" Make allow C-h capture in TMUX nav
+if $TMUX != ''
+	nnoremap <silent> <BS> :TmuxNavigateLeft<cr>
+endif
