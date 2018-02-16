@@ -14,10 +14,10 @@ set fileformats=unix,dos,mac
 filetype on
 filetype plugin on
 filetype plugin indent on
-syntax on 
+syntax on
 
 " How often to update events
-set updatetime=300  
+set updatetime=300
 set timeoutlen=800 ttimeoutlen=0
 
 " Color and vim mouse
@@ -27,8 +27,8 @@ if has('nvim')
 	let $NVIM_TUI_ENABLE_TRUE_COLOR=1
   colo wombatmikemod
 else
-	set ttymouse=xterm2 
-  set viminfo='100,\"1000,:200,%,n~/.temp/viminfo"' 
+	set ttymouse=xterm2
+  set viminfo='100,\"1000,:200,%,n~/.temp/viminfo"'
   if has("gui_running") || &term == "xterm-256color" || &term == "screen-256color"
     set t_Co=256
     colo wombatmikemod
@@ -36,12 +36,12 @@ else
     colo wombat
   endif
 endif
- 
+
 " Mouse support
 if has('mouse')
   set mouse=a
 endif
-  
+
 " Some useful settings
 set smartindent
 set expandtab         " tab to spaces
@@ -72,7 +72,7 @@ set expandtab
 
 " Enable omnicomplete in all vim versions
 set ofu=syntaxcomplete#Complete
- 
+
 " Allow continual indent/dedent in visual block
 vnoremap < <gv
 vnoremap > >gv
@@ -93,7 +93,7 @@ set undoreload=50000
 set undolevels=1000
 
 " Remember last position
-autocmd BufReadPost * if @% !~# '\.git[\/\\]COMMIT_EDITMSG$' && line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif 
+autocmd BufReadPost * if @% !~# '\.git[\/\\]COMMIT_EDITMSG$' && line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
 
 " Escape from terminal
 if has('nvim')
@@ -116,12 +116,12 @@ au FileType rst setlocal tw=99 tabstop=4 shiftwidth=4 softtabstop=4
 au BufRead,BufNewFile *.rst set filetype=rst
 
 " Vim
-autocmd FileType vim setlocal et sw=2 ts=2 tw=79 
+autocmd FileType vim setlocal et sw=2 ts=2 tw=79
 
 " Python
 au BufRead,BufNewFile *.py set filetype=python
 autocmd FileType python setlocal completeopt=menuone,longest
-autocmd FileType python setlocal et sw=4 ts=4 tw=79 
+autocmd FileType python setlocal et sw=4 ts=4 tw=79
 
 " Markdown
 autocmd BufNewFile,BufReadPost *.md set filetype=markdown
@@ -217,4 +217,4 @@ if !$VIM_MINIMAL
 endif
 
 " Tmux clipboard
-let g:vim_fakeclip_tmux_plus=1 
+let g:vim_fakeclip_tmux_plus=1

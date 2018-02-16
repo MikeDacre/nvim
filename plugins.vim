@@ -40,7 +40,7 @@ if !$VIM_MINIMAL
     Plug 'hkupty/iron.nvim', { 'do': ':UpdateRemotePlugins' }
     Plug 'vimlab/split-term.vim'
     " Linters
-    Plug 'neomake/neomake' 
+    Plug 'neomake/neomake'
     " Clipboard
     Plug 'cazador481/fakeclip.neovim'
     " Git Realtime Info
@@ -58,17 +58,17 @@ if !$VIM_MINIMAL
   else
     if has('nvim')
       Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-      Plug 'zchee/deoplete-jedi', { 'do': ':UpdateRemotePlugins' } 
+      Plug 'zchee/deoplete-jedi', { 'do': ':UpdateRemotePlugins' }
     else
       Plug 'ajh17/VimCompletesMe'
     endif
   endif
- 
+
   " Markdown writing
   Plug 'junegunn/goyo.vim', { 'for': 'markdown' }
   Plug 'reedes/vim-pencil', { 'for': 'markdown' }
   Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
- 
+
   " Markdown Composer
   if $VIM_MARKDOWN
     function! BuildComposer(info)
@@ -84,7 +84,7 @@ if !$VIM_MINIMAL
     Plug 'euclio/vim-markdown-composer', { 'for': 'markdown', 'do': function('BuildComposer') }
   endif
 endif
-   
+
 " Status bar
 Plug 'bling/vim-airline'
 
@@ -95,6 +95,6 @@ if has('nvim') || v:version >= 705
 endif
 Plug 'christoomey/vim-tmux-navigator'
 Plug 'roxma/vim-tmux-clipboard'
- 
+
 " Initialize plugin system
 call plug#end()
