@@ -13,6 +13,11 @@ Plug 'jlanzarotta/bufexplorer', { 'on': 'BufExplorer' }
 Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
 Plug 'scrooloose/nerdcommenter'
 
+" Extra targets and actions
+Plug 'tpope/vim-repeat'    " Select within surrounding with cin<surround>
+Plug 'wellle/targets.vim'
+Plug 'tpope/vim-surround'  " Change surroundings with cs<surround>
+
 if !$VIM_MINIMAL
   Plug 'tpope/vim-speeddating'  " Increment dates and times
   Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
