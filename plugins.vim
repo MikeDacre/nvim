@@ -69,9 +69,9 @@ if !$VIM_MINIMAL
     " Linters
     Plug 'neomake/neomake'
     " Clipboard
-    if !exists('g:gui_oni')
-        Plug 'cazador481/fakeclip.neovim'
-    endif
+    " if !exists('g:gui_oni')
+        " Plug 'cazador481/fakeclip.neovim'
+    " endif
     " Git Realtime Info
     Plug 'airblade/vim-gitgutter'
   else
