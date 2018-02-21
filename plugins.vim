@@ -31,6 +31,7 @@ if !$VIM_MINIMAL
   Plug 'jamessan/vim-gnupg'
   Plug 'othree/html5.vim'
   Plug 'milkypostman/vim-togglelist'
+  Plug 'python-mode/python-mode'
  
   " Markdown writing
   Plug 'junegunn/goyo.vim', { 'for': 'markdown' }
@@ -79,14 +80,16 @@ if !$VIM_MINIMAL
   endif
 
   " Completion
-  if $VIM_YCM && !exists('g:gui_oni')
-    Plug 'Valloric/YouCompleteMe'
-  else
-    if has('nvim')
-      Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-      Plug 'zchee/deoplete-jedi', { 'do': ':UpdateRemotePlugins' }
+  if !exists('g:gui_oni')
+    if $VIM_YCM
+      Plug 'Valloric/YouCompleteMe'
     else
-      Plug 'ajh17/VimCompletesMe'
+      if has('nvim')
+        Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+        Plug 'zchee/deoplete-jedi', { 'do': ':UpdateRemotePlugins' }
+      else
+        Plug 'ajh17/VimCompletesMe'
+      endif
     endif
   endif
 endif

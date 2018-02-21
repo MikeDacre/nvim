@@ -8,7 +8,7 @@ if has('nvim')
   " Python
   let g:neomake_python_pylint_maker = {
     \ 'args': [
-    \ '-d', 'C0301, C168, bad-whitespace',
+    \ '-d', 'C0301, C168, C901, W0612, W0611, E221, E501, E116, bad-whitespace',
     \ '-f', 'text',
     \ '--msg-template="{path}:{line}:{column}:{C}: [{symbol}] {msg}"',
     \ '-r', 'n'
@@ -29,12 +29,11 @@ if has('nvim')
   fun ToggleNeomake()
     if g:neo_on
       let g:neomake_python_enabled_makers = ['python', 'pyflakes']
-      Neomake
-      lclose
+      :Neomake
       let g:neo_on=0
     else
       let g:neomake_python_enabled_makers = ['python', 'pyflakes', 'pylint', 'vulture']
-      Neomake
+      :Neomake
       let g:neo_on=1
     endif
   endfun

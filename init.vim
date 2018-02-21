@@ -167,6 +167,23 @@ if has('nvim')
   augroup END
 endif
 
+" Python Mode
+let g:pymode                    = 1
+let g:pymode_folding            = 1
+let g:pymode_syntax             = 1
+let g:pymode_rope               = 0
+let g:pymode_rope_completion    = 0
+if has('python3')
+  let g:pymode_python           = 'python3'  " Always use python3
+endif
+let g:pymode_trim_whitespaces   = 0
+let g:pymode_breakpoint         = 1
+let g:pymode_breakpoint_bind    = '<leader>bb'
+let g:pymode_lint               = 0
+let g:pymode_lint_on_write      = 0
+let g:pymode_lint_checkers      = ['pyflakes']
+let g:pymode_lint_ignore        = "F0002,W0612,C0301,C901,C0326,W0611,E221,E501,E116"
+
 " Pencil and markdown
 let g:pencil#autoformat = 0
 let g:vim_markdown_frontmatter = 1

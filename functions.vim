@@ -62,6 +62,15 @@ imap <leader>me Mike Dacre
 " Pasting Mode
 map <leader>pp :set paste<CR>:set noexpandtab<CR>
 map <leader>PP :set nopaste<CR>:set expandtab<CR>
+ 
+" Highlight whitespace
+autocmd Syntax * syn match ExtraWhitespace /\s\+$\| \+\ze\t/
+highlight ExtraWhitespace ctermbg=red guibg=red
+match ExtraWhitespace /\s\+$/
+autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
+autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
+autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+autocmd BufWinLeave * call clearmatches()
 
 " Iron REPL
 if has('nvim')
