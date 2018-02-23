@@ -62,7 +62,7 @@ imap <leader>me Mike Dacre
 " Pasting Mode
 map <leader>pp :set paste<CR>:set noexpandtab<CR>
 map <leader>PP :set nopaste<CR>:set expandtab<CR>
- 
+
 " Highlight whitespace
 autocmd Syntax * syn match ExtraWhitespace /\s\+$\| \+\ze\t/
 highlight ExtraWhitespace ctermbg=red guibg=red
