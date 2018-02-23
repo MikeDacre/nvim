@@ -41,7 +41,7 @@ module.exports = {
     // UI customizations
     "ui.animations.enabled": true,
     "ui.fontSmoothing": "auto",
-    "statusbar.enabled": false,
+    "statusbar.enabled": true,
     "tabs.mode": 'tabs',
 
     "experimental.markdownPreview.enabled": true,
