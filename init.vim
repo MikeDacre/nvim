@@ -43,6 +43,7 @@ if has('mouse')
 endif
 
 " Some useful settings
+set title
 set smartindent
 set expandtab         " tab to spaces
 set foldenable
