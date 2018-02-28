@@ -72,6 +72,9 @@ autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 autocmd InsertLeave * match ExtraWhitespace /\s\+$/
 autocmd BufWinLeave * call clearmatches()
 
+" Delete whitespace
+noremap <leader>dw :%s/\s\+$//g<cr>
+
 " Iron REPL
 if has('nvim')
   fun IronSendLine()

@@ -32,7 +32,8 @@ if !$VIM_MINIMAL
   Plug 'othree/html5.vim'
   Plug 'milkypostman/vim-togglelist'
   Plug 'python-mode/python-mode'
- 
+  Plug 'powerman/vim-plugin-AnsiEsc', { 'on': 'AnsiEsc' }
+
   " Markdown writing
   Plug 'junegunn/goyo.vim', { 'for': 'markdown' }
   Plug 'reedes/vim-pencil', { 'for': 'markdown' }
@@ -51,7 +52,7 @@ if !$VIM_MINIMAL
     endfunction
 
     Plug 'euclio/vim-markdown-composer', { 'for': 'markdown', 'do': function('BuildComposer') }
-  endif  
+  endif
 
   " Multiple cursor edits with <C-n>, <C-x>, and <C-p>
   Plug 'terryma/vim-multiple-cursors'
@@ -106,7 +107,7 @@ if $TMUX != ''
   Plug 'christoomey/vim-tmux-navigator'
   Plug 'roxma/vim-tmux-clipboard'
 endif
- 
+
 " Git support
 Plug 'tpope/vim-fugitive'
 
