@@ -62,7 +62,7 @@ imap <leader>me Mike Dacre
 " Pasting Mode
 map <leader>pp :set paste<CR>:set noexpandtab<CR>
 map <leader>PP :set nopaste<CR>:set expandtab<CR>
- 
+
 " Highlight whitespace
 autocmd Syntax * syn match ExtraWhitespace /\s\+$\| \+\ze\t/
 highlight ExtraWhitespace ctermbg=red guibg=red
@@ -121,7 +121,7 @@ if $TMUX != ''
     call VimuxSendText(@b)
     call VimuxSendKeys("Enter")
   endfun
-         
+
   let g:vimux_running = 0
   fun ToggleVimux()
     if g:vimux_running
@@ -214,13 +214,13 @@ endfunction
 noremap <silent> <Leader>ww :call ToggleWrap()<CR>
 
 " Pencil and Goyo for writing
-func! WordProcessorMode() 
+func! WordProcessorMode()
   if &filetype == 'markdown'
-		setlocal formatoptions=1 
-		setlocal noexpandtab 
-		map j gj 
+		setlocal formatoptions=1
+		setlocal noexpandtab
+		map j gj
 		map k gk
-		setlocal spell spelllang=en_us 
+		setlocal spell spelllang=en_us
 		" colorscheme solarized8_light
 		set thesaurus+=~/.vim/thesaurus/mthesaur.txt
 		set complete+=s
@@ -236,6 +236,6 @@ func! WordProcessorMode()
 		:Goyo
 		:PencilSoft
   endif
-endfu 
+endfu
 
 com! WordProcessor call WordProcessorMode()
