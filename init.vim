@@ -43,6 +43,7 @@ if has('mouse')
 endif
 
 " Some useful settings
+set title
 set smartindent
 set expandtab         " tab to spaces
 set foldenable
@@ -102,6 +103,9 @@ if has('nvim')
   :tnoremap <C-t> <C-\><C-n>
 endif
 
+" Delete whitespace
+noremap <leader>dw :%s/ \+$//g<CR>
+
 " Custom Functions
 if !$VIM_MINIMAL
   exec "source " . g:vimdir_path . "/functions.vim"
@@ -122,23 +126,25 @@ autocmd FileType vim setlocal et sw=2 ts=2 tw=79
 
 " Python
 au BufRead,BufNewFile *.py set filetype=python
-autocmd FileType python setlocal completeopt=menuone,longest
-autocmd FileType python setlocal et sw=4 ts=4 tw=79
+au FileType python setlocal completeopt=menuone,longest
+au FileType python setlocal et sw=4 ts=4 tw=79
 
 " Markdown
-autocmd BufNewFile,BufReadPost *.md set filetype=markdown
-autocmd BufNewFile,BufReadPost *.markdown set filetype=markdown
+au BufNewFile,BufReadPost *.md set filetype=markdown
+au BufNewFile,BufReadPost *.markdown set filetype=markdown
 
 " Snakemake
 au BufNewFile,BufRead Snakefile set syntax=snakemake
 au BufNewFile,BufRead *.smk set syntax=snakemake
+au BufNewFile,BufRead *.snk set syntax=snakemake
 au BufNewFile,BufRead *.snakefile set syntax=snakemake
 au FileType snakemake let Comment="#"
-au FileType snakemake setlocal tw=99 tabstop=4 shiftwidth=4 softtabstop=4
+au FileType snakemake setlocal completeopt=menuone,longest
+au FileType snakemake setlocal tw=79 tabstop=4 shiftwidth=4 softtabstop=4
 
 " Text
-autocmd FileType tex setlocal textwidth=80
-autocmd BufNewFile,BufRead *.txt setlocal textwidth=80
+au FileType tex setlocal textwidth=80
+au BufNewFile,BufRead *.txt setlocal textwidth=80
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "                            Plugin Configuration                             "
@@ -204,6 +210,10 @@ let g:snips_author = 'Mike Dacre'
 let g:ultisnips_python_style = 'NORMAL'
 let g:UltiSnipsExpandTrigger="<c-a>"
 let g:UltiSnipsEditSplit = "vertical"
+
+" Easy Align
+xmap ga <Plug>(EasyAlign)
+nmap ga <Plug>(EasyAlign)
 
 " Tag List
 noremap <F6> :TlistToggle<CR>
