@@ -72,6 +72,9 @@ autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 autocmd InsertLeave * match ExtraWhitespace /\s\+$/
 autocmd BufWinLeave * call clearmatches()
 
+" Delete whitespace
+noremap <leader>dw :%s/\s\+$//g<cr>
+
 " Iron REPL
 if has('nvim')
   fun IronSendLine()
@@ -169,7 +172,6 @@ if $TMUX != ''
         map <silent> <Leader>sc :call RunTmuxPythonCell(0)<CR>
         map <silent> <Leader>sb :call RunTmuxPythonCell(1)<CR>
 
-        call VimuxRunCommand('ipython')
         call VimuxRunCommand('zsh')
       endif
       let g:vimux_running = 1
