@@ -8,7 +8,7 @@ if has('nvim')
   " Python
   let g:neomake_python_pylint_maker = {
     \ 'args': [
-    \ '-d', 'C0301, C168, C901, W0612, W0611, E221, E501, E116, bad-whitespace',
+    \ '-d', 'C0301, C168, C901, W0612, W0611, E221, E501, E116, bad-whitespace, invalid-name',
     \ '-f', 'text',
     \ '--msg-template="{path}:{line}:{column}:{C}: [{symbol}] {msg}"',
     \ '-r', 'n'
@@ -22,19 +22,17 @@ if has('nvim')
     \ }
 
   let g:neomake_python_python_exe = 'python3'
-  let g:neomake_python_enabled_makers = ['python', 'pyflakes']
+  let g:neomake_python_enabled_makers = ['python', 'pylint', 'pyflakes']
 
   " Toggle More Intense Neomake Checkers
-  let g:neo_on=0
+  let g:pyneo_lint_on=0
   fun ToggleNeomake()
-    if g:neo_on
-      let g:neomake_python_enabled_makers = ['python', 'pyflakes']
-      :Neomake
-      let g:neo_on=0
+    if g:pyneo_lint_on
+      let g:neomake_python_enabled_makers = ['python', 'pylint', 'pyflakes']
+      let g:pyneo_lint_on=0
     else
-      let g:neomake_python_enabled_makers = ['python', 'pyflakes', 'pylint', 'vulture']
-      :Neomake
-      let g:neo_on=1
+      let g:neomake_python_enabled_makers = ['python', 'pyflakes', 'pep8', 'pylint', 'vulture']
+      let g:pyneo_lint_on=1
     endif
   endfun
 
