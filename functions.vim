@@ -172,7 +172,6 @@ if $TMUX != ''
         map <silent> <Leader>sc :call RunTmuxPythonCell(0)<CR>
         map <silent> <Leader>sb :call RunTmuxPythonCell(1)<CR>
 
-        call VimuxRunCommand('ipython')
         call VimuxRunCommand('zsh')
       endif
       let g:vimux_running = 1
