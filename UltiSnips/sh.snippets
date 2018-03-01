@@ -1,0 +1,47 @@
+snippet snake "Snakemake submit script" b
+#!/bin/bash
+# Run snakemake or sbatch or pbs
+#PBS -N nucleo
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=4GB
+#PBS -l walltime=96:00:00
+#PBS -o run_snake.out
+#PBS -e run_snake.err
+#SBATCH -J nucleo
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH --mem=4000
+#SBATCH -p hbfraser,hns,normal
+#SBATCH -t 96:00:00
+#SBATCH -o run_snake.out
+#SBATCH -e run_snake.err
+
+module load fraserconda
+
+if hash sbatch 2>/dev/null; then
+    CLUSTER_STRING="sbatch -n {threads} --mem={resources.mem_mb} -p {cluster.queue} -t {params.time} -o {cluster.out} -e {cluster.err}"
+elif hash qsub 2>/dev/null; then
+    CLUSTER_STRING="qsub -l nodes=1:ppn={threads} -l mem={resources.mem_mb} -l walltime={params.time} -o {cluster.out} -e {cluster.err}"
+fi
+
+snakemake $@ --printshellcmds --keep-going \
+    -j ${2:1500} --cluster-config cluster_config.json \
+    --cluster "${CLUSTER_STRING}" 2>&1 | tee snake_log.log
+retval_bash="${PIPESTATUS[0]}" retval_zsh="${pipestatus[1]}"
+
+if [ -n "$ZSH_VERSION" ]; then
+    err=$retval_zsh
+else
+    err=$retval_bash
+fi
+
+if [[ $err == 0 ]]; then
+    echo "Snakejob $1 completed" | sendmail mike.dacre@gmail.com
+else
+    f=$(tail -n 50 snake_log.log)
+    printf "Snakejob $1 failed with code $err\n\nTail of log:\n\n${f}\n" | sendmail mike.dacre@gmail.com
+fi
+
+echo "Completed with code $err!"
+exit $err
+endsnippet
