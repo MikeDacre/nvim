@@ -99,11 +99,12 @@ endif
 Plug 'bling/vim-airline'
 
 " Tmux integration
+Plug 'tmux-plugins/vim-tmux'
 if $TMUX != ''
-  Plug 'benmills/vimux'
   if has('nvim') || v:version >= 705
     Plug 'tmux-plugins/vim-tmux-focus-events'
   endif
+  Plug 'benmills/vimux'
   Plug 'christoomey/vim-tmux-navigator'
   Plug 'roxma/vim-tmux-clipboard'
 endif
