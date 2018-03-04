@@ -1,13 +1,13 @@
 snippet snake "Snakemake submit script" b
 #!/bin/bash
 # Run snakemake or sbatch or pbs
-#PBS -N nucleo
+#PBS -N ${1:snakeit}
 #PBS -l nodes=1:ppn=1
 #PBS -l mem=4GB
 #PBS -l walltime=96:00:00
 #PBS -o run_snake.out
 #PBS -e run_snake.err
-#SBATCH -J nucleo
+#SBATCH -J $1
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH --mem=4000
