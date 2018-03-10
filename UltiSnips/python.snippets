@@ -228,7 +228,7 @@ pre_expand "add_imports([{'impt': 'bz2', 'asstr': '_bz2'}, {'impt': 'gzip', 'ass
 snippet zipped
 def open_zipped(infile, mode='r'):
 	"""Return file handle of file regardless of compressed or not.
-	
+
 	Also returns already opened files unchanged, text mode automatic for
 	compatibility with python2.
 	"""
@@ -238,15 +238,22 @@ def open_zipped(infile, mode='r'):
 	# Make text mode automatic
 	if len(mode) == 1:
 		mode = mode + 't'
+	# Refuse to handle non-strings that aren't files.
 	if not isinstance(infile, str):
-		raise ValueError('I cannot open a filename that isn't a string.')
+		raise ValueError("I cannot open a filename that isn't a string.")
+	# Treat '-' appropriately
+	if infile == '-':
+		if 'w' in mode:
+			return _sys.stdout
+		return _sys.stdin
+	# If possible open zipped files
 	if infile.endswith('.gz'):
 		return _gzip.open(infile, mode)
 	if infile.endswith('.bz2'):
 		if hasattr(_bz2, 'open'):
 			return _bz2.open(infile, mode)
-		else:
-			return _bz2.BZ2File(infile, mode)
+		return _bz2.BZ2File(infile, mode)
+	# Fall back on regular open
 	return open(infile, mode)
 $0
 endsnippet
@@ -457,4 +464,86 @@ from sqlalchemy.orm import sessionmaker
 engine = create_engine('sqlite:///:memory:', echo=False)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
+endsnippet
+
+snippet setup
+"""Installation instructions for ${1:name}."""
+import os
+from setuptools import setup
+
+import $1  # For version
+
+VERSION=$1.__version__
+GITHUB='https://github.com/MikeDacre/$1'
+
+REQUIREMENTS = [${2}]
+
+
+def read(fname):
+    """Read the contents of a file in this dir."""
+    with open(os.path.join(os.path.dirname(__file__), fname)) as fin:
+        return fin.read()
+
+
+# Actual setup instructions
+setup(
+    name         = '$1',
+    version      = VERSION,
+    author       = 'Mike Dacre',
+    author_email = 'mike.dacre@gmail.com',
+    description  = (
+        "${3}"
+    ),
+    keywords = (
+        "${4:command-line utility}"
+    ),
+    long_description = read('README.md'),
+    license = 'MIT',
+
+    # URLs
+    url = GITHUB,
+    download_url='{0}/archive/v{1}.tar.gz'.format(GITHUB, VERSION),
+
+    # Actual packages/modules
+    # Packages are directories with __init__.py files
+    # Modules are python scripts (minus the .py)
+    #  packages=['$1'],
+    py_modules=['$1'],
+
+    # Entry points and scripts
+    # Entry points are functions that can use sys.argv (e.g. main())
+    # Scripts are independent pieces of code intended to be executed as is
+    entry_points = {
+        'console_scripts': [
+            'careful_rm = $1:main',
+        ],
+    },
+    #  scripts = [],
+
+    # Data files
+    #  data_files = [],
+
+    # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
+    classifiers=[
+        'Development Status :: 1 - Planning',
+        # 'Development Status :: 4 - Beta',
+		# 'Development Status :: 5 - Production/Stable',
+        'Environment :: Console',
+        'Intended Audience :: End Users/Desktop',
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: POSIX',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
+        'Topic :: Utilities',
+    ],
+
+    # Requirements
+    requires=REQUIREMENTS,
+    install_requires=REQUIREMENTS,
+    #  tests_require=[],
+)
 endsnippet
