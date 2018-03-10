@@ -117,8 +117,10 @@ endif
 
 au BufRead,BufNewFile *.cmdlst set filetype=sh
 au BufRead,BufNewFile *.pbs set filetype=sh
-au FileType pandoc setlocal tw=99 tabstop=4 shiftwidth=4 softtabstop=4
-au FileType rst setlocal tw=99 tabstop=4 shiftwidth=4 softtabstop=4
+au BufRead,BufNewFile *.pbs set filetype=rst
+au FileType pandoc setlocal tw=80 tabstop=4 shiftwidth=4 softtabstop=4
+au FileType markdown setlocal tw=80 tabstop=4 shiftwidth=4 softtabstop=4
+au FileType rst setlocal tw=80 tabstop=4 shiftwidth=4 softtabstop=4
 au BufRead,BufNewFile *.rst set filetype=rst
 
 " Vim
