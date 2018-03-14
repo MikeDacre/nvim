@@ -71,20 +71,28 @@ def search_imports(impt, frm='', asstr='', end=True):
 	else:
 		return -2
 
-def add_import(impt, frm='', asstr='', end=True):
-	"""Add an import if it does not already exist, default is to add to end."""
-	assert isinstance(impt, str)
-	assert isinstance(frm, str)
-	assert isinstance(asstr, str)
+def get_import_loc(impt, frm='', asstr='', end=True):
+	"""Get the proper location for an import."""
 	imp_loc = search_imports(impt, frm=frm, asstr=asstr, end=end)
-	impt = impt.strip()
 	if imp_loc == -1:
-		return
+		return -1
 	if imp_loc == -2:
 		imp_loc = first_blank_line()
 	if imp_loc == -1:
 		imp_loc = vim.current.window.cursor[0]
 	imp_loc = imp_loc - 1
+	return imp_loc
+
+def add_import(impt, frm='', asstr='', end=True):
+	"""Add an import if it does not already exist, default is to add to end."""
+	assert isinstance(impt, str)
+	assert isinstance(frm, str)
+	assert isinstance(asstr, str)
+	imp_loc = get_import_loc(impt, frm=frm, asstr=asstr, end=end)
+	if imp_loc == -1:
+		return
+	assert(isinstance(imp_loc, int))
+	impt = impt.strip()
 	imp_string = 'from {} import {}'.format(frm, impt) if frm else 'import {}'.format(impt)
 	if asstr:
 		imp_string = imp_string + ' as ' + asstr
@@ -103,6 +111,31 @@ def add_imports(impts, end=True):
 			add_import(**impt, end=end)
 		else:
 			add_import(impt, end=end)
+
+tqdm_imp_string = """
+try:
+	if str(type(get_ipython())).contains("ZMQInteractiveShell"):
+		_pb = _tqnote
+	else:
+		_pb = _tqdm
+except NameError:
+	_pb = _tqdm
+"""
+
+def tqdm_import():
+	"""Use tqdm on either notebook or console."""
+	add_imports([
+		{'frm': 'tqdm', 'impt': 'tqdm', 'asstr': '_tqdm'},
+		{'frm': 'tqdm', 'impt': 'tqdm_notebook', 'asstr': '_tqnote'}
+	], end=True)
+	write_loc = search_imports('tqdm_notebook', frm='tqdm', asstr='_tqnote', end=True)
+	if write_loc == -1:
+		return
+	write_loc += 2
+	to_write = tqdm_imp_string.split('\n')
+	to_write.reverse()
+	for i, ln in enumerate(to_write):
+		snip.buffer.append(ln, write_loc+1)
 
 def add_import_and_delete():
 	cur = int(vim.current.window.cursor[0])
@@ -185,7 +218,7 @@ for i in ${1:infile}:
 	$0
 endsnippet
 
-snippet tqdm "Import tqdm" b
+snippet tqdm_impt "Import tqdm" b
 try:
 	from tqdm import tqdm, tqdm_notebook
 	try:
@@ -197,6 +230,13 @@ try:
 		pb = tqdm
 except ImportError:
 	pb = None
+endsnippet
+
+pre_expand "tqdm_import()"
+snippet tqdm
+dpb = quiet or _sys.stdout.isatty()
+for ${1:i} in pb(${2:iter}, unit=' ${3:rows}', disable=dpb, leave=${4:True}):
+	$0
 endsnippet
 
 snippet longdesc "Long Description" b
@@ -426,16 +466,15 @@ def main(argv=None):
 	                    help="Log file (Default: STDERR)")
 
 	# Positional arguments
-	parser.add_argument('$2', nargs='+',
-	                    help="Input files}")
+	parser.add_argument('$2', nargs='+', help="Input files")
 
 	# Options
 	parser.add_argument('-v', '--verbose', action="store_true",
-											help="Verbose output to log")
+						help="Verbose output to log")
 
 	args = parser.parse_args(argv)
 
-	$1($2)
+	return $1(args.$2)
 
 
 if __name__ == '__main__' and '__file__' in globals():
@@ -518,7 +557,7 @@ def main(argv=None):
 	ifl = args.$2 if args.$2 else _sys.stdin
 	ofl = args.$3 if args.$3 else _sys.stdout
 
-	$1(ifl, ofl)
+	return $1(ifl, ofl)
 
 
 if __name__ == '__main__' and '__file__' in globals():
@@ -632,7 +671,7 @@ def main(argv=None):
 		_log_out.setLevel(_log.DEBUG)
 		log.addHandler(_log_out)}
 
-	$1(ifl, ofl)
+	return $1(ifl, ofl)
 
 
 if __name__ == '__main__' and '__file__' in globals():
