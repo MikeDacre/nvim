@@ -19,6 +19,7 @@ Plug 'scrooloose/nerdcommenter'
 Plug 'tpope/vim-repeat'    " Select within surrounding with cin<surround>
 Plug 'wellle/targets.vim'
 Plug 'tpope/vim-surround'  " Change surroundings with cs<surround>
+Plug 'MikeDacre/tmux-zsh-vim-titles'
 
 if !$VIM_MINIMAL
   Plug 'tpope/vim-speeddating'  " Increment dates and times

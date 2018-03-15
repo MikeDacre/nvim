@@ -42,13 +42,8 @@ if has('mouse')
   set mouse=a
 endif
 
-" Set Title
-autocmd BufEnter * let &titlestring = "v:" . expand("%:t")
-set t_ts=^[k
-set t_fs=^[\
-set title
-
 " Some useful settings
+set title
 set smartindent
 set expandtab         " tab to spaces
 set foldenable
