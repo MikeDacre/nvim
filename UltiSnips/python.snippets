@@ -183,33 +183,61 @@ _log_formatter = _log.Formatter(_log_format)
 # log.addHandler(handler)
 endsnippet
 
-pre_expand "add_import('subprocess', asstr='_sub')"
+pre_expand "add_imports([{'impt': 'subprocess', 'asstr': 'sub'}, {'impt': 'shlex', 'asstr': 'sh'}, 'sys'])"
 snippet run
-def run(command, raise_on_error=False):
-	"""Run a command with subprocess the way it should be.
+def run(cmd, shell=False, check=False, get='all'):
+	"""Replicate getstatusoutput from subprocess.
 
-	Parameters
-	----------
-	command : str
-		A command to execute, piping is fine.
-	raise_on_error : bool
-		Raise a subprocess.CalledProcessError on exit_code != 0
+	Params
+	------
+	cmd : str or list
+	shell : bool, optional
+		Run as a shell, allows piping
+	check : bool, optional
+		Raise exception if command failed
+	get : {'all', 'code', 'stdout', 'stderr'}, optional
+		Control what is returned:
+			- all: (code, stdout, stderr)
+			- code/stdout/stderr: only that item
+			- None: code only
 
 	Returns
 	-------
-	stdout : str
-	stderr : str
-	exit_code : int
+	output : str or tuple
+		See get above. Default return value: (code, stdout, stderr)
 	"""
-	pp = _sub.Popen(command, shell=True, universal_newlines=True,
-	                stdout=_sub.PIPE, stderr=_sub.PIPE)
-	out, err = pp.communicate()
-	code = pp.returncode
-	if raise_on_error and code != 0:
-		raise _sub.CalledProcessError(
-			returncode=code, cmd=command, output=out, stderr=err
+	get_options = ['all', 'stdout', 'stderr', 'code', None]
+	if get not in get_options:
+		raise ValueError(
+			'get must be one of {0} is {1}'.format(get_options, get)
 		)
-	return out.decode(), err.decode(), code
+	if not shell and isinstance(cmd, str):
+		cmd = sh.split(cmd)
+	if get != 'code' and get is not None:
+		pp = sub.Popen(cmd, shell=shell, stdout=sub.PIPE, stderr=sub.PIPE)
+		out, err = pp.communicate()
+	else:
+		pp = sub.Popen(cmd, shell=shell)
+		pp.communicate()
+	if not isinstance(out, str):
+		out = out.decode()
+	if not isinstance(err, str):
+		err = err.decode()
+	code = pp.returncode
+	if check and code != 0:
+		if get:
+			sys.stderr.write(
+				'Command failed\nSTDOUT:\n{0}\nSTDERR:\n{1}\n'
+				.format(out, err)
+			)
+		raise sub.CalledProcessError(code, cmd)
+	if get == 'all':
+		return code, out.rstrip(), err.rstrip()
+	elif get == 'stdout':
+		return out.rstrip()
+	elif get == 'stderr':
+		return err.rstrip()
+	return code
 endsnippet
 
 snippet ffile "For i in file, split" b
