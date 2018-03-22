@@ -36,10 +36,12 @@ else
 fi
 
 if [[ $err == 0 ]]; then
-    echo "Snakejob $1 completed" | sendmail mike.dacre@gmail.com
+    echo "Snakejob $1 completed with code 0" | notify_me.py --send-email -s "Snakejob $1 completed"
 else
     f=$(tail -n 50 snake_log.log)
-    printf "Snakejob $1 failed with code $err\n\nTail of log:\n\n${f}\n" | sendmail mike.dacre@gmail.com
+    t=$(tail -n 10 snake_log.log)
+    printf "Snakejob $1 failed.\n\nTail of log:\n\n${t}\n" | notify_me.py -s "Snakejob $1 failed with code $err"
+    printf "Snakejob $1 failed.\n\nTail of log:\n\n${f}\n" | notify_me.py --skip-push --send-email -s "Snakejob $1 failed with code $err"
 fi
 
 echo "Completed with code $err!"
