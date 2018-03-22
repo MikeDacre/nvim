@@ -102,7 +102,7 @@ Plug 'bling/vim-airline'
 " Tmux integration
 Plug 'tmux-plugins/vim-tmux'
 if $TMUX != ''
-  if has('nvim') || v:version >= 705
+  if has('nvim') || v:version >= 700
     Plug 'tmux-plugins/vim-tmux-focus-events'
   endif
   Plug 'benmills/vimux'

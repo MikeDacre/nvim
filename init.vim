@@ -43,7 +43,7 @@ if has('mouse')
 endif
 
 " Some useful settings
-set title
+" set title
 set smartindent
 set expandtab         " tab to spaces
 set foldenable
@@ -122,6 +122,9 @@ au FileType pandoc setlocal tw=80 tabstop=4 shiftwidth=4 softtabstop=4
 au FileType markdown setlocal tw=80 tabstop=4 shiftwidth=4 softtabstop=4
 au FileType rst setlocal tw=80 tabstop=4 shiftwidth=4 softtabstop=4
 au BufRead,BufNewFile *.rst set filetype=rst
+
+" Tmux
+au BufRead,BufNewFile *.tmux set filetype=sh
 
 " Vim
 autocmd FileType vim setlocal et sw=2 ts=2 tw=79
