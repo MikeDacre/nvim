@@ -16,6 +16,7 @@ snippet snake "Snakemake submit script" b
 #SBATCH -o run_snake.out
 #SBATCH -e run_snake.err
 
+source ~/.profile
 module load fraserconda
 
 if hash sbatch 2>/dev/null; then
@@ -35,13 +36,13 @@ else
     err=$retval_bash
 fi
 
+$notify="$HOME/mike_tools/bin/notify_me.py"
 if [[ $err == 0 ]]; then
-    echo "Snakejob $1 completed with code 0" | notify_me.py --send-email -s "Snakejob $1 completed"
+    echo "Snakemake job $1 on $HOSTNAME completed with code 0\n\n${t}" | "$notify" --send-email -s "Snakejob $1 completed"
 else
-    f=$(tail -n 50 snake_log.log)
-    t=$(tail -n 10 snake_log.log)
-    printf "Snakejob $1 failed.\n\nTail of log:\n\n${t}\n" | notify_me.py -s "Snakejob $1 failed with code $err"
-    printf "Snakejob $1 failed.\n\nTail of log:\n\n${f}\n" | notify_me.py --skip-push --send-email -s "Snakejob $1 failed with code $err"
+    f=$(tail -n 75 snake_log.log)
+    printf "Snakemake job $1 on $HOSTNAME failed.\n\nTail of log:\n\n${f}\n" | "$notify" --skip-push --send-email -s "Snakejob $1 failed with code $err"
+    printf "Snakemake job $1 on $HOSTNAME failed with code $err.\n\n${t}\n" | "$notify" -s "Snakejob $1 failed"
 fi
 
 echo "Completed with code $err!"

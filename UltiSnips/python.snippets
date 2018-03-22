@@ -108,7 +108,8 @@ def add_imports(impts, end=True):
 		if isinstance(impt, tuple):
 			add_import(*impt, end=end)
 		elif isinstance(impt, dict):
-			add_import(**impt, end=end)
+			impt.update({'end': end})
+			add_import(**impt)
 		else:
 			add_import(impt, end=end)
 
