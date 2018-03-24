@@ -160,6 +160,9 @@ if !$VIM_YCM && has('nvim')
   inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"
 endif
 
+" Tmux clipboard
+map <Leader>tp let @" = system('tmux show-buffer')
+
 " Tmux and IPython
 if $TMUX
   let g:VimuxOrientation = "v"
