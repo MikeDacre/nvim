@@ -156,8 +156,8 @@ au BufNewFile,BufRead *.txt setlocal textwidth=80
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 " Tmux-ZSH-Vim-Titles
-let g:vim_include_path = 0
-" let g:vim_include_path = 'zsh'
+" let g:vim_include_path = 0
+let g:vim_include_path = 'zsh'
 let g:vim_path_width = '20'
 
 " deoplete
