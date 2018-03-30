@@ -14,6 +14,7 @@ if !exists('g:gui_oni')
     Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
 endif
 Plug 'scrooloose/nerdcommenter'
+Plug 'editorconfig/editorconfig-vim'
 
 " Extra targets and actions
 Plug 'tpope/vim-repeat'    " Select within surrounding with cin<surround>
