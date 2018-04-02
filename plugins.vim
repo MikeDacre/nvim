@@ -15,6 +15,7 @@ if !exists('g:gui_oni')
 endif
 Plug 'scrooloose/nerdcommenter'
 Plug 'AndrewRadev/linediff.vim'
+Plug 'editorconfig/editorconfig-vim'
 
 " Extra targets and actions
 Plug 'tpope/vim-repeat'    " Select within surrounding with cin<surround>

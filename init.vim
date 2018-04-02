@@ -160,6 +160,9 @@ au BufNewFile,BufRead *.txt setlocal textwidth=80
 " let g:vim_include_path = 'zsh'
 let g:vim_path_width = '20'
 
+" editorconfig
+let g:EditorConfig_exclude_patterns = ['fugitive://.*']
+
 " deoplete
 if !$VIM_YCM && has('nvim')
   let g:deoplete#enable_at_startup = 1
