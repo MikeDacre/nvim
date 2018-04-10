@@ -38,8 +38,8 @@ if !$VIM_MINIMAL
   Plug 'powerman/vim-plugin-AnsiEsc', { 'on': 'AnsiEsc' }
 
   " Markdown writing
-  Plug 'junegunn/goyo.vim', { 'for': 'markdown' }
-  Plug 'reedes/vim-pencil', { 'for': 'markdown' }
+  Plug 'reedes/vim-pencil'
+  Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
   Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
 
   " Markdown Composer

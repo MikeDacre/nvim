@@ -217,27 +217,25 @@ noremap <silent> <Leader>ww :call ToggleWrap()<CR>
 
 " Pencil and Goyo for writing
 func! WordProcessorMode()
-  if &filetype == 'markdown'
-		setlocal formatoptions=1
-		setlocal noexpandtab
-		map j gj
-		map k gk
-		setlocal spell spelllang=en_us
-		" colorscheme solarized8_light
-		set thesaurus+=~/.vim/thesaurus/mthesaur.txt
-		set complete+=s
-		set formatprg=par
-		set number
-		" setlocal foldcolumn=12
-		" setlocal wm=20
-		" let g:pencil#autoformat = 1
-		" let g:pencil#wrapModeDefault = 'soft'
-		if ! &wrap
-			call ToggleWrap()
-		endif
-		:Goyo
-		:PencilSoft
+  setlocal formatoptions=1
+  setlocal noexpandtab
+  map j gj
+  map k gk
+  setlocal spell spelllang=en_us
+  " colorscheme solarized8_light
+  set thesaurus+=~/.vim/thesaurus/mthesaur.txt
+  set complete+=s
+  set formatprg=par
+  set number
+  " setlocal foldcolumn=12
+  " setlocal wm=20
+  " let g:pencil#autoformat = 1
+  " let g:pencil#wrapModeDefault = 'soft'
+  if ! &wrap
+    call ToggleWrap()
   endif
+  :Goyo
+  :PencilSoft
 endfu
 
 com! WordProcessor call WordProcessorMode()
