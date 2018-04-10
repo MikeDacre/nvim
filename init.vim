@@ -167,6 +167,9 @@ let g:EditorConfig_exclude_patterns = ['fugitive://.*']
 if !$VIM_YCM && has('nvim')
   let g:deoplete#enable_at_startup = 1
   inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"
+  " Enter: complete&close popup if visible (so next Enter works); else: break undo
+  inoremap <silent><expr> <Cr> pumvisible() ?
+              \ deoplete#mappings#close_popup() : "<C-g>u<Cr>"
 endif
 
 " Tmux clipboard
