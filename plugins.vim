@@ -23,6 +23,9 @@ Plug 'wellle/targets.vim'
 Plug 'tpope/vim-surround'  " Change surroundings with cs<surround>
 Plug 'MikeDacre/tmux-zsh-vim-titles'
 
+Plug 'vimoutliner/vimoutliner'
+Plug 'MikeDacre/vim-checkbox'
+
 if !$VIM_MINIMAL
   Plug 'tpope/vim-speeddating'  " Increment dates and times
   Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
