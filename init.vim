@@ -164,7 +164,7 @@ let g:vim_path_width = '20'
 let g:EditorConfig_exclude_patterns = ['fugitive://.*']
 
 " deoplete
-if !$VIM_YCM && has('nvim')
+if !$VIM_YCM && has('nvim') && g:vim_minimal == 0
   let g:deoplete#enable_at_startup = 1
   inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"
   " Enter: complete&close popup if visible (so next Enter works); else: break undo
@@ -210,42 +210,6 @@ let g:pymode_lint_on_write      = 0
 let g:pymode_lint_checkers      = ['pyflakes']
 let g:pymode_lint_ignore        = "F0002,W0612,C0301,C901,C0326,W0611,E221,E501,E116"
 
-" Pencil and markdown
-let g:pencil#autoformat = 0
-let g:vim_markdown_frontmatter = 1
-let g:vim_markdown_toc_autofit = 1
-
-" Indent guides
-let g:indent_guides_enable_on_vim_startup = 1
-let g:indent_guides_auto_colors           = 0
-autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  ctermbg=8
-autocmd VimEnter,Colorscheme * :hi IndentGuidesEven ctermbg=darkgrey
-
-" NERDtree
-noremap <F5> :NERDTree<CR>
-let g:NERDTreeWinPos = "left"
-
-" SnipMate/UltiSnpis
-let g:snips_author = 'Mike Dacre'
-let g:ultisnips_python_style = 'NORMAL'
-let g:UltiSnipsExpandTrigger="<c-a>"
-let g:UltiSnipsEditSplit = "vertical"
-
-" Easy Align
-xmap ga <Plug>(EasyAlign)
-nmap ga <Plug>(EasyAlign)
-
-" Tag List
-noremap <F6> :TlistToggle<CR>
-map <leader>to :TlistSessionLoad .tlist<cr>
-map <leader>ts :TlistSessionSave .tlist<cr>y<cr>
-let Tlist_GainFocus_On_ToggleOpen = 0
-let Tlist_Use_Right_Window = 1
-let Tlist_Process_file_Always = 1
-let tlist_php_settings = 'php;c:class;d:constant;f:function'
-let tlist_python3_settings = 'Python;c:classes;f:functions;m:class_members;v:variables;i:imports'
-let tlist_python_settings = 'Python;c:classes;f:functions;m:class_members;v:variables;i:imports'
-
 " Buffer Explorer
 let g:bufExplorerFindActive=1
 map <leader>be :BufExplorer<CR>
@@ -256,17 +220,55 @@ let NERDCustomDelimiters = { 'py': { 'left': '#' }, 'snakemake' : { 'left': '#' 
 let g:NERDCustomDelimiters = { 'py': { 'left': '#' }, 'snakemake' : { 'left': '#' , 'leftAlt': '#' } }
 map <Leader>cv <plug>NERDCommenterToggle
 
-" Toggle error window
-let g:toggle_list_no_mappings = 1
-nmap <script> <silent> <leader>ll :call ToggleLocationList()<CR>
-nmap <script> <silent> <leader>lq :call ToggleQuickfixList()<CR>
+" SnipMate/UltiSnpis
+let g:snips_author = 'Mike Dacre'
+let g:ultisnips_python_style = 'NORMAL'
+let g:UltiSnipsExpandTrigger="<c-a>"
+let g:UltiSnipsEditSplit = "vertical"
 
-" Neomake and Syntastic
-if !$VIM_MINIMAL
-  exec "source " . g:vimdir_path . "/linters.vim"
-endif
+if g:vim_minimal == 0 && g:vim_mini == 'false'
+  " Pencil and markdown
+  let g:pencil#autoformat = 0
+  let g:vim_markdown_frontmatter = 1
+  let g:vim_markdown_toc_autofit = 1
 
-" Make allow C-h capture in TMUX nav
-if $TMUX != ''
-	nnoremap <silent> <BS> :TmuxNavigateLeft<cr>
+  " Indent guides
+  let g:indent_guides_enable_on_vim_startup = 1
+  let g:indent_guides_auto_colors           = 0
+  autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  ctermbg=8
+  autocmd VimEnter,Colorscheme * :hi IndentGuidesEven ctermbg=darkgrey
+
+  " NERDtree
+  noremap <F5> :NERDTree<CR>
+  let g:NERDTreeWinPos = "left"
+
+  " Easy Align
+  xmap ga <Plug>(EasyAlign)
+  nmap ga <Plug>(EasyAlign)
+
+  " Tag List
+  noremap <F6> :TlistToggle<CR>
+  map <leader>to :TlistSessionLoad .tlist<cr>
+  map <leader>ts :TlistSessionSave .tlist<cr>y<cr>
+  let Tlist_GainFocus_On_ToggleOpen = 0
+  let Tlist_Use_Right_Window = 1
+  let Tlist_Process_file_Always = 1
+  let tlist_php_settings = 'php;c:class;d:constant;f:function'
+  let tlist_python3_settings = 'Python;c:classes;f:functions;m:class_members;v:variables;i:imports'
+  let tlist_python_settings = 'Python;c:classes;f:functions;m:class_members;v:variables;i:imports'
+
+  " Toggle error window
+  let g:toggle_list_no_mappings = 1
+  nmap <script> <silent> <leader>ll :call ToggleLocationList()<CR>
+  nmap <script> <silent> <leader>lq :call ToggleQuickfixList()<CR>
+
+  " Neomake and Syntastic
+  if !$VIM_MINIMAL
+    exec "source " . g:vimdir_path . "/linters.vim"
+  endif
+
+  " Make allow C-h capture in TMUX nav
+  if $TMUX != ''
+    nnoremap <silent> <BS> :TmuxNavigateLeft<cr>
+  endif
 endif

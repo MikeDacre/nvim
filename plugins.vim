@@ -2,20 +2,24 @@
 "                              Plugins for NVIM                               "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+let g:vim_mini = system('if [ -n "$VIM_MINIMAL" ] && $VIM_MINIMAL; then echo true; else echo false; fi')
+if g:vim_mini == 'true'
+  let g:vim_minimal = 1
+else
+  let g:vim_minimal = 0
+endif
+
 " Plugins with [vim-plug](https://github.com/junegunn/vim-plug)
 call plug#begin(g:vimdir_path . '/plugged')
 
 " Plugins that work everywhere
 Plug 'tpope/vim-sensible'
-Plug 'mhinz/vim-startify'
 Plug 'tpope/vim-obsession'
 Plug 'jlanzarotta/bufexplorer', { 'on': 'BufExplorer' }
 if !exists('g:gui_oni')
     Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
 endif
 Plug 'scrooloose/nerdcommenter'
-Plug 'AndrewRadev/linediff.vim'
-Plug 'editorconfig/editorconfig-vim'
 
 " Extra targets and actions
 Plug 'tpope/vim-repeat'    " Select within surrounding with cin<surround>
@@ -23,7 +27,10 @@ Plug 'wellle/targets.vim'
 Plug 'tpope/vim-surround'  " Change surroundings with cs<surround>
 Plug 'MikeDacre/tmux-zsh-vim-titles'
 
-if !$VIM_MINIMAL
+if g:vim_minimal == 0 && g:vim_mini == 'false'
+  Plug 'editorconfig/editorconfig-vim'
+  Plug 'mhinz/vim-startify'
+  Plug 'AndrewRadev/linediff.vim'
   Plug 'tpope/vim-speeddating'  " Increment dates and times
   Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
   Plug 'vim-scripts/taglist.vim'
