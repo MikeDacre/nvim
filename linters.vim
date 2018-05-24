@@ -2,7 +2,7 @@
 "                        Linters—Neomake and Syntastic                        "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-if g:vim_minimal == 0 && g:vim_mini == 'false'
+if g:vim_minimal == 0
   if has('nvim')
     "" Neomake for NeoVim
 

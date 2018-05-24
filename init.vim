@@ -226,7 +226,7 @@ let g:ultisnips_python_style = 'NORMAL'
 let g:UltiSnipsExpandTrigger="<c-a>"
 let g:UltiSnipsEditSplit = "vertical"
 
-if g:vim_minimal == 0 && g:vim_mini == 'false'
+if g:vim_minimal == 0
   " Pencil and markdown
   let g:pencil#autoformat = 0
   let g:vim_markdown_frontmatter = 1

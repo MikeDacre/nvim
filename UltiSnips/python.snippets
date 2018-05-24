@@ -311,9 +311,9 @@ endsnippet
 pre_expand "add_imports([{'impt': 'bz2', 'asstr': '_bz2'}, {'impt': 'gzip', 'asstr': '_gzip'}])"
 snippet zipped
 def open_zipped(infile, mode='r'):
-	"""return file handle of file regardless of compressed or not.
+	"""Return file handle of file regardless of compressed or not.
 
-	also returns already opened files unchanged, text mode automatic for
+	Also returns already opened files unchanged, text mode automatic for
 	compatibility with python2.
 	"""
 	# return already open files
@@ -324,7 +324,7 @@ def open_zipped(infile, mode='r'):
 		mode = mode + 't'
 	# refuse to handle non-strings that aren't files.
 	if not isinstance(infile, str):
-		raise valueerror("i cannot open a filename that isn't a string.")
+		raise ValueError("I cannot open a filename that isn't a string.")
 	# treat '-' appropriately
 	if infile == '-':
 		if 'w' in mode:
@@ -438,19 +438,14 @@ pre_expand "add_imports([{'impt': 'sys', 'asstr': '_sys'}, {'impt': 'bz2', 'asst
 snippet args "Optional positional files" b
 
 
-def ${1:parse_file}(${2:infiles}):
+def ${1:parse_file}():
 	"""File parser."""
-	for fl in $2:
-		with _open_zipped(fl) as fin:
-			for line in fin:
-				for f in line.strip().split('\t'):
-					$0
+	
 
+def open_zipped(infile, mode='r'):
+	"""Return file handle of file regardless of compressed or not.
 
-def _open_zipped(infile, mode='r'):
-	"""return file handle of file regardless of compressed or not.
-
-	also returns already opened files unchanged, text mode automatic for
+	Also returns already opened files unchanged, text mode automatic for
 	compatibility with python2.
 	"""
 	# return already open files
@@ -461,7 +456,7 @@ def _open_zipped(infile, mode='r'):
 		mode = mode + 't'
 	# refuse to handle non-strings that aren't files.
 	if not isinstance(infile, str):
-		raise valueerror("i cannot open a filename that isn't a string.")
+		raise ValueError("I cannot open a filename that isn't a string.")
 	# treat '-' appropriately
 	if infile == '-':
 		if 'w' in mode:
@@ -495,15 +490,13 @@ def main(argv=None):
 	                    help="Log file (Default: STDERR)")
 
 	# Positional arguments
-	parser.add_argument('$2', nargs='+', help="Input files")
+	parser.add_argument('${2}', nargs='+', help="Input files")
 
 	# Options
 	parser.add_argument('-v', '--verbose', action="store_true",
 						help="Verbose output to log")
 
 	args = parser.parse_args(argv)
-
-	return $1(args.$2)
 
 
 if __name__ == '__main__' and '__file__' in globals():
@@ -515,18 +508,18 @@ pre_expand "add_imports([{'impt': 'sys', 'asstr': '_sys'}, {'impt': 'bz2', 'asst
 snippet stdarg "Optional positional files" b
 
 
-def ${1:parse_file}(${2:infile}, ${3:outfile}):
+def ${1:parse_file}(${2:infile}, ${3:outfile}$10):
 	"""File parser."""
-	with _open_zipped($2) as fin, _open_zipped($3, 'w') as fout:
+	with open_zipped($2) as fin, open_zipped($3, 'w') as fout:
 		for line in fin:
 			for f in line.split('\t'):
 				$0
 
 
-def _open_zipped(infile, mode='r'):
-	"""return file handle of file regardless of compressed or not.
+def open_zipped(infile, mode='r'):
+	"""Return file handle of file regardless of compressed or not.
 
-	also returns already opened files unchanged, text mode automatic for
+	Also returns already opened files unchanged, text mode automatic for
 	compatibility with python2.
 	"""
 	# return already open files
@@ -537,7 +530,7 @@ def _open_zipped(infile, mode='r'):
 		mode = mode + 't'
 	# refuse to handle non-strings that aren't files.
 	if not isinstance(infile, str):
-		raise valueerror("i cannot open a filename that isn't a string.")
+		raise ValueError("I cannot open a filename that isn't a string.")
 	# treat '-' appropriately
 	if infile == '-':
 		if 'w' in mode:
@@ -572,135 +565,18 @@ def main(argv=None):
 	parser.add_argument('-l', '--logfile',
 	                    help="${7:Log file} (Default: STDERR)")}
 
-	# Positional arguments
-	parser.add_argument('files', nargs='+',
-	                    help="Input files}")}
-
 	${8:
 	# Options
 	parser.add_argument('-v', '--verbose', action="store_true",
-											help="Verbose output to log")}
+						help="Verbose output to log")}
 
 	args = parser.parse_args(argv)
 
 	ifl = args.$2 if args.$2 else _sys.stdin
-	ofl = args.$3 if args.$3 else _sys.stdout
+	ofl = args.$3 if args.$3 else _sys.stdout${9:
+	lfl = args.logfile if args.logfile else _sys.stderr}
 
-	return $1(ifl, ofl)
-
-
-if __name__ == '__main__' and '__file__' in globals():
-	_sys.exit(main())
-endsnippet
-
-pre_expand "add_imports([{'impt': 'sys', 'asstr': '_sys'}, {'impt': 'bz2', 'asstr': '_bz2'}, {'impt': 'gzip', 'asstr': '_gzip'}, {'impt': 'argparse', 'asstr': '_argparse'}, {'impt': 'logging', 'asstr': '_log'}])"
-snippet stdlog "Optional positional files" b
-
-__version__ = '0.1'
-
-# Setup logging
-_log_formatter = _log.Formatter(
-	"%(asctime)s [%(name)s] %(levelname)s – %(message)s"
-)
-_log_formatter_simp = _log.Formatter(
-	"%(asctime)s %(levelname)s – %(message)s"
-)
-log = _log.getLogger(__file__)
-_log_out = _log.StreamHandler()
-_log_out.setFormatter(_log_formatter_simp)
-log.addHandler(_log_out)
-log.setLevel(_log.INFO)
-
-
-def ${1:parse_file}(${2:infile}, ${3:outfile}):
-	"""File parser."""
-	with _open_zipped($2) as fin, _open_zipped($3, 'w') as fout:
-		for line in fin:
-			for f in line.split('\t'):
-				$0
-
-def _open_zipped(infile, mode='r'):
-	"""return file handle of file regardless of compressed or not.
-
-	also returns already opened files unchanged, text mode automatic for
-	compatibility with python2.
-	"""
-	# return already open files
-	if hasattr(infile, 'write'):
-		return infile
-	# make text mode automatic
-	if len(mode) == 1:
-		mode = mode + 't'
-	# refuse to handle non-strings that aren't files.
-	if not isinstance(infile, str):
-		raise valueerror("i cannot open a filename that isn't a string.")
-	# treat '-' appropriately
-	if infile == '-':
-		if 'w' in mode:
-			return _sys.stdout
-		return _sys.stdin
-	# if possible open zipped files
-	if infile.endswith('.gz'):
-		return _gzip.open(infile, mode)
-	if infile.endswith('.bz2'):
-		if hasattr(_bz2, 'open'):
-			return _bz2.open(infile, mode)
-		return _bz2.bz2file(infile, mode)
-	# fall back on regular open
-	return open(infile, mode)
-
-
-def main(argv=None):
-	"""Run as a script."""
-	if not argv:
-		argv = _sys.argv[1:]
-
-	parser  = _argparse.ArgumentParser(
-		description=__doc__,
-		formatter_class=_argparse.RawDescriptionHelpFormatter
-	)
-
-	# Optional files
-	parser.add_argument('-i', '--$2', nargs='?',
-	                    help="${4:Input file} (Default: STDIN)")
-	parser.add_argument('-o', '--$3', nargs='?',
-	                    help="${5:Output file} (Default: STDOUT)")${6:
-	parser.add_argument('-l', '--logfile',
-	                    help="${7:Log file} (Default: STDERR)")}
-
-	# Positional arguments
-	parser.add_argument('files', nargs='+',
-	                    help="Input files}")}
-
-	# Options
-	parser.add_argument('-v', '--verbose', action="store_true",
-						help="Verbose output to log")
-
-	args = parser.parse_args(argv)
-
-	ifl = args.$2 if args.$2 else _sys.stdin
-	ofl = args.$3 if args.$3 else _sys.stdout
-
-	# Adjust logging
-	if args.verbose:
-		log.setLevel(_log.DEBUG)
-	loghandle = None
-	if args.logfile:
-		# Setup file
-		loghandle = _open_zipped(args.logfile, '${8:a}')
-		handler = _log.StreamHandler(loghandle)
-		handler.setFormatter(_log_formatter)
-		if args.verbose:
-			handler.setLevel(_log.DEBUG)
-		log.addHandler(handler)
-		log.info('%s Starting Run', __file__)
-	elif args.verbose:
-		# Set STDERR logger to debug if no logfile
-		log.handlers = []
-		_log_out.setLevel(_log.DEBUG)
-		log.addHandler(_log_out)}
-
-	return $1(ifl, ofl)
+	return $1(ifl, ofl${10:, lfl})
 
 
 if __name__ == '__main__' and '__file__' in globals():
@@ -767,7 +643,7 @@ setup(
     # Scripts are independent pieces of code intended to be executed as is
     entry_points = {
         'console_scripts': [
-            'careful_rm = $1:main',
+            '$1 = $1:main',
         ],
     },
     #  scripts = [],

@@ -27,7 +27,7 @@ Plug 'wellle/targets.vim'
 Plug 'tpope/vim-surround'  " Change surroundings with cs<surround>
 Plug 'MikeDacre/tmux-zsh-vim-titles'
 
-if g:vim_minimal == 0 && g:vim_mini == 'false'
+if g:vim_minimal == 0
   Plug 'editorconfig/editorconfig-vim'
   Plug 'mhinz/vim-startify'
   Plug 'AndrewRadev/linediff.vim'
