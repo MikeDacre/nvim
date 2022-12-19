@@ -123,6 +123,11 @@ au FileType markdown setlocal tw=80 tabstop=4 shiftwidth=4 softtabstop=4
 au FileType rst setlocal tw=80 tabstop=4 shiftwidth=4 softtabstop=4
 au BufRead,BufNewFile *.rst set filetype=rst
 
+" HTML
+au FileType hugo setlocal et sw=2 ts=2 tw=160
+au FileType html setlocal et sw=2 ts=2 tw=160
+au FileType css  setlocal et sw=2 ts=2 tw=120
+
 " Tmux
 au BufRead,BufNewFile *.tmux set filetype=sh
 

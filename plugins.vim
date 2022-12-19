@@ -43,6 +43,8 @@ if g:vim_minimal == 0
   Plug 'milkypostman/vim-togglelist'
   Plug 'python-mode/python-mode'
   Plug 'powerman/vim-plugin-AnsiEsc', { 'on': 'AnsiEsc' }
+  Plug 'leafOfTree/vim-project'
+  Plug 'phelipetls/vim-hugo'
 
   Plug 'ervandew/supertab'
 
@@ -50,8 +52,8 @@ if g:vim_minimal == 0
   Plug 'MikeDacre/vim-checkbox'
 
   " Markdown writing
-  Plug 'reedes/vim-pencil'
-  Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
+  " Plug 'reedes/vim-pencil'
+  " Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
   Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
 
   " Markdown Composer
