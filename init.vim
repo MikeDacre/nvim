@@ -124,8 +124,8 @@ au FileType rst setlocal tw=80 tabstop=4 shiftwidth=4 softtabstop=4
 au BufRead,BufNewFile *.rst set filetype=rst
 
 " HTML
-au FileType hugo setlocal et sw=2 ts=2 tw=160
-au FileType html setlocal et sw=2 ts=2 tw=160
+au FileType hugo setlocal et sw=2 ts=2 tw=160 spell spelllang=en_us
+au FileType html setlocal et sw=2 ts=2 tw=160 spell spelllang=en_us
 au FileType css  setlocal et sw=2 ts=2 tw=120
 
 " Tmux
@@ -159,6 +159,12 @@ au BufNewFile,BufRead *.txt setlocal textwidth=80
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "                            Plugin Configuration                             "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
+if empty(glob(data_dir . '/autoload/plug.vim'))
+  silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
 
 " Tmux-ZSH-Vim-Titles
 " let g:vim_include_path = 0

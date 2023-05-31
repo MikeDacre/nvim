@@ -15,9 +15,15 @@ call plug#begin(g:vimdir_path . '/plugged')
 " Plugins that work everywhere
 Plug 'tpope/vim-sensible'
 Plug 'tpope/vim-obsession'
+Plug 'xolox/vim-misc'
+Plug 'xolox/vim-session'
 Plug 'jlanzarotta/bufexplorer', { 'on': 'BufExplorer' }
 if !exists('g:gui_oni')
     Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
+    Plug 'scrooloose/nerdtree-project-plugin'
+    nnoremap <leader>nt :NERDTree<CR>
+    nnoremap <leader>no :NERDTreeToggle<CR>
+    nnoremap <leader>nf :NERDTreeFind<CR>
 endif
 Plug 'scrooloose/nerdcommenter'
 
