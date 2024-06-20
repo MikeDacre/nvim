@@ -35,6 +35,7 @@ Plug 'MikeDacre/tmux-zsh-vim-titles'
 
 if g:vim_minimal == 0
   Plug 'editorconfig/editorconfig-vim'
+  Plug 'freitass/todo.txt-vim'
   Plug 'mhinz/vim-startify'
   Plug 'AndrewRadev/linediff.vim'
   Plug 'tpope/vim-speeddating'  " Increment dates and times
@@ -63,19 +64,19 @@ if g:vim_minimal == 0
   Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
 
   " Markdown Composer
-  if $VIM_MARKDOWN && !exists('g:gui_oni')
-    function! BuildComposer(info)
-      if a:info.status != 'unchanged' || a:info.force
-        if has('nvim')
-          !cargo build --release
-        else
-          !cargo build --release --no-default-features --features json-rpc
-        endif
-      endif
-    endfunction
+  " if $VIM_MARKDOWN && !exists('g:gui_oni')
+    " function! BuildComposer(info)
+      " if a:info.status != 'unchanged' || a:info.force
+        " if has('nvim')
+          " !cargo build --release
+        " else
+          " !cargo build --release --no-default-features --features json-rpc
+        " endif
+      " endif
+    " endfunction
 
-    Plug 'euclio/vim-markdown-composer', { 'for': 'markdown', 'do': function('BuildComposer') }
-  endif
+    " Plug 'euclio/vim-markdown-composer', { 'for': 'markdown', 'do': function('BuildComposer') }
+  " endif
 
   " Multiple cursor edits with <C-n>, <C-x>, and <C-p>
   Plug 'terryma/vim-multiple-cursors'
