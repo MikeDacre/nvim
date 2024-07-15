@@ -14,11 +14,15 @@ call plug#begin(g:vimdir_path . '/plugged')
 
 " Plugins that work everywhere
 Plug 'tpope/vim-sensible'
+Plug 'lambdalisue/vim-nerdfont'
+Plug 'sharkdp/fd'
+Plug 'BurntSushi/ripgrep'
 Plug 'tpope/vim-obsession'
 Plug 'xolox/vim-misc'
 Plug 'xolox/vim-session'
 Plug 'jlanzarotta/bufexplorer', { 'on': 'BufExplorer' }
 if !exists('g:gui_oni')
+    Plug 'lambdalisue/vim-glyph-palette'
     Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
     Plug 'scrooloose/nerdtree-project-plugin'
     nnoremap <leader>nt :NERDTree<CR>
@@ -113,7 +117,7 @@ if g:vim_minimal == 0
         Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
         Plug 'zchee/deoplete-jedi', { 'do': ':UpdateRemotePlugins' }
       else
-        Plug 'ajh17/VimCompletesMe'
+        Plug 'https://git.sr.ht/~ackyshake/VimCompletesMe.vim'
       endif
     endif
   endif
