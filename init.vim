@@ -80,7 +80,7 @@ set expandtab
 set ofu=syntaxcomplete#Complete
 
 " Automatically conceal, particularly for markdown
-set conceallevel=2
+set conceallevel=1
 
 " Allow continual indent/dedent in visual block
 vnoremap < <gv
@@ -146,8 +146,8 @@ au FileType python setlocal completeopt=menuone,longest
 au FileType python setlocal et sw=4 ts=4 tw=79
 
 " Markdown
-au BufNewFile,BufReadPost *.md set filetype=markdown
-au BufNewFile,BufReadPost *.markdown set filetype=markdown
+" au BufNewFile,BufReadPost *.md set filetype=markdown
+" au BufNewFile,BufReadPost *.markdown set filetype=markdown
 
 " Snakemake
 au BufNewFile,BufRead Snakefile set syntax=snakemake

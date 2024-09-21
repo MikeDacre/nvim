@@ -69,7 +69,7 @@ if g:vim_minimal == 0
   " Markdown writing
   " Plug 'reedes/vim-pencil'
   " Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
-  Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
+  " Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
   Plug 'ravibrock/spellwarn.nvim'
   if has('nvim')
     Plug 'epwalsh/obsidian.nvim'

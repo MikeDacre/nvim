@@ -1,0 +1,48 @@
+;.editorconfig
+# EditorConfig is awesome: https://editorconfig.org
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+# Matches multiple files with brace expansion notation
+# Set default charset
+[*.{js,py}]
+charset = utf-8
+
+[**.js]
+; path to optional external js beautifier, default is vim-jsbeautify/plugin/lib
+path=~/.vim/plugged/vim-jsbeautify/plugin/lib/js/lib/beautify.js
+
+; Javascript interpreter to be invoked by default 'node'
+bin=node
+indent_style = space
+indent_size = 4
+
+[**.css]
+path=~/.vim/plugged/vim-jsbeautify/plugin/lib/js/lib/beautify-css.js
+indent_style = space
+indent_size = 4
+
+[**.html]
+; Using special comments
+; And such comments or apply only in global configuration
+; So it's best to avoid them
+vim:path=~/.vim/plugged/vim-jsbeautify/plugin/lib/js/lib/beautify-html.js
+vim:max_char=78:brace_style=expand
+indent_style = space
+indent_size = 4
+
+# 4 space indentation
+[*.py]
+indent_style = space
+indent_size = 4
+
+# Tab indentation (no size specified)
+[Makefile]
+indent_style = tab
