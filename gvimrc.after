@@ -1,0 +1,3 @@
+set guifont=DejaVuSansMNFM:13
+set guifontwide=DejaVuSansMNFP:w13
+set encoding=UTF-8

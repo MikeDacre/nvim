@@ -1,14 +1,16 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"                         Mike Dacre's NeoVim Config                          "
+"                   Mike Dacre's Dual Vim/NeoVim Config                       "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Get our location
 let g:vimdir_path = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 
 exec "source " . g:vimdir_path . "/plugins.vim"
 
+set encoding=UTF-8
+
 " Fundamental settings
 set fileencoding=utf-8
-set fileencodings=ucs-bom,utf-8,gbk,cp936,latin-1
+set fileencodings=utf-8,latin-1,ucs-bom,gbk,cp936
 set fileformat=unix
 set fileformats=unix,dos,mac
 filetype on
@@ -31,11 +33,15 @@ else
   set viminfo='100,\"1000,:200,%,n~/.temp/viminfo"'
   if has("gui_running") || &term == "xterm-256color" || &term == "screen-256color"
     set t_Co=256
+    set guifont=DejaVuSansMNFM:w13
+    set guifontwide=DejaVuSansMNFP:w13
     colo wombatmikemod
   else
     colo wombat
   endif
 endif
+
+let g:airline_powerline_fonts = 1
 
 " Mouse support
 if has('mouse')
@@ -175,13 +181,13 @@ let g:vim_path_width = '20'
 let g:EditorConfig_exclude_patterns = ['fugitive://.*']
 
 " deoplete
-if !$VIM_YCM && has('nvim') && g:vim_minimal == 0
-  let g:deoplete#enable_at_startup = 1
-  inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"
-  " Enter: complete&close popup if visible (so next Enter works); else: break undo
-  inoremap <silent><expr> <Cr> pumvisible() ?
-              \ deoplete#mappings#close_popup() : "<C-g>u<Cr>"
-endif
+" if !$VIM_YCM && has('nvim') && g:vim_minimal == 0
+  " let g:deoplete#enable_at_startup = 1
+  " inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"
+  " " Enter: complete&close popup if visible (so next Enter works); else: break undo
+  " inoremap <silent><expr> <Cr> pumvisible() ?
+              " \ deoplete#mappings#close_popup() : "<C-g>u<Cr>"
+" endif
 
 " Tmux clipboard
 map <Leader>tp let @" = system('tmux show-buffer')
@@ -216,7 +222,7 @@ endif
 let g:pymode_trim_whitespaces   = 0
 let g:pymode_breakpoint         = 1
 let g:pymode_breakpoint_bind    = '<leader>bb'
-let g:pymode_lint               = 0
+let g:pymode_lint               = 1
 let g:pymode_lint_on_write      = 0
 let g:pymode_lint_checkers      = ['pyflakes']
 let g:pymode_lint_ignore        = "F0002,W0612,C0301,C901,C0326,W0611,E221,E501,E116"
@@ -249,9 +255,180 @@ if g:vim_minimal == 0
   autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  ctermbg=8
   autocmd VimEnter,Colorscheme * :hi IndentGuidesEven ctermbg=darkgrey
 
-  " NERDtree
-  noremap <F5> :NERDTree<CR>
-  let g:NERDTreeWinPos = "left"
+  " Startify
+  let g:startify_bookmarks = systemlist("cut -sd' ' -f 2- ~/.NERDTreeBookmarks")
+  let g:startify_fortune_use_unicode = 1
+  let g:startify_session_autoload = 1
+  let g:startify_session_delete_buffers = 1
+  let g:startify_session_persistence = 1
+  " function! GetUniqueSessionName()
+    " let path = fnamemodify(getcwd(), ':~:t')
+    " let path = empty(path) ? 'no-project' : path
+    " let branch = gitbranch#name()
+    " let branch = empty(branch) ? '' : '-' . branch
+    " return substitute(path . branch, '/', '-', 'g')
+  " endfunction
+
+  " autocmd User        StartifyReady silent execute 'SLoad '  . GetUniqueSessionName()
+  " autocmd VimLeavePre *             silent execute 'SSave! ' . GetUniqueSessionName()
+
+  " returns all modified files of the current git repo
+  " `2>/dev/null` makes the command fail quietly, so that when we are not
+  " in a git repo, the list will be empty
+  function! s:gitModified()
+      let files = systemlist('git ls-files -m 2>/dev/null')
+      return map(files, "{'line': v:val, 'path': v:val}")
+  endfunction
+
+  " same as above, but show untracked files, honouring .gitignore
+  function! s:gitUntracked()
+      let files = systemlist('git ls-files -o --exclude-standard 2>/dev/null')
+      return map(files, "{'line': v:val, 'path': v:val}")
+  endfunction
+
+  " \ { 'type': 'dir',       'header': ['   MRU '. getcwd()] },
+  let g:startify_lists = [
+          \ { 'type': 'files',     'header': ['   Recent']         },
+          \ { 'type': 'sessions',  'header': ['   Sessions']       },
+          \ { 'type': 'bookmarks', 'header': ['   Bookmarks']      },
+          \ { 'type': function('s:gitModified'),  'header': ['   git modified']},
+          \ { 'type': function('s:gitUntracked'), 'header': ['   git untracked']},
+          \ { 'type': 'commands',  'header': ['   Commands']       },
+          \ ]
+
+  " vim-project
+  let g:vim_project_config = {
+      \'config_home':                   '~/.vim/vim-project-config',
+      \'project_base':                  ['~/.vim/projects'],
+      \'use_session':                   0,
+      \'open_root_when_use_session':    0,
+      \'check_branch_when_use_session': 0,
+      \'project_root':                  './',
+      \'auto_load_on_start':            1,
+      \'include':                       ['./'],
+      \'exclude':                       ['.git', 'node_modules', '.DS_Store', '.github', '.next'],
+      \'search_include':                [],
+      \'find_in_files_include':         [],
+      \'search_exclude':                [],
+      \'find_in_files_exclude':         [],
+      \'auto_detect':                   'yes',
+      \'auto_detect_file':              ['.git', '.svn'],
+      \'ask_create_directory':          'no',
+      \'project_views':                 [],
+      \'file_mappings':                 {},
+      \'tasks':                         [],
+      \'new_tasks':                     [
+        \{ 'name': 'git', 'cmd': 'git clone', 'args': 'url' },
+        \{ 'name': 'empty', 'cmd': 'mkdir' },
+        \{ 'name': 'existing', 'cmd': 'cd .' },
+      \],
+      \'new_project_base':              '',
+      \'new_tasks_post_cmd':            '',
+      \'commit_message':                '',
+      \'debug':                         0,
+      \}
+
+  " Keymappings for list prompt
+  let g:vim_project_config.list_mappings = {
+        \'open':                 "\<cr>",
+        \'close_list':           "\<esc>",
+        \'clear_char':           ["\<bs>", "\<c-a>"],
+        \'clear_word':           "\<c-w>",
+        \'clear_all':            "\<c-u>",
+        \'prev_item':            ["\<c-k>", "\<up>"],
+        \'next_item':            ["\<c-j>", "\<down>"],
+        \'first_item':           ["\<c-h>", "\<left>"],
+        \'last_item':            ["\<c-l>", "\<right>"],
+        \'scroll_up':            "\<c-p>",
+        \'scroll_down':          "\<c-n>",
+        \'paste':                "\<c-b>",
+        \'switch_to_list':       "\<c-o>",
+        \}
+  let g:vim_project_config.list_mappings_projects = {
+        \'prev_view':            "\<s-tab>",
+        \'next_view':            "\<tab>",
+        \}
+  let g:vim_project_config.list_mappings_search_files = {
+        \'open_split':           "\<c-s>",
+        \'open_vsplit':          "\<c-v>",
+        \'open_tabedit':         "\<c-t>",
+        \}
+  let g:vim_project_config.list_mappings_find_in_files = {
+        \'open_split':           "\<c-s>",
+        \'open_vsplit':          "\<c-v>",
+        \'open_tabedit':         "\<c-t>",
+        \'replace_prompt':       "\<c-r>",
+        \'replace_dismiss_item': "\<c-d>",
+        \'replace_confirm':      "\<cr>",
+        \}
+  let g:vim_project_config.list_mappings_run_tasks = {
+        \'run_task':              "\<cr>",
+        \'stop_task':             "\<c-q>",
+        \'open_task_terminal':    "\<c-o>",
+        \}
+
+  let g:vim_project_config.list_mappings_git = {
+        \'checkout_revision':     "\<c-o>",
+        \}
+
+  let g:vim_project_config.git_diff_mappings = {
+        \'jump_to_source': "\<cr>",
+        \}
+  let g:vim_project_config.git_changes_mappings = {
+        \'open_file': "\<cr>",
+        \}
+  let g:vim_project_config.git_local_changes_mappings = {
+        \'commit': 'c',
+        \'rollback_file': 'R',
+        \'open_changelist_or_file': "\<cr>",
+        \'new_changelist': 'a',
+        \'move_to_changelist': 'm',
+        \'rename_changelist': 'r',
+        \'delete_changelist': 'd',
+        \'pull': 'u',
+        \'push': 'p',
+        \'pull_and_push': 'P',
+        \}
+
+  function! GetTitle()
+    if exists('g:vim_project') && !empty(g:vim_project)
+      return g:vim_project.name.' - '.expand('%')
+    else
+      return expand('%:p').' - '.expand('%')
+    endif
+  endfunction
+
+  if exists('g:vim_project') && !empty(g:vim_project)
+    set title titlestring=%{GetTitle()}
+  endif
+
+  if !has('nvim')
+    " NERDtree
+    noremap <F5> :NERDTree<CR>
+
+    " Mirror the NERDTree before showing it. This makes it the same on all tabs.
+    nnoremap <C-n> :NERDTreeMirror<CR>:NERDTreeFocus<CR>
+
+    " New tree
+    nnoremap <leader>nnt :NERDTreeMirror<CR>:NERDTreeFocus<CR>
+
+    " Toggle
+    nnoremap <leader>nt :NERDTreeToggle<CR>
+    nnoremap <leader>nf :NERDTreeFocus<CR>
+    nnoremap <leader>ns :NERDTreeFind<CR>
+
+    let g:NERDTreeWinPos = "left"
+
+    " Start NERDTree when Vim is started without file arguments.
+    autocmd StdinReadPre * let s:std_in=1
+    autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | wincmd p | endif
+
+    " Exit Vim if NERDTree is the only window remaining in the only tab.
+    autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
+
+    " Close the tab if NERDTree is the only window remaining in it.
+    autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
+  endif
 
   " Easy Align
   xmap ga <Plug>(EasyAlign)
@@ -283,3 +460,7 @@ if g:vim_minimal == 0
     nnoremap <silent> <BS> :TmuxNavigateLeft<cr>
   endif
 endif
+
+set guifont=DejaVuSansMNFM:w13
+set guifontwide=DejaVuSansMNFP:w13
+set encoding=UTF-8
