@@ -94,12 +94,14 @@ vnoremap > >gv
 :  call mkdir($HOME . "/.temp/undo", "")
 :endif
 
-set directory=$HOME/.temp/swap
-set backupdir=$HOME/.temp/backup
-set undodir=$HOME/.temp/undo
-set undofile
-set undoreload=50000
-set undolevels=1000
+if !has('nvim')
+  set directory=$HOME/.temp/swap
+  set backupdir=$HOME/.temp/backup
+  set undodir=$HOME/.temp/undo
+  set undofile
+  set undoreload=50000
+  set undolevels=1000
+endif
 
 " Remember last position
 autocmd BufReadPost * if @% !~# '\.git[\/\\]COMMIT_EDITMSG$' && line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
@@ -402,7 +404,12 @@ if g:vim_minimal == 0
     set title titlestring=%{GetTitle()}
   endif
 
-  if !has('nvim')
+  if has('nvim')
+    " Toggle
+    nnoremap <leader>nt :NvimTreeToggle<CR>
+    nnoremap <leader>nf :NvimTreeFocus<CR>
+
+  else
     " NERDtree
     noremap <F5> :NERDTree<CR>
 
@@ -459,6 +466,10 @@ if g:vim_minimal == 0
   if $TMUX != ''
     nnoremap <silent> <BS> :TmuxNavigateLeft<cr>
   endif
+endif
+
+if has('nvim')
+  lua require('init')
 endif
 
 set guifont=DejaVuSansMNFM:w13

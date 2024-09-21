@@ -22,8 +22,10 @@ Plug 'MikeDacre/tmux-zsh-vim-titles'
 " NerdTree
 if has('nvim')
   Plug 'michaelb/sniprun'
+  " Plug 'j\-hui/fidget.nvim'
   Plug 'MunifTanjim/nui.nvim'
-  Plug 'rest-nvim/rest.nvim'
+  " Plug 'rest-nvim/rest.nvim'
+  Plug 'nvim-tree/nvim-tree.lua'
 else
   Plug 'preservim/nerdtree'
 endif
@@ -67,9 +69,9 @@ if g:vim_minimal == 0
   Plug 'othree/html5.vim'
 
   " Markdown writing
-  " Plug 'reedes/vim-pencil'
+  Plug 'reedes/vim-pencil'
   " Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
-  " Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
+  Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
   Plug 'ravibrock/spellwarn.nvim'
   if has('nvim')
     Plug 'epwalsh/obsidian.nvim'
@@ -125,6 +127,8 @@ endif
 
 " Completion
 Plug 'Valloric/YouCompleteMe'
+
+Plug 'wincent/terminus'
 
 " Status bar
 if has('nvim')
