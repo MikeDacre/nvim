@@ -62,7 +62,7 @@ if g:vim_minimal == 0
     Plug 'GCBallesteros/jupytext.nvim'
   endif
   Plug 'python-mode/python-mode' , { 'for': 'python' }
-  Plug 'phelipetls/vim-hugo'
+  " Plug 'phelipetls/vim-hugo'
   Plug 'maksimr/vim-jsbeautify'
   Plug 'othree/html5.vim'
 
