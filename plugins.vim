@@ -28,6 +28,7 @@ if has('nvim')
   " Plug 'rest-nvim/rest.nvim'
   Plug 'nvim-tree/nvim-tree.lua'
   Plug 'Nedra1998/nvim-mdlink'
+  Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 endif
 Plug 'preservim/nerdcommenter'
 
