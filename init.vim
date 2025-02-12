@@ -33,8 +33,7 @@ else
   set viminfo='100,\"1000,:200,%,n~/.temp/viminfo"'
   if has("gui_running") || &term == "xterm-256color" || &term == "screen-256color"
     set t_Co=256
-    set guifont=DejaVuSansMNFM:w13
-    set guifontwide=DejaVuSansMNFP:w13
+    set guifont=DejaVuSansMNFM:w12
     colo wombatmikemod
   else
     colo wombat
@@ -471,7 +470,3 @@ endif
 if has('nvim')
   lua require('init')
 endif
-
-set guifont=DejaVuSansMNFM:w13
-set guifontwide=DejaVuSansMNFP:w13
-set encoding=UTF-8

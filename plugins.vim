@@ -20,14 +20,14 @@ Plug 'jlanzarotta/bufexplorer', { 'on': 'BufExplorer' }
 Plug 'MikeDacre/tmux-zsh-vim-titles'
 
 " NerdTree
+Plug 'preservim/nerdtree'
 if has('nvim')
   Plug 'michaelb/sniprun'
   " Plug 'j\-hui/fidget.nvim'
   Plug 'MunifTanjim/nui.nvim'
   " Plug 'rest-nvim/rest.nvim'
   Plug 'nvim-tree/nvim-tree.lua'
-else
-  Plug 'preservim/nerdtree'
+  Plug 'Nedra1998/nvim-mdlink'
 endif
 Plug 'preservim/nerdcommenter'
 
@@ -125,8 +125,6 @@ else
   Plug 'scrooloose/syntastic'
 endif
 
-" Completion
-Plug 'Valloric/YouCompleteMe'
 
 Plug 'wincent/terminus'
 
@@ -144,6 +142,8 @@ if has('nvim')
   Plug 'aserowy/tmux.nvim'
   Plug 'nvim-focus/focus.nvim'
 else
+  " Completion
+  Plug 'Valloric/YouCompleteMe'
   Plug 'tmux-plugins/vim-tmux'
   Plug 'tmux-plugins/vim-tmux-focus-events'
   Plug 'benmills/vimux'
@@ -174,8 +174,7 @@ else
   " Plug 'ryanoasis/nerd-fonts'
   Plug 'lambdalisue/vim-glyph-palette'
 endif
-set guifont=DejaVuSansMNFM
-set guifontwide=DejaVuSansMNFP
-set encoding=UTF-8
+" set encoding=UTF-8
+" set guifont=DejaVuSansMNFM:h12
 " Initialize plugin system
 call plug#end()
