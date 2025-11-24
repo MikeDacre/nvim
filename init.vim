@@ -126,9 +126,13 @@ au BufRead,BufNewFile *.cmdlst set filetype=sh
 au BufRead,BufNewFile *.pbs set filetype=sh
 au BufRead,BufNewFile *.pbs set filetype=rst
 au FileType pandoc setlocal tw=80 tabstop=4 shiftwidth=4 softtabstop=4
-au FileType markdown setlocal tw=80 tabstop=4 shiftwidth=4 softtabstop=4
-au FileType rst setlocal tw=80 tabstop=4 shiftwidth=4 softtabstop=4
+au FileType markdown setlocal tw=80 tabstop=2 shiftwidth=2 softtabstop=2
+au FileType rst setlocal tw=80 tabstop=2 shiftwidth=2 softtabstop=2
 au BufRead,BufNewFile *.rst set filetype=rst
+
+" Markdown
+au BufNewFile,BufReadPost *.md set filetype=markdown
+au BufNewFile,BufReadPost *.markdown set filetype=markdown
 
 " HTML
 au FileType hugo setlocal et sw=2 ts=2 tw=160 spell spelllang=en_us
@@ -145,10 +149,6 @@ autocmd FileType vim setlocal et sw=2 ts=2 tw=79
 au BufRead,BufNewFile *.py set filetype=python
 au FileType python setlocal completeopt=menuone,longest
 au FileType python setlocal et sw=4 ts=4 tw=79
-
-" Markdown
-" au BufNewFile,BufReadPost *.md set filetype=markdown
-" au BufNewFile,BufReadPost *.markdown set filetype=markdown
 
 " Snakemake
 au BufNewFile,BufRead Snakefile set syntax=snakemake
