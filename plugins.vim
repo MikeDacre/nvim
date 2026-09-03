@@ -69,6 +69,9 @@ if g:vim_minimal == 0
   Plug 'maksimr/vim-jsbeautify'
   Plug 'othree/html5.vim'
 
+  " JSON
+  Plug 'elzr/vim-json'
+  Plug 'alfredodeza/jacinto.vim'
   " Markdown writing
   Plug 'reedes/vim-pencil'
   " Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
