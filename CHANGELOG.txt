@@ -33,3 +33,5 @@ February 2018 and was adopted as a managed project in September 2026.
 ### Fixed
 
 - Nothing yet. Editor behaviour is deliberately untouched in this release.
+
+<!-- changelog-synced: 1a7035d -->
