@@ -12,6 +12,10 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+### Changed
+
+- Record vim-project-config subrepo and nyaovim archive; harden check.sh for compatible mode (f4b036c)
+
 ## [0.1.0] - 2026-09-03
 
 ### Added
@@ -34,4 +38,4 @@ February 2018 and was adopted as a managed project in September 2026.
 
 - Nothing yet. Editor behaviour is deliberately untouched in this release.
 
-<!-- changelog-synced: 1a7035d -->
+<!-- changelog-synced: f4b036c -->
