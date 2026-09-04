@@ -1,13 +1,15 @@
 {
   "name": "nvim",
-  "purpose": "Mike Dacre's dual Vim/NeoVim configuration, deployed from one git repo to every machine",
+  "purpose": "Mike Dacre's Vim-first configuration, shared with NeoVim, deployed from one git repo to every machine",
   "type": "config",
   "subtype": "editor-runtime",
   "lang": "vimscript+lua",
   "runtime": {
-    "nvim": ">=0.12",
+    "primary": "Vim 9 \u2014 MacVim (GUI) and terminal vim, on many machines",
+    "secondary": "Neovim 0.12+, an in-progress migration, never at Vim's expense",
     "vim": ">=9.0",
-    "hard_constraint": "every change must work in plain Vim 9 on a remote server"
+    "nvim": ">=0.12",
+    "hard_constraint": "LOSING VIM SUPPORT IS UNACCEPTABLE. Vim is the primary editor, not the fallback. Any change that works only in Neovim must be additive and guarded; any change that degrades the Vim path is rejected outright, regardless of how much nicer the Neovim version is."
   },
   "entrypoint": "init.vim",
   "visibility": "public",
@@ -137,9 +139,25 @@
   "hazards": [
     "nvim-treesitter was archived 2026-04-03; master is frozen, main is an incompatible rewrite. plugins.vim declares it TWICE. Do not update it casually.",
     "plugged/ is 2.6GB and gitignored. Never commit it.",
-    "The checkout IS the runtimepath: a syntax error in init.vim breaks the editor on every machine at next pull."
+    "The checkout IS the runtimepath: a syntax error in init.vim breaks the editor on every machine at next pull.",
+    "MacVim syncs Vim upstream on a lag (r183 = Vim 9.2 patches 1-332). Two command-injection CVEs are reported unfixed on its tracker, one in tag-file handling. Relevant here because taglist.vim and tag sessions are in daily use."
   ],
   "release": {
     "assets": []
+  },
+  "editors": {
+    "primary": [
+      "MacVim",
+      "vim"
+    ],
+    "secondary": [
+      "nvim"
+    ],
+    "note": "MacVim's GUI is materially better than every Neovim macOS GUI tried so far; that gap, not plugin capability, is what gates the migration"
+  },
+  "resolved_questions": {
+    "oni": "dead as of 2026-09-04 \u2014 config.js to be removed",
+    "vim-go-fork": "no remaining reason \u2014 return to upstream",
+    "vim9-machines": "many; Vim is primary, Neovim is the migration target"
   }
 }

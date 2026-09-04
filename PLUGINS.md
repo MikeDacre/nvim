@@ -1,8 +1,10 @@
 # Plugin audit
 
-Standing backlog for `plugins.vim`. **Goal: one plugin that works in both Vim 9
-and Neovim wherever possible**; a `has('nvim')/else` pair is the last resort,
-because it doubles the maintenance surface.
+Standing backlog for `plugins.vim`. **Vim 9 is the primary editor** — MacVim and terminal
+`vim`, on many machines. Neovim is secondary and migrating. So: one plugin that
+works in both wherever possible; a `has('nvim')/else` pair is the last resort;
+and a Neovim-only plugin must never be the *only* implementation of something
+the Vim path also needs.
 
 `Loads` = where the plugin is actually sourced today.
 `Pri` = P1 broken or wasteful now · P2 real win · P3 tidy-up.
@@ -27,7 +29,7 @@ Nothing here is actioned. Rows get approved one at a time (see
 | `xolox/vim-misc` | library | Dependency of vim-session/vim-easytags, **neither installed** — likely orphaned; verify then drop | P2 |
 | `jlanzarotta/bufexplorer` | buffer list | Overlaps telescope/fzf buffer pickers on nvim | P3 |
 | `MikeDacre/tmux-zsh-vim-titles` | terminal titles | Yours; keep | — |
-| `preservim/nerdtree` | file tree | **Loads on nvim too, alongside `nvim-tree.lua`** — pick one per editor, or keep nerdtree alone as the dual answer | P1 |
+| `preservim/nerdtree` | file tree | **Loads on nvim too, alongside `nvim-tree.lua`** — with Vim primary, keep nerdtree as the single dual answer and drop nvim-tree | P1 |
 | `preservim/nerdcommenter` | commenting | Neovim 0.10+ has built-in `gc` commenting → guard to vim-only | P2 |
 | `tpope/vim-repeat` | repeat plugin maps | Keep — dual, tiny | — |
 | `wellle/targets.vim` | extra text objects | Overlaps treesitter textobjects on nvim; keep as the dual baseline | P3 |
@@ -55,11 +57,11 @@ Nothing here is actioned. Rows get approved one at a time (see
 | `vimwiki/vimwiki` | wiki/notes | Overlaps obsidian.nvim (nvim) and vimoutliner — **the note stack is the biggest consolidation win** | P2 |
 | `gu-fan/riv.vim` | reStructuredText | `for: rst`; keep if you still write RST, else drop | P3 |
 | `lifepillar/vim-solarized8` | colourscheme | Keep — dual; repo also ships `colors/` | — |
-| `junegunn/fzf` + `fzf.vim` | fuzzy find | **The dual answer.** Telescope duplicates it on nvim | P2 |
+| `junegunn/fzf` + `fzf.vim` | fuzzy find | **The dual answer, and now the preferred one.** Telescope duplicates it on nvim | P2 |
 | `sharkdp/fd` | file finder | **Not a vim plugin** — a Rust binary cloned into `plugged/` and never built. Install via brew; remove the `Plug` line | P1 |
 | `BurntSushi/ripgrep` | grep | **Not a vim plugin** — same as above | P1 |
 | `wincent/terminus` | cursor shape/focus | Neovim handles most of this natively → guard to vim-only | P3 |
-| `MikeDacre/vim-go` | Go support | Your fork — record why it's forked, or return to upstream | P3 |
+| `MikeDacre/vim-go` | Go support | **Confirmed: fork has no remaining reason — repoint to upstream `fatih/vim-go`** | P1 |
 | `tpope/vim-fugitive` | git | Keep — best-in-class, dual | — |
 | `airblade/vim-gitgutter` | git signs | Dual; `gitsigns.nvim` is nicer on nvim but fugitive+gitgutter is the honest dual pair — keep | P3 |
 
@@ -96,7 +98,7 @@ Nothing here is actioned. Rows get approved one at a time (see
 
 | Plugin | Role | Change | Pri |
 |---|---|---|---|
-| `scrooloose/syntastic` | linting | Long superseded by ALE; `dense-analysis/ale` works in **both** editors and could replace syntastic + neomake | P2 |
+| `scrooloose/syntastic` | linting | Long superseded by ALE. `dense-analysis/ale` works in **both** editors and is the strongest single consolidation available: it would replace syntastic + neomake and much of `linters.vim` | P2 |
 | `Valloric/YouCompleteMe` | completion | Heaviest thing in the config, needs compilation. `vim-lsp`+`asyncomplete` or `ALE` completion is lighter; nvim uses native | P2 |
 | `bling/vim-airline` + `vim-airline-themes` | statusline | Note: upstream is `vim-airline/vim-airline`, `bling/` is the old redirect — repoint | P3 |
 | `tmux-plugins/vim-tmux`, `vim-tmux-focus-events`, `benmills/vimux`, `christoomey/vim-tmux-navigator`, `roxma/vim-tmux-clipboard` | tmux | `vim-tmux-navigator` works in **both** editors and could replace part of `tmux.nvim` for a single dual answer | P2 |

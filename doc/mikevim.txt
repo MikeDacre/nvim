@@ -19,9 +19,10 @@ One git repo, both editors, every machine. The checkout **is** the runtimepath:
 `~/nvim` and `~/.config/nvim` are the same directory, and `~/.vim` and
 `~/.vimrc` symlink into it.
 
-Neovim 0.12+ is the primary target. Plain Vim 9 is a hard constraint, not a
-nicety — it is what runs on remote servers, so every change must work in
-both.
+**Vim 9 is the primary editor** — MacVim for GUI work, terminal `vim`
+everywhere else, across many machines. Neovim 0.12+ is supported and is where
+things are slowly migrating, but Vim support is not negotiable: a change that
+only works in Neovim must be additive and guarded, never a replacement.
 
 
 INSTALLATION                                            *mikevim-installation*
@@ -172,7 +173,7 @@ LAYOUT                                                        *mikevim-layout*
   plugins.vim                            every Plug declaration, with has('nvim') guards
   functions.vim                          custom functions and most mappings
   linters.vim                            Neomake (nvim) and Syntastic (vim) configuration
-  gvimrc, config.js                      GUI and ONI settings
+  gvimrc                                 MacVim / GUI settings
   lua/                                   Neovim-only Lua layer
   UltiSnips/, spell/, syntax/, colors/   runtime assets
   doc/mikevim.txt                        generated — this file, as :help mikevim

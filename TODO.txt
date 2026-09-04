@@ -16,3 +16,7 @@ x 2026-09-04 Move vim-project-config to a private subrepo with branch rincewind 
 (C) Confirm whether ONI config.js is still used +scaffold @both
 (A) Add 'set nocompatible' as the first line of init.vim; vim relies on the implicit default +plugins @vim
 (B) Trace E488 from vim-glyph-palette on vim startup; non-fatal but noisy +plugins @vim
+(A) Remove ONI: delete config.js and its README row; confirmed dead +scaffold @both
+(A) Repoint MikeDacre/vim-go to upstream fatih/vim-go; fork has no remaining reason +plugins @both
+(B) Check MacVim patch level against vim 9.2.0479; two command-injection CVEs reported unfixed +infra @vim
+(B) Reassess nvim-only duplicates now that vim is primary: nerdtree over nvim-tree, fzf over telescope +plugins @both
