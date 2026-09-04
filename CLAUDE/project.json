@@ -4,7 +4,11 @@
   "type": "config",
   "subtype": "editor-runtime",
   "lang": "vimscript+lua",
-  "runtime": { "nvim": ">=0.12", "vim": ">=9.0", "hard_constraint": "every change must work in plain Vim 9 on a remote server" },
+  "runtime": {
+    "nvim": ">=0.12",
+    "vim": ">=9.0",
+    "hard_constraint": "every change must work in plain Vim 9 on a remote server"
+  },
   "entrypoint": "init.vim",
   "visibility": "public",
   "sync": "synced",
@@ -13,9 +17,14 @@
     "trunk": "master",
     "claude_mode": "tracked",
     "checkout_is_runtimepath": true,
-    "note": "~/nvim and ~/.config/nvim are the same directory; ~/.vim and ~/.vimrc symlink into it"
+    "note": "~/nvim and ~/.config/nvim are the same directory; ~/.vim and ~/.vimrc symlink into it",
+    "archived_branches": [
+      "nyaovim -> tag archive/nyaovim"
+    ]
   },
-  "machines": ["rincewind"],
+  "machines": [
+    "rincewind"
+  ],
   "build": {
     "init": "make init",
     "doc": "make doc",
@@ -42,35 +51,95 @@
     }
   ],
   "connectors": [
-    { "name": "Desktop Commander", "use": "shell, file edits and git inside the working copy", "fallback": "Filesystem read-only + hand the user ONE idempotent script" },
-    { "name": "Filesystem", "use": "read-only inspection when Desktop Commander is hung", "fallback": "ask the user to paste file contents" },
-    { "name": "web_search", "use": "verify plugin maintenance status and upstream breaking changes before proposing a change", "fallback": "state that the claim is unverified and do not act on it" }
+    {
+      "name": "Desktop Commander",
+      "use": "shell, file edits and git inside the working copy",
+      "fallback": "Filesystem read-only + hand the user ONE idempotent script"
+    },
+    {
+      "name": "Filesystem",
+      "use": "read-only inspection when Desktop Commander is hung",
+      "fallback": "ask the user to paste file contents"
+    },
+    {
+      "name": "web_search",
+      "use": "verify plugin maintenance status and upstream breaking changes before proposing a change",
+      "fallback": "state that the claim is unverified and do not act on it"
+    }
   ],
   "skills": [
-    { "name": "plugin-audit", "trigger": "cull plugins, plugin bloat, do I still need, dual-editor coverage" },
-    { "name": "docs-regen", "trigger": "update the cheatsheet, regenerate help, :help mikevim is stale" }
+    {
+      "name": "plugin-audit",
+      "trigger": "cull plugins, plugin bloat, do I still need, dual-editor coverage"
+    },
+    {
+      "name": "docs-regen",
+      "trigger": "update the cheatsheet, regenerate help, :help mikevim is stale"
+    }
   ],
   "docs_refs": [
-    { "what": "Neovim built-in plugin manager (vim.pack)", "url": "https://neovim.io/doc/user/pack/" },
-    { "what": "vim.pack guide (Chasnovski)", "url": "https://echasnovski.com/blog/2026-03-13-a-guide-to-vim-pack" },
-    { "what": "nvim-treesitter master->main migration thread", "url": "https://github.com/nvim-treesitter/nvim-treesitter/discussions/7927" },
-    { "what": "vim-plug README (Plug options, PlugSnapshot)", "url": "https://github.com/junegunn/vim-plug" },
-    { "what": "panvimdoc spec and usage", "url": "https://github.com/kdheepak/panvimdoc" },
-    { "what": "Neovim 0.12 release notes / breaking changes", "url": "https://neovim.io/doc/user/news.html" },
-    { "what": "Vim help-writing conventions (for doc/ output)", "url": "https://vimhelp.org/helphelp.txt.html#help-writing" }
+    {
+      "what": "Neovim built-in plugin manager (vim.pack)",
+      "url": "https://neovim.io/doc/user/pack/"
+    },
+    {
+      "what": "vim.pack guide (Chasnovski)",
+      "url": "https://echasnovski.com/blog/2026-03-13-a-guide-to-vim-pack"
+    },
+    {
+      "what": "nvim-treesitter master->main migration thread",
+      "url": "https://github.com/nvim-treesitter/nvim-treesitter/discussions/7927"
+    },
+    {
+      "what": "vim-plug README (Plug options, PlugSnapshot)",
+      "url": "https://github.com/junegunn/vim-plug"
+    },
+    {
+      "what": "panvimdoc spec and usage",
+      "url": "https://github.com/kdheepak/panvimdoc"
+    },
+    {
+      "what": "Neovim 0.12 release notes / breaking changes",
+      "url": "https://neovim.io/doc/user/news.html"
+    },
+    {
+      "what": "Vim help-writing conventions (for doc/ output)",
+      "url": "https://vimhelp.org/helphelp.txt.html#help-writing"
+    }
   ],
-  "secrets": { "keys": [], "note": "none declared; priv/ exists for per-machine overrides only" },
+  "secrets": {
+    "keys": [],
+    "note": "none declared; priv/ exists for per-machine overrides only"
+  },
   "generated": [
-    { "source": "README.md", "artifact": "doc/mikevim.txt", "via": "make doc" },
-    { "source": "doc/mikevim.txt", "artifact": "doc/tags", "via": "make doc" }
+    {
+      "source": "README.md",
+      "artifact": "doc/mikevim.txt",
+      "via": "make doc"
+    },
+    {
+      "source": "doc/mikevim.txt",
+      "artifact": "doc/tags",
+      "via": "make doc"
+    }
   ],
   "subrepos": [
-    { "path": "vim-project-config", "visibility": "private", "branch_per_machine": true, "current_branch": "rincewind", "gitignored_by_parent": true }
+    {
+      "path": "vim-project-config",
+      "visibility": "private",
+      "branch_per_machine": true,
+      "current_branch": "rincewind",
+      "gitignored_by_parent": true,
+      "remote": "https://github.com/MikeDacre/vim-project-config.git",
+      "default_branch": "rincewind"
+    }
   ],
   "hazards": [
     "nvim-treesitter was archived 2026-04-03; master is frozen, main is an incompatible rewrite. plugins.vim declares it TWICE. Do not update it casually.",
     "plugged/ is 2.6GB and gitignored. Never commit it.",
     "The checkout IS the runtimepath: a syntax error in init.vim breaks the editor on every machine at next pull."
   ],
-  "release": { "assets": [] }
+  "release": {
+    "assets": []
+  }
 }

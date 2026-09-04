@@ -3,7 +3,7 @@
 # projects: +scaffold +plugins +docs +infra
 # contexts: @vim @nvim @both @git
 #
-(A) Move vim-project-config to a private subrepo with branch rincewind +infra @git
+x 2026-09-04 Move vim-project-config to a private subrepo with branch rincewind +infra @git
 (A) Replace g:vim_mini system() shell-out with pure vimscript +plugins @both
 (A) Remove duplicate nvim-treesitter Plug declaration in plugins.vim +plugins @nvim
 (A) Guard spellwarn.nvim behind has nvim +plugins @vim

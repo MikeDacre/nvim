@@ -39,7 +39,15 @@ def unlogged():
     sha = synced_sha()
     rng = f"{sha}..HEAD" if sha else "-20"
     out = git("log", "--no-merges", "--format=%h\t%s", rng)
-    return [l.split("\t", 1) for l in out.splitlines() if l.strip()]
+    rows = [l.split("\t", 1) for l in out.splitlines() if l.strip()]
+    # skip commits that only touch the changelog itself (housekeeping)
+    keep = []
+    for sha, subject in rows:
+        files = git("show", "--pretty=", "--name-only", sha).split()
+        if files and set(files) <= {"CHANGELOG.txt"}:
+            continue
+        keep.append([sha, subject])
+    return keep
 
 
 def classify(subject):
