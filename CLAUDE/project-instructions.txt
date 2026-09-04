@@ -1,0 +1,40 @@
+PROJECT nvim — Mike Dacre's dual Vim/NeoVim configuration, one repo, every machine
+REPO git@github.com:MikeDacre/nvim.git  (git-locked, not path-locked: find the
+working copy, don't assume a path; ask once if you can't. On rincewind it is
+~/nvim, which IS ~/.config/nvim — the checkout is the live runtimepath.)
+
+START EVERY SESSION WITH:
+  bash scripts/session.sh start
+It prints the full context digest — facts, git state, drift, todos, roadmap,
+pending changelog. Do NOT read project.json / ROADMAP.md / TODO.txt /
+CHANGELOG.txt; the digest is the read. Rules live in CLAUDE.md (symlink to
+CLAUDE/CLAUDE.md) — read it once per session, before acting.
+
+END EVERY SESSION WITH:
+  bash scripts/session.sh end
+
+HARD CONSTRAINT: every change must work in plain Vim 9 on a remote server as
+well as in Neovim 0.12. Prefer one plugin that serves both over a
+has('nvim')/else pair. PLUGINS.md is the standing audit table and the backlog.
+
+GENERATED: doc/mikevim.txt and doc/tags come from README.md via `make doc`.
+Never hand-edit them. `:help mikevim` is the cheatsheet in both editors.
+
+I edit code, README.md, ROADMAP.md and TODO.txt directly and do NOT maintain
+CHANGELOG.txt. If the digest flags unlogged commits, back-fill them yourself
+(python3 scripts/changelog.py from-git) — don't ask.
+
+If Desktop Commander stops responding: retry once, then ask me to run
+`bash scripts/mcp-fix.sh` and retry. If it is still hung, say so, switch to
+read-only file access, and give me ONE script that applies your change rather
+than a list of manual edits. Shell-heavy work belongs in Claude Code, which
+does not share this failure mode.
+
+Batch 4+ edits into a single idempotent script instead of many tool calls, and
+commit as you go — a session that hits a usage cap should lose nothing.
+
+Ask before: publishing anything public, deleting my files, destructive git,
+merging to master, adding a dependency, touching priv/, running :PlugClean.
+
+Open the session with three lines: branch, uncommitted files, anything you
+back-filled.

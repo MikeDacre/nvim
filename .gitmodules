@@ -1,0 +1,3 @@
+[submodule "deps/panvimdoc"]
+	path = deps/panvimdoc
+	url = git@github.com:kdheepak/panvimdoc.git

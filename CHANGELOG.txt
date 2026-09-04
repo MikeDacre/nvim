@@ -1,0 +1,35 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+History before v0.1.0 lives in `git log`; the config has been in daily use since
+February 2018 and was adopted as a managed project in September 2026.
+
+---
+
+## [Unreleased]
+
+## [0.1.0] - 2026-09-03
+
+### Added
+
+- Project scaffold: `CLAUDE/` rules and facts, `scripts/` session tooling,
+  `ROADMAP.md`, `TODO.txt`, this changelog
+- `PLUGINS.md` — standing audit of all 84 plugin declarations, with dual-editor
+  status and a prioritised backlog
+- `doc/mikevim.txt`, generated from `README.md` by panvimdoc, so `:help mikevim`
+  is the keymap cheatsheet in both Vim 9 and Neovim
+- `deps/panvimdoc` submodule pinned at v4.0.1
+- `Makefile` with init, doc, test, check and doctor targets
+
+### Changed
+
+- `README.md` rewritten as the cheatsheet source, with real install steps and a
+  full mapping table
+
+### Fixed
+
+- Nothing yet. Editor behaviour is deliberately untouched in this release.

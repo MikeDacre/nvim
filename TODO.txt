@@ -1,0 +1,18 @@
+# todo.txt format: [x ]<pri> <text> +project @context
+# (A) urgent  (B) normal  (C) someday
+# projects: +scaffold +plugins +docs +infra
+# contexts: @vim @nvim @both @git
+#
+(A) Move vim-project-config to a private subrepo with branch rincewind +infra @git
+(A) Replace g:vim_mini system() shell-out with pure vimscript +plugins @both
+(A) Remove duplicate nvim-treesitter Plug declaration in plugins.vim +plugins @nvim
+(A) Guard spellwarn.nvim behind has nvim +plugins @vim
+(B) Drop sharkdp/fd and BurntSushi/ripgrep Plug lines; install via brew +plugins @both
+(B) Decide nerdtree vs nvim-tree: nerdtree currently loads on nvim too +plugins @nvim
+(B) Delete stale autoload/plug.vim.old +scaffold @both
+(B) Commit a PlugSnapshot lockfile and document the refresh cadence +plugins @both
+(B) Decide on an explicit mapleader; it is currently the unset default +docs @both
+(C) Verify xolox/vim-misc is still needed; its dependents are not installed +plugins @both
+(C) Confirm whether ONI config.js is still used +scaffold @both
+(A) Add 'set nocompatible' as the first line of init.vim; vim relies on the implicit default +plugins @vim
+(B) Trace E488 from vim-glyph-palette on vim startup; non-fatal but noisy +plugins @vim

@@ -1,58 +1,135 @@
-# Mike Dacre's NeoVim Config
+# mikevim
 
-This is a remake of my [vim config](https://github.com/MikeDacre/.vim) to use
-neovim initialized in February of 2018 because my vim config was too bloated
-and vim was getting just too damned slow.
+Mike Dacre's dual-editor Vim and NeoVim configuration.
+
+One git repo, both editors, every machine. The checkout **is** the runtimepath:
+`~/nvim` and `~/.config/nvim` are the same directory, and `~/.vim` and
+`~/.vimrc` symlink into it.
+
+Neovim 0.12+ is the primary target. Plain Vim 9 is a hard constraint, not a
+nicety — it is what runs on remote servers, so every change must work in both.
 
 ## Installation
 
-This config contains files for nvim, vanilla vim, and
-[ONI](https://github.com/onivim/oni). The core init file `nvim.ini`, can be
-used directly as a vimrc. To install this package directly for all vims, do
-the following:
-
 ```shell
-cd $HOME
-git clone https://github.com/MikeDacre/nvim $HOME/nvim
-ln -s nvim .vim
-ln -s nvim/init.vim .vimrc
-mkdir -p .oni
-ln -s $HOME/nvim/config.js $HOME/.oni/config.js
-# Unnecessary on some systems
-mkdir -p .config
-cd .config
-ln -s $HOME/nvim nvim
+git clone git@github.com:MikeDacre/nvim.git ~/.config/nvim
+cd ~/.config/nvim
+ln -s .config/nvim ~/.vim
+ln -s .config/nvim/init.vim ~/.vimrc
+make init          # installs vim-plug's plugins in both editors
 ```
 
-### Installing plugins
+`make init` runs `:PlugInstall` headlessly. Some plugins compile
+(`YouCompleteMe` on vim, `firenvim` on nvim) and will take a while.
 
-Now open first `nvim` and run `:PlugInstall` and then `vim` and run
-`:PlugInstall` again, this is because there are slightly different plugins in
-vim and nvim to provide the same functionality.
+### Minimal mode
 
-**Note**: The tmux plugins will only be installed if you are in a tmux
-environment, so make sure that you are inside tmux if you want to install or
-update those plugins.
+Set `VIM_MINIMAL=true` in the environment to skip the heavy plugin set. Useful
+on servers and in containers.
 
-Two plugins are controlled by environmental variables, the autocompleter, which
-defaults to deoplete and switches to YouCompleteMe if `$VIM_YCM` is set, and
-markdown-preview, which requires the rust language and is only on if
-`$VIM_MARKDOWN` is set. To install both of these, export those two
-environmental variables prior to running `PlugInstall` or `PlugUpdate`.
+```shell
+VIM_MINIMAL=true vim
+```
 
-**Note**: Markdown preview requires the rust language to build and
-YouCompleteMe requires a modern version of CMAKE, I can't get it to install
-on most CentOS systems, which is why the VimCompletesMe fallback exists.
+## Cheatsheet
 
-## Little tricks
+**The leader key is `\`** — it is never reassigned, so the default applies. The
+local leader is also `\`. Read `\dd` below as backslash, d, d.
 
-As described above, I use environmental variables to control some aspects of
-the config. To switch to using markdown-composer or YCM, use the variables 
-described above. To run a slimmed down version of vim with way fewer plugins,
-set the `$VIM_MINIMAL` variable.
+### Editing
 
-## Licensing/Usage
+| Mapping | Mode | Does |
+|---|---|---|
+| `\dw` | n | Strip trailing whitespace in the whole file |
+| `\pp` / `\PP` | n | Paste mode on (no expandtab) / off |
+| `\ww` | n | Toggle soft wrap, with `Up`/`Down`/`Home`/`End` remapped to screen lines |
+| `<` / `>` | v | Indent and **keep the selection** |
+| `ga` | n, v | EasyAlign |
+| `\cv` | n | Toggle comment (NERDCommenter) |
+| `\il` / `\el` | n | Capture the current line / execute the current line |
 
-Anything that I have written, you can use for free without crediting me, I
-don't care.  Any submodules/plugins are not mine and so everything there is
-licensed by the actual authors.
+### Dates and identity
+
+| Mapping | Mode | Inserts |
+|---|---|---|
+| `\dd` | n, i | `2026-09-03 14:30:00` — full timestamp |
+| `\ds` | n, i | `09/03/26` — short date |
+| `\dt` | n, i | `14:30:00` — time only |
+| `\dl` | n, i | `Thu 03 Sep 2026 14:30:00 PDT` — long form |
+| `\me` | n, i | `Mike Dacre` |
+
+### Files and navigation
+
+| Mapping | Does |
+|---|---|
+| `\be` | BufExplorer |
+| `\nt` / `\nf` | File tree toggle / focus (NvimTree on nvim, NERDTree on vim) |
+| `\ns` | Reveal current file in the tree (vim) |
+| `\nnt` | Mirror and focus the tree (vim) |
+| `<F5>` | Open NERDTree (vim) |
+| `<C-n>` | Mirror and focus NERDTree (vim) |
+| `<F6>` | Toggle the tag list |
+| `\to` / `\ts` | Tag list session load / save |
+| `\ll` / `\lq` | Toggle the location list / quickfix list |
+| `<BS>` | Navigate tmux pane left |
+
+### Sending code to a REPL
+
+The same four mappings work everywhere; what is behind them depends on the
+editor and whether tmux is running (Iron on nvim, Vimux or raw tmux on vim).
+
+| Mapping | Mode | Does |
+|---|---|---|
+| `<Space>` | n, v | Send the current line, or the selection, to the REPL |
+| `\sl` | n | Send line |
+| `\sc` | n | Send cell |
+| `\sb` | n | Send cell and step to the next |
+| `<C-e>` | n | Toggle Vimux (vim) |
+| `\rl` | n | Start Iron (nvim) |
+| `\fl` | n | Return focus from the terminal window (nvim) |
+
+### Linting
+
+| Mapping | Editor | Does |
+|---|---|---|
+| `\pl` | vim | Run all checkers |
+| `\pk` | both | Neomake toggle (nvim) / pylint only (vim) |
+| `\pu` | both | Reset checkers |
+| `\pt` | vim | Toggle the Python checker set |
+
+### tmux
+
+`\tp` pulls the tmux paste buffer into the unnamed register.
+
+## Layout
+
+| Path | Holds |
+|---|---|
+| `init.vim` | entry point; options, plugin-conditional mappings |
+| `plugins.vim` | every `Plug` declaration, with `has('nvim')` guards |
+| `functions.vim` | custom functions and most mappings |
+| `linters.vim` | Neomake (nvim) and Syntastic (vim) configuration |
+| `gvimrc`, `config.js` | GUI and ONI settings |
+| `lua/` | Neovim-only Lua layer |
+| `UltiSnips/`, `spell/`, `syntax/`, `colors/` | runtime assets |
+| `doc/mikevim.txt` | **generated** — this file, as `:help mikevim` |
+| `PLUGINS.md` | standing plugin audit and backlog |
+| `CLAUDE/` | working notes, rules, project facts |
+| `priv/` | machine-local, never committed |
+| `vim-project-config/` | private subrepo, one branch per machine |
+
+## Maintenance
+
+```shell
+bash scripts/session.sh start   # context digest
+make doc                        # README.md -> doc/mikevim.txt (needs pandoc)
+bash scripts/check.sh           # the gate: syntax, docs, placeholders, priv
+nvim --headless -c 'PlugUpdate' -c 'qa'
+nvim --headless -c 'PlugSnapshot! plugins.lock.vim' -c 'qa'   # pin versions
+```
+
+`:PlugClean` deletes directories under `plugged/` — never run it unattended.
+
+## Licence
+
+MIT. See `LICENSE`.
