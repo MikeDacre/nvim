@@ -1,5 +1,5 @@
 # nvim config maintenance targets. None of this is needed to *use* the config.
-.PHONY: init doc test check doctor clean help
+.PHONY: init doc test check doctor ctx clean help
 .DEFAULT_GOAL := help
 
 VIM  ?= vim
@@ -10,8 +10,8 @@ help:  ## list targets
 	@grep -hE '^[a-z-]+:.*##' $(MAKEFILE_LIST) | sed 's/:.*## /\t/' | expand -t20
 
 init:  ## install plugins in both editors
-	$(NVIM) --headless -c 'PlugInstall --sync' -c 'qa' 2>&1 | tail -3
-	-$(VIM) -es -c 'PlugInstall --sync' -c 'qa' 2>&1 | tail -3
+	-$(NVIM) --headless -c 'PlugInstall --sync' -c 'qa' </dev/null 2>&1 | tail -3
+	-$(VIM) -es -N -c 'PlugInstall --sync' -c 'qa' </dev/null 2>&1 | tail -3
 
 doc:  ## regenerate doc/mikevim.txt and doc/tags from README.md
 	@command -v pandoc >/dev/null || { echo "pandoc missing: brew install pandoc"; exit 1; }
@@ -25,12 +25,12 @@ doc:  ## regenerate doc/mikevim.txt and doc/tags from README.md
 		--dedup-subheadings false \
 		--demojify true
 	@mkdir -p doc && mv -f deps/panvimdoc/doc/$(DOCNAME).txt doc/$(DOCNAME).txt
-	$(NVIM) --headless -c 'helptags doc' -c 'qa'
+	@if command -v $(NVIM) >/dev/null 2>&1; then $(NVIM) --headless -c 'helptags doc' -c 'qa'; \
+	 else $(VIM) -es -N -c 'helptags doc' -c 'qa' </dev/null; fi
 	@echo "doc/$(DOCNAME).txt regenerated. :help $(DOCNAME)"
 
-test:  ## both editors must start cleanly with this config
-	@$(NVIM) --headless -u init.vim -c 'qa' && echo "ok  nvim starts"
-	@timeout 30 $(VIM) -es --cmd 'set nocompatible' -u init.vim -c 'qa' </dev/null && echo "ok  vim starts"
+test:  ## both editors must start cleanly with this config (honest exit codes)
+	@bash scripts/check.sh editors
 
 check:  ## the gate
 	@bash scripts/check.sh
@@ -38,5 +38,8 @@ check:  ## the gate
 doctor:  ## toolchain and auth
 	@bash scripts/doctor.sh
 
-clean:  ## delete generated docs, regenerate with make doc
-	git clean -f doc/$(DOCNAME).txt doc/tags
+ctx:  ## print the session digest (no network)
+	@bash scripts/session.sh ctx
+
+clean:  ## delete generated docs; regenerate with make doc
+	rm -f doc/$(DOCNAME).txt doc/tags

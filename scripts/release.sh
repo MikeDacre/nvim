@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# release.sh <x.y.z> — move [Unreleased] into a version, tag, push. Never auto-publishes.
+# release.sh <x.y.z> — move [Unreleased] into a version, tag, commit. Never pushes:
+# pushing the tag and `gh release create` are publishing actions that need approval.
 set -euo pipefail
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 V="${1:?usage: release.sh <x.y.z>}"
-git diff --quiet || { echo "working tree dirty"; exit 1; }
+[[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "not SemVer x.y.z: $V"; exit 2; }
+[ -z "$(git status --porcelain)" ] || { echo "working tree dirty:"; git status --short; exit 1; }
+git rev-parse -q --verify "refs/tags/v$V" >/dev/null && { echo "tag v$V already exists"; exit 1; }
+python3 scripts/changelog.py from-git
 bash scripts/check.sh
 DATE=$(date +%Y-%m-%d)
 python3 - "$V" "$DATE" <<'PY'
@@ -15,6 +19,7 @@ p.write_text(t)
 PY
 python3 scripts/changelog.py sync
 git add -A CHANGELOG.txt
-git commit -m "Release v$V"
+git commit -q -m "Release v$V"
 git tag -a "v$V" -m "v$V"
-echo "tagged v$V — push with: git push origin $(git rev-parse --abbrev-ref HEAD) --tags"
+echo "tagged v$V — after approval: git push --follow-tags origin $(git rev-parse --abbrev-ref HEAD)"
+echo "GitHub release (ask first): gh release create v$V --title v$V --notes-from-tag"
