@@ -12,10 +12,19 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+### Added
+
+- add: Claude Code integration — SessionStart digest hook, permission allow/deny lists, /end /ctx /release skills, path-scoped plugin rules; skills now live in .claude/skills (CLAUDE/skills symlinked) (c04b4bc)
+
 ### Changed
 
 - Correct the premise: Vim 9 is primary, Neovim secondary; resolve ONI and vim-go questions (225b569)
 - Record vim-project-config subrepo and nyaovim archive; harden check.sh for compatible mode (f4b036c)
+- docs: merge duplicate changelog sections; resolve ONI todo; add E216 and skill-invocation todos (def2dc3)
+
+### Fixed
+
+- fix: honest check.sh gates (no silent!, nvim exit code, git-based doc staleness), changelog section merge, https submodule url; add mcp-fix.sh, cfg.sh, lib.sh, todo.py from the kit; session.sh ctx/refs/end flow; jq no longer required (3595bd2)
 
 ## [0.1.0] - 2026-09-03
 
@@ -39,4 +48,4 @@ February 2018 and was adopted as a managed project in September 2026.
 
 - Nothing yet. Editor behaviour is deliberately untouched in this release.
 
-<!-- changelog-synced: 225b569 -->
+<!-- changelog-synced: def2dc3 -->
