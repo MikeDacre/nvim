@@ -1,7 +1,6 @@
 ---
 name: end
-description: Close the working session — commit outstanding work with the message Mike gives, back-fill the changelog from git, regenerate docs, run the check.sh gate, push. Use when Mike says "end session", "wrap up", "close out", "we're done", "push and finish".
-disable-model-invocation: true
+description: Close the working session — commit outstanding work with the message Mike gives, back-fill the changelog from git, regenerate docs, run the check.sh gate, push. Use when Mike says "end session", "wrap up", "close out", "we're done", "push and finish". Only on Mike's explicit request — never trigger it unasked.
 ---
 
 # End the session

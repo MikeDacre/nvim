@@ -1,7 +1,6 @@
 ---
 name: release
-description: Cut a release — bump VERSION, roll [Unreleased] into a version, merge dev to the release branch with --no-ff, tag, back-merge. Use when Mike says "cut a release", "tag a version", "release minor/patch/major".
-disable-model-invocation: true
+description: Cut a release — bump VERSION, roll [Unreleased] into a version, merge dev to the release branch with --no-ff, tag, back-merge. Use when Mike says "cut a release", "tag a version", "release minor/patch/major". Only on Mike's explicit request — never trigger it unasked.
 ---
 
 # Release

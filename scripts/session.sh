@@ -128,6 +128,7 @@ digest() {
   facts; echo
   gitstate; drift; echo
   [[ -f TODO.txt ]] && { python3 scripts/todo.py summary 2>/dev/null; echo; }
+  [[ -d CLAUDE/orders ]] && { python3 scripts/order.py summary 2>/dev/null; }
   roadmap; unreleased
   bash scripts/feature.sh status 2>/dev/null | sed -n '2,6p'
   hr

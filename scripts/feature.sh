@@ -22,7 +22,7 @@ PFX=$(cfg git.feature_prefix "feat/")
 BR=$(git rev-parse --abbrev-ref HEAD)
 
 active() {  # feature branches with commits not yet in dev
-  git for-each-ref --format='%(refname:short)' "refs/heads/${PFX}*" "refs/heads/fix/*" |
+  git for-each-ref --format='%(refname:short)' "refs/heads/${PFX}*" "refs/heads/fix/*" "refs/heads/chore/*" "refs/heads/hotfix/*" |
   while read -r b; do
     n=$(git rev-list --count "$DEVB..$b" 2>/dev/null || echo 0)
     [[ "$n" -gt 0 ]] && printf '%s\t%s\t%s\n' "$b" "$n" "$(git log -1 --format=%cr "$b")"
@@ -70,7 +70,7 @@ new() {
 
 finish() {
   local b="${1:-$BR}"
-  case "$b" in "$PFX"*|fix/*) :;; *) echo "not a feature branch: $b"; exit 2;; esac
+  case "$b" in "$PFX"*|fix/*|chore/*|hotfix/*) :;; *) echo "not a feature/fix/chore branch: $b"; exit 2;; esac
   [[ -n "$(git status --porcelain)" ]] && { echo "commit first"; exit 3; }
   git checkout -q "$DEVB" && git pull -q --ff-only 2>/dev/null
   git merge --no-ff -q "$b" -m "merge: $b into $DEVB" || { echo "CONFLICT — resolve, then re-run"; exit 1; }

@@ -76,7 +76,15 @@
       "Bash(make man)",
       "Bash(make todo*)",
       "Bash(git branch --list*)",
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "Bash(*)",
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch"
     ],
     "deny": [
       "Bash(git push --force*)",
@@ -85,10 +93,8 @@
       "Bash(git reset --hard*)",
       "Bash(git rebase*)",
       "Bash(git filter-*)",
-      "Bash(git branch -D*)",
       "Bash(git tag -d*)",
       "Bash(git clean *)",
-      "Bash(rm -rf *)",
       "Bash(nvim --headless -c PlugClean*)",
       "Bash(vim -es -c PlugClean*)",
       "Edit(priv/**)",
@@ -106,6 +112,34 @@
       "Bash(python3 scripts/todo.py rm *)",
       "Edit(man/**)",
       "Write(man/**)"
+    ],
+    "defaultMode": "acceptEdits",
+    "ask": [
+      "Bash(git checkout main*)",
+      "Bash(git switch main*)",
+      "Bash(git push*origin main*)",
+      "Bash(git push --all*)",
+      "Bash(git push --tags*)",
+      "Bash(bash scripts/release.sh*)",
+      "Bash(make release*)",
+      "Bash(gh release*)",
+      "Bash(gh repo create*)",
+      "Bash(gh repo edit*)",
+      "Bash(gh repo delete*)",
+      "Bash(git branch -D*)",
+      "Bash(git branch -d*)",
+      "Bash(rm -r*)",
+      "Bash(rm -fr*)",
+      "Bash(git submodule add*)",
+      "Bash(uv add*)",
+      "Bash(pip install*)",
+      "Bash(pip3 install*)",
+      "Bash(npm install *)",
+      "Bash(npm i *)",
+      "Bash(cargo add*)",
+      "Bash(brew install*)",
+      "Edit(templates/CLAUDE.md)",
+      "Write(templates/CLAUDE.md)"
     ]
   }
 }

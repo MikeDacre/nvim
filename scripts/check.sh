@@ -10,22 +10,19 @@ warn() { printf "  WARN  %s\n" "$1"; }
 bad()  { printf "  FAIL  %s\n" "$1"; fail=$((fail+1)); }
 cfg()  { bash scripts/cfg.sh "$1" "${2:-}" 2>/dev/null || echo "${2:-}"; }
 
-# Kit mode: this repo IS claude_init, not a project scaffolded from it. Its
-# templates/ legitimately contain placeholders and it has no CLAUDE/ dir, so
-# the project-only checks would fail spuriously.
+# Kit mode: this repo IS claude_init. It is also a kit-managed project (it
+# dogfoods its own conventions), so the project checks run as usual and the
+# kit checks in 5a run in addition. templates/ is never scanned for
+# placeholders — they are the point.
 KIT=0
-[ -f project-init.md ] && [ -d templates ] && [ ! -d CLAUDE ] && KIT=1
+[ -f project-init.md ] && [ -d templates ] && KIT=1
 
-echo "CHECK $(basename "$PWD")$( [ $KIT -eq 1 ] && echo ' (kit mode)' )"
+echo "CHECK $(basename "$PWD")$( [ $KIT -eq 1 ] && echo ' (kit + project)' )"
 
 # 1. unfilled template placeholders — only in kit-managed files. A whole-repo
 # scan false-positives on Hugo/Jinja/JS templates ({{ .Title }}), so the scan is
 # scoped and the token shape is exact: {{UPPER_SNAKE}}.
-if [ $KIT -eq 1 ]; then
-  SCOPE="README.md CHANGELOG.txt ROADMAP.md TODO.txt Makefile"
-else
-  SCOPE="CLAUDE .claude README.md ROADMAP.md TODO.txt CHANGELOG.txt CHANGELOG.md Makefile Makefile.kit priv/README.md VERSION"
-fi
+SCOPE="CLAUDE .claude README.md ROADMAP.md TODO.txt CHANGELOG.txt CHANGELOG.md Makefile Makefile.kit priv/README.md VERSION"
 ph=""
 for p in $SCOPE; do
   [ -e "$p" ] || continue
@@ -63,15 +60,35 @@ if [ -n "$t" ]; then
     || warn "latest tag $t != v$(cat VERSION 2>/dev/null) (expected mid-cycle)"
 fi
 
-# 5. CLAUDE symlink, layout mode, skills location, Claude Code settings
-cmode=$(cfg claude_repo.mode tracked)
+# 5a. kit checks (claude_init itself): templates valid, this repo's installed
+# copies in step with templates/, and every shipped script in both copy lists.
 if [ $KIT -eq 1 ]; then
   [ -f templates/CLAUDE.md ] && pass "kit templates present" || bad "templates/CLAUDE.md missing"
   grep -qE '\{\{[A-Z][A-Z0-9_]*\}\}' templates/CLAUDE.md && bad "templates/CLAUDE.md must stay invariant (no placeholders)" \
     || pass "templates/CLAUDE.md invariant"
   python3 -c 'import json; json.load(open("templates/claude-settings.json"))' 2>/dev/null \
     && pass "templates/claude-settings.json valid" || bad "templates/claude-settings.json missing or invalid"
-elif [ -e CLAUDE/CLAUDE.md ]; then
+  drift=0
+  cmp -s templates/claude-settings.json .claude/settings.json || { bad ".claude/settings.json differs from templates/claude-settings.json (make sync-self)"; drift=1; }
+  cmp -s templates/CLAUDE.md CLAUDE/CLAUDE.md || { bad "CLAUDE/CLAUDE.md differs from templates/CLAUDE.md (make sync-self)"; drift=1; }
+  for d in templates/skills/*/; do
+    n=$(basename "$d")
+    cmp -s "$d/SKILL.md" ".claude/skills/$n/SKILL.md" 2>/dev/null || { bad ".claude/skills/$n/SKILL.md differs from templates/skills/$n (make sync-self)"; drift=1; }
+  done
+  [ $drift -eq 0 ] && pass "installed copies match templates/"
+  miss=0
+  for f in scripts/*.sh scripts/*.py; do
+    n=$(basename "$f")
+    case "$n" in bootstrap.sh|adopt.sh|check.local.sh) continue;; esac
+    grep -q "$n" scripts/bootstrap.sh && grep -q "$n" scripts/adopt.sh \
+      || { bad "scripts/$n is missing from adopt.sh KIT_SCRIPTS or the bootstrap.sh copy loop"; miss=1; }
+  done
+  [ $miss -eq 0 ] && pass "every kit script is in both copy lists"
+fi
+
+# 5. CLAUDE symlink, layout mode, skills location, Claude Code settings
+cmode=$(cfg claude_repo.mode tracked)
+if [ -e CLAUDE/CLAUDE.md ]; then
   [ -L CLAUDE.md ] && pass "CLAUDE.md symlink intact" || bad "CLAUDE.md symlink missing (ln -sf CLAUDE/CLAUDE.md CLAUDE.md)"
   if [ -d .claude/skills ]; then
     { [ -L CLAUDE/skills ] && [ -d CLAUDE/skills ]; } && pass "skills in .claude/skills (CLAUDE/skills symlinked)" \
@@ -121,7 +138,7 @@ if [ -f .gitmodules ]; then
 fi
 
 # 8. generated files current (git-based; see lib.sh stale)
-if [ $KIT -eq 0 ] && command -v generated_pairs >/dev/null 2>&1; then
+if command -v generated_pairs >/dev/null 2>&1; then
   while IFS=$'\t' read -r src art; do
     [ -n "$src" ] || continue
     if [ ! -f "$art" ]; then warn "$art not generated yet (make docs)"
