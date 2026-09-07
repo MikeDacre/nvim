@@ -9,7 +9,7 @@
 #   mcp-fix.sh --dry-run [pat] # show what would be killed, kill nothing
 #   mcp-fix.sh --list          # list all locally-running MCP-ish node procs
 #
-# From claude_init; 3.2-safe.
+# 3.2-safe. Matches claude_init conventions in doctor.sh.
 
 cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)"
 
@@ -42,7 +42,7 @@ if [[ $LIST -eq 1 ]]; then
 fi
 
 echo "Target pattern: $TARGET"
-PIDS=$(pgrep -f "$TARGET" | grep -v "^$$\$" || true)
+PIDS=$(pgrep -f "$TARGET" | grep -v "^$$\$")
 
 if [[ -z "$PIDS" ]]; then
   echo "  --    no matching process found — nothing to do"
@@ -51,7 +51,8 @@ fi
 
 echo "  found:"
 for pid in $PIDS; do
-  ps -p "$pid" -ww -o pid=,pcpu=,pmem=,etime=,command= 2>/dev/null | sed 's/^/        /'
+  ps -p "$pid" -ww -o pid=,pcpu=,pmem=,etime=,command= 2>/dev/null \
+    | sed 's/^/        /'
 done
 
 if [[ $DRY_RUN -eq 1 ]]; then
@@ -60,13 +61,17 @@ if [[ $DRY_RUN -eq 1 ]]; then
 fi
 
 echo "  sending SIGTERM..."
-for pid in $PIDS; do kill -TERM "$pid" 2>/dev/null; done
+for pid in $PIDS; do
+  kill -TERM "$pid" 2>/dev/null
+done
 sleep 2
 
 STILL=$(pgrep -f "$TARGET" | grep -v "^$$\$" || true)
 if [[ -n "$STILL" ]]; then
   echo "  still alive — sending SIGKILL..."
-  for pid in $STILL; do kill -KILL "$pid" 2>/dev/null; done
+  for pid in $STILL; do
+    kill -KILL "$pid" 2>/dev/null
+  done
 fi
 
 echo "  ok    process(es) terminated — will respawn on next tool call"

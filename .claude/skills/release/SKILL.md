@@ -1,16 +1,15 @@
 ---
 name: release
-description: Cut a release — move [Unreleased] into a versioned CHANGELOG section, commit, and tag vX.Y.Z. Use when Mike says "cut a release", "tag a version", "release 0.2.0".
+description: Cut a release — bump VERSION, roll [Unreleased] into a version, merge dev to the release branch with --no-ff, tag, back-merge. Use when Mike says "cut a release", "tag a version", "release minor/patch/major".
 disable-model-invocation: true
 ---
 
 # Release
 
-1. The tree must be clean and `bash scripts/check.sh` must pass; `release.sh`
-   enforces both and refuses otherwise.
-2. `bash scripts/release.sh $ARGUMENTS` — SemVer `x.y.z`, no leading `v`.
-3. Pushing the tag and creating a GitHub release are publishing actions.
-   Ask before each of:
-       git push --follow-tags origin master
-       gh release create vX.Y.Z --title vX.Y.Z --notes-from-tag
-4. `project.json .release.assets` lists files to attach; it is empty today.
+1. Must be on `dev` with a clean tree; `release.sh` runs `check.sh` and refuses
+   on a FAIL. Preview first: `bash scripts/release.sh $ARGUMENTS --dry-run`.
+2. Merging to the release branch, pushing the tag, and `gh release create` are
+   approval gates (CLAUDE.md §3). Ask, then run
+   `bash scripts/release.sh $ARGUMENTS` (major|minor|patch). It prompts before
+   publishing a GitHub release; never pass `--yes` on Mike's behalf.
+3. `project.json .release.assets` lists the files it attaches.

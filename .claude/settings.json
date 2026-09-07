@@ -7,7 +7,11 @@
           {
             "type": "command",
             "command": "bash",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/session.sh", "start", "--hook"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/scripts/session.sh",
+              "start",
+              "--hook"
+            ],
             "timeout": 45,
             "statusMessage": "Reading the project digest"
           }
@@ -19,7 +23,11 @@
           {
             "type": "command",
             "command": "bash",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/session.sh", "ctx", "--hook"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/scripts/session.sh",
+              "ctx",
+              "--hook"
+            ],
             "timeout": 30,
             "statusMessage": "Refreshing the project digest"
           }
@@ -52,7 +60,23 @@
       "Bash(vim -es *)",
       "Bash(nvim --headless *)",
       "Bash(nvim -l *)",
-      "Bash(luajit -bl *)"
+      "Bash(luajit -bl *)",
+      "Bash(bash scripts/feature.sh status*)",
+      "Bash(bash scripts/feature.sh list*)",
+      "Bash(bash scripts/sync.sh status*)",
+      "Bash(python3 scripts/todo.py list*)",
+      "Bash(python3 scripts/todo.py all*)",
+      "Bash(python3 scripts/todo.py due*)",
+      "Bash(python3 scripts/todo.py stale*)",
+      "Bash(python3 scripts/todo.py add *)",
+      "Bash(python3 scripts/todo.py done *)",
+      "Bash(make lint)",
+      "Bash(make fmt)",
+      "Bash(make docs)",
+      "Bash(make man)",
+      "Bash(make todo*)",
+      "Bash(git branch --list*)",
+      "Bash(git check-ignore *)"
     ],
     "deny": [
       "Bash(git push --force*)",
@@ -78,7 +102,10 @@
       "Edit(CLAUDE/CLAUDE.md)",
       "Write(CLAUDE/CLAUDE.md)",
       "Edit(plugged/**)",
-      "Write(plugged/**)"
+      "Write(plugged/**)",
+      "Bash(python3 scripts/todo.py rm *)",
+      "Edit(man/**)",
+      "Write(man/**)"
     ]
   }
 }

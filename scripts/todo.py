@@ -12,15 +12,17 @@
   todo.py stale [days]       open tasks created more than N days ago (default 60)
 
 Line numbers are stable within a single invocation only — always `list` first.
-Comment lines start with the marker in COMMENT and are preserved untouched.
+Comment lines start with ‡ (or #) and are preserved untouched.
 """
 import datetime as dt
 import os
 import re
 import subprocess
 import sys
+import signal
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)  # quiet exit when piped into head
 
-COMMENT = "#"   # this repo's TODO.txt uses a # legend block (the kit default is ‡)
+COMMENTS = ("\u2021", "#")   # ‡ is the kit legend marker; # is tolerated for hand-made files
 DATE = r"\d{4}-\d{2}-\d{2}"
 
 
@@ -37,7 +39,7 @@ TODAY = dt.date.today().isoformat()
 
 def load() -> list[str]:
     if not os.path.exists(PATH):
-        sys.exit(f"missing {PATH}")
+        sys.exit(f"missing {PATH} — create it from templates/TODO.txt")
     with open(PATH, encoding="utf-8") as fh:
         return fh.read().splitlines()
 
@@ -48,7 +50,7 @@ def save(lines: list[str]) -> None:
 
 
 def is_task(ln: str) -> bool:
-    return bool(ln.strip()) and not ln.startswith(COMMENT)
+    return bool(ln.strip()) and not ln.startswith(COMMENTS)
 
 
 def is_done(ln: str) -> bool:
@@ -173,6 +175,22 @@ def cmd_archive() -> None:
     print(f"archived {len(moved)} task(s) -> done.txt")
 
 
+def cmd_open_summary() -> None:
+    """Compact digest for session.sh start."""
+    rows = [(n, ln) for n, ln in numbered(load()) if not is_done(ln)]
+    if not rows:
+        print("TODO.txt: no open tasks"); return
+    top = sorted(rows, key=lambda r: (priority(r[1]), due_of(r[1]) or dt.date.max))
+    urgent = [r for r in rows
+              if (due_of(r[1]) and due_of(r[1]) <= dt.date.today())
+              or priority(r[1]) == "A"]
+    print(f"TODO.txt: {len(rows)} open"
+          f"{f', {len(urgent)} urgent/overdue' if urgent else ''}"
+          " — full list: python3 scripts/todo.py list")
+    for n, ln in (urgent or top)[:6]:
+        print(f"    {n:>3}  {ln}")
+
+
 if __name__ == "__main__":
     a = sys.argv[1:]
     if not a:
@@ -197,6 +215,8 @@ if __name__ == "__main__":
             cmd_stale(int(a[1]) if len(a) > 1 else 60)
         elif c == "archive":
             cmd_archive()
+        elif c == "summary":
+            cmd_open_summary()
         else:
             sys.exit(__doc__)
     except ValueError as e:

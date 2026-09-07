@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -e
+b=$(git rev-parse --abbrev-ref HEAD)
+rel=$(bash scripts/cfg.sh git.release_branch main 2>/dev/null || echo main)
+[ "$b" = "$rel" ] && { echo "refusing: commit to $rel. Use dev/feat and scripts/release.sh"; exit 1; }
+leaked=$(git diff --cached --name-only | grep '^priv/' \
+  | grep -vE '^priv/(README\.md|\.gitkeep|.*\.(example|template))$' || true)
+[ -n "$leaked" ] && { echo "refusing: staged secret file(s):"; echo "$leaked"; exit 1; }
+exit 0
