@@ -13,10 +13,13 @@ x 2026-09-04 Move vim-project-config to a private subrepo with branch rincewind 
 (B) Commit a PlugSnapshot lockfile and document the refresh cadence +plugins @both
 (B) Decide on an explicit mapleader; it is currently the unset default +docs @both
 (C) Verify xolox/vim-misc is still needed; its dependents are not installed +plugins @both
-(C) Confirm whether ONI config.js is still used +scaffold @both
+x 2026-09-07 (C) Confirm whether ONI config.js is still used +scaffold @both
 (A) Add 'set nocompatible' as the first line of init.vim; vim relies on the implicit default +plugins @vim
 (B) Trace E488 from vim-glyph-palette on vim startup; non-fatal but noisy +plugins @vim
 (A) Remove ONI: delete config.js and its README row; confirmed dead +scaffold @both
 (A) Repoint MikeDacre/vim-go to upstream fatih/vim-go; fork has no remaining reason +plugins @both
 (B) Check MacVim patch level against vim 9.2.0479; two command-injection CVEs reported unfixed +infra @vim
 (B) Reassess nvim-only duplicates now that vim is primary: nerdtree over nvim-tree, fzf over telescope +plugins @both
+(B) Investigate v:errmsg E216 FileExplorer at nvim startup; no FileExplorer autocmd exists in this config, so it is a plugin's silent! netrw hijack (nvim-tree or NERDTree, which loads on nvim too) +plugins @nvim
+(C) Verify /end and /release invoke under disable-model-invocation; claude-code issues 26251 and 38969 reported the flag blocking manual slash invocation in early 2026 +scaffold @both
+(C) Add .claude/rules for linters.vim once the linting stack is consolidated +scaffold @both
