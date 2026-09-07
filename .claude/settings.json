@@ -1,0 +1,84 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash",
+            "args": ["${CLAUDE_PROJECT_DIR}/scripts/session.sh", "start", "--hook"],
+            "timeout": 45,
+            "statusMessage": "Reading the project digest"
+          }
+        ]
+      },
+      {
+        "matcher": "resume|clear|compact|fork",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash",
+            "args": ["${CLAUDE_PROJECT_DIR}/scripts/session.sh", "ctx", "--hook"],
+            "timeout": 30,
+            "statusMessage": "Refreshing the project digest"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(bash scripts/session.sh *)",
+      "Bash(bash scripts/check.sh*)",
+      "Bash(bash scripts/doctor.sh*)",
+      "Bash(bash scripts/cfg.sh *)",
+      "Bash(python3 scripts/changelog.py *)",
+      "Bash(python3 scripts/todo.py *)",
+      "Bash(make doc)",
+      "Bash(make test)",
+      "Bash(make check)",
+      "Bash(make doctor)",
+      "Bash(make ctx)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git blame*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git fetch*)",
+      "Bash(git submodule status*)",
+      "Bash(vim -es *)",
+      "Bash(nvim --headless *)",
+      "Bash(nvim -l *)",
+      "Bash(luajit -bl *)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push --delete*)",
+      "Bash(git reset --hard*)",
+      "Bash(git rebase*)",
+      "Bash(git filter-*)",
+      "Bash(git branch -D*)",
+      "Bash(git tag -d*)",
+      "Bash(git clean *)",
+      "Bash(rm -rf *)",
+      "Bash(nvim --headless -c PlugClean*)",
+      "Bash(vim -es -c PlugClean*)",
+      "Edit(priv/**)",
+      "Write(priv/**)",
+      "Edit(doc/mikevim.txt)",
+      "Write(doc/mikevim.txt)",
+      "Edit(doc/tags)",
+      "Write(doc/tags)",
+      "Edit(CLAUDE.md)",
+      "Write(CLAUDE.md)",
+      "Edit(CLAUDE/CLAUDE.md)",
+      "Write(CLAUDE/CLAUDE.md)",
+      "Edit(plugged/**)",
+      "Write(plugged/**)"
+    ]
+  }
+}
