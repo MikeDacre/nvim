@@ -1,5 +1,5 @@
 # nvim config maintenance targets. None of this is needed to *use* the config.
-.PHONY: init doc test check doctor ctx clean help
+.PHONY: init doc docs test check doctor ctx clean help
 .DEFAULT_GOAL := help
 
 VIM  ?= vim
@@ -30,7 +30,9 @@ doc:  ## regenerate doc/mikevim.txt and doc/tags from README.md
 	@echo "doc/$(DOCNAME).txt regenerated. :help $(DOCNAME)"
 
 test:  ## both editors must start cleanly with this config (honest exit codes)
-	@bash scripts/check.sh editors
+	@bash scripts/check.local.sh
+
+docs: doc  ## alias: what the kit's session.sh end calls
 
 check:  ## the gate
 	@bash scripts/check.sh
