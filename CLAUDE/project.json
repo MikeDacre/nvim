@@ -180,11 +180,11 @@
     }
   ],
   "hazards": [
-    "nvim-treesitter was archived 2026-04-03; master is frozen, main is an incompatible rewrite. plugins.vim declares it TWICE. Do not update it casually.",
+    "nvim-treesitter was archived 2026-04-03; master is frozen, main is an incompatible rewrite. Do not update it casually — it needs a designed migration, not a bump.",
     "plugged/ is 2.6GB and gitignored. Never commit it.",
     "The checkout IS the runtimepath: a syntax error in init.vim breaks the editor on every machine at next pull.",
-    "MacVim syncs Vim upstream on a lag (r183 = Vim 9.2 patches 1-332). Two command-injection CVEs are reported unfixed on its tracker, one in tag-file handling. Relevant here because taglist.vim and tag sessions are in daily use.",
-    "check.sh reports v:errmsg after startup as WARN, not FAIL: silent!-suppressed plugin errors land there (E216 FileExplorer in nvim from a plugin's netrw hijack, E488 glyph-palette in vim). A WARN is a lead, not a gate failure."
+    "MacVim syncs Vim upstream on a lag (r183 = Vim 9.2 patches 1-332). Two command-injection CVEs are reported unfixed on its tracker, one in tag-file handling. Relevant here because tag sessions are in daily use (tagbar, since the 2026-09-07 plugin audit replaced taglist.vim).",
+    "check.sh reports v:errmsg after startup as WARN, not FAIL: silent!-suppressed plugin errors land there. A WARN is a lead, not a gate failure — the E216/E488 examples once cited here were resolved by the 2026-09-07 plugin audit (nvim-tree.lua and vim-glyph-palette both dropped) and no longer reproduce."
   ],
   "release": {
     "assets": [],

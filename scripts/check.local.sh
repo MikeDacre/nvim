@@ -2,9 +2,9 @@
 # check.local.sh — this project's own gate, called by the kit's check.sh and by
 # `make test`: both editors must load init.vim cleanly and every lua file must
 # parse. Exit codes are honest. v:errmsg is reported as WARN because silent!-
-# suppressed plugin errors land there too (e.g. E216 FileExplorer in nvim) —
-# a WARN is a lead, not a failure. (The E488 glyph-palette WARN this comment
-# used to mention is resolved: vim-glyph-palette was dropped in the 2026-09-07
+# suppressed plugin errors can land there — a WARN is a lead, not a failure.
+# (The E216/E488 WARNs this comment used to cite as examples are resolved:
+# nvim-tree.lua and vim-glyph-palette were both dropped in the 2026-09-07
 # plugin audit.)
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
