@@ -18,6 +18,7 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ### Changed
 - Replace archived/orphaned plugins with maintained alternatives: syntastic -> dense-analysis/ale (dual editor), vim-scripts/taglist.vim -> preservim/tagbar, YouCompleteMe -> yegappan/lsp (native Vim9 LSP), MikeDacre/vim-go fork -> upstream fatih/vim-go, plasticboy/vim-markdown -> preservim/vim-markdown, bling/vim-airline -> vim-airline/vim-airline.
+- consolidate toward maintained, dual-editor plugins (1064207).
 
 - Correct the premise: Vim 9 is primary, Neovim secondary; resolve ONI and vim-go questions (225b569)
 - Record vim-project-config subrepo and nyaovim archive; harden check.sh for compatible mode (f4b036c)
@@ -28,6 +29,7 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ### Fixed
 - Remove the system() shell-out at startup for g:vim_minimal, the duplicate nvim-treesitter Plug declaration, and the unguarded spellwarn.nvim on plain Vim; resolve the E216 and E488 startup hazards.
+- pin nvim-treesitter to master, add plugged/ parity check (b4d66f8).
 
 - fix: honest check.sh gates (no silent!, nvim exit code, git-based doc staleness), changelog section merge, https submodule url; add mcp-fix.sh, cfg.sh, lib.sh, todo.py from the kit; session.sh ctx/refs/end flow; jq no longer required (3595bd2)
 
@@ -53,4 +55,4 @@ February 2018 and was adopted as a managed project in September 2026.
 
 - Nothing yet. Editor behaviour is deliberately untouched in this release.
 
-<!-- changelog-synced: def2dc3 -->
+<!-- changelog-synced: 92de42a -->
