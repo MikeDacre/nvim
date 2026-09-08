@@ -94,8 +94,10 @@ if has('nvim')
   Plug 'neomake/neomake'
   " Debugging
   Plug 'mfussenegger/nvim-dap'
-  " Tree-Sitter — upstream archived 2026-04-03; do not bump, needs a designed migration
-  Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+  " Tree-Sitter — upstream archived 2026-04-03; 'main' is an incompatible
+  " rewrite and became GitHub's default branch, so 'master' must stay pinned
+  " explicitly or a fresh clone silently grabs the wrong one (bit us 2026-09-07)
+  Plug 'nvim-treesitter/nvim-treesitter', {'branch': 'master', 'do': ':TSUpdate'}
   Plug 'ValdezFOmar/tree-sitter-editorconfig'
   Plug 'tree-sitter/tree-sitter-go'
   Plug 'tree-sitter-grammars/tree-sitter-gpg-config'
