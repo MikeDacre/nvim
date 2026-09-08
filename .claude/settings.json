@@ -7,7 +7,11 @@
           {
             "type": "command",
             "command": "bash",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/session.sh", "start", "--hook"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/scripts/session.sh",
+              "start",
+              "--hook"
+            ],
             "timeout": 45,
             "statusMessage": "Reading the project digest"
           }
@@ -19,7 +23,11 @@
           {
             "type": "command",
             "command": "bash",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/session.sh", "ctx", "--hook"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/scripts/session.sh",
+              "ctx",
+              "--hook"
+            ],
             "timeout": 30,
             "statusMessage": "Refreshing the project digest"
           }
@@ -52,7 +60,31 @@
       "Bash(vim -es *)",
       "Bash(nvim --headless *)",
       "Bash(nvim -l *)",
-      "Bash(luajit -bl *)"
+      "Bash(luajit -bl *)",
+      "Bash(bash scripts/feature.sh status*)",
+      "Bash(bash scripts/feature.sh list*)",
+      "Bash(bash scripts/sync.sh status*)",
+      "Bash(python3 scripts/todo.py list*)",
+      "Bash(python3 scripts/todo.py all*)",
+      "Bash(python3 scripts/todo.py due*)",
+      "Bash(python3 scripts/todo.py stale*)",
+      "Bash(python3 scripts/todo.py add *)",
+      "Bash(python3 scripts/todo.py done *)",
+      "Bash(make lint)",
+      "Bash(make fmt)",
+      "Bash(make docs)",
+      "Bash(make man)",
+      "Bash(make todo*)",
+      "Bash(git branch --list*)",
+      "Bash(git check-ignore *)",
+      "Bash(*)",
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch"
     ],
     "deny": [
       "Bash(git push --force*)",
@@ -61,10 +93,8 @@
       "Bash(git reset --hard*)",
       "Bash(git rebase*)",
       "Bash(git filter-*)",
-      "Bash(git branch -D*)",
       "Bash(git tag -d*)",
       "Bash(git clean *)",
-      "Bash(rm -rf *)",
       "Bash(nvim --headless -c PlugClean*)",
       "Bash(vim -es -c PlugClean*)",
       "Edit(priv/**)",
@@ -78,7 +108,38 @@
       "Edit(CLAUDE/CLAUDE.md)",
       "Write(CLAUDE/CLAUDE.md)",
       "Edit(plugged/**)",
-      "Write(plugged/**)"
+      "Write(plugged/**)",
+      "Bash(python3 scripts/todo.py rm *)",
+      "Edit(man/**)",
+      "Write(man/**)"
+    ],
+    "defaultMode": "acceptEdits",
+    "ask": [
+      "Bash(git checkout main*)",
+      "Bash(git switch main*)",
+      "Bash(git push*origin main*)",
+      "Bash(git push --all*)",
+      "Bash(git push --tags*)",
+      "Bash(bash scripts/release.sh*)",
+      "Bash(make release*)",
+      "Bash(gh release*)",
+      "Bash(gh repo create*)",
+      "Bash(gh repo edit*)",
+      "Bash(gh repo delete*)",
+      "Bash(git branch -D*)",
+      "Bash(git branch -d*)",
+      "Bash(rm -r*)",
+      "Bash(rm -fr*)",
+      "Bash(git submodule add*)",
+      "Bash(uv add*)",
+      "Bash(pip install*)",
+      "Bash(pip3 install*)",
+      "Bash(npm install *)",
+      "Bash(npm i *)",
+      "Bash(cargo add*)",
+      "Bash(brew install*)",
+      "Edit(templates/CLAUDE.md)",
+      "Write(templates/CLAUDE.md)"
     ]
   }
 }

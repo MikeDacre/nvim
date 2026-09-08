@@ -1,6 +1,6 @@
 ---
 name: ctx
-description: Re-read the project digest (git state, drift, hazards, roadmap, open TODOs) without touching the network. Use mid-session after commits, after compaction, or when Mike asks "where are we", "what's the state", "refresh context".
+description: Re-read the project digest (facts, git state, drift, rules, roadmap, open TODOs) without touching the network. Use mid-session after commits, after compaction, or when Mike asks "where are we", "what's the state", "refresh context".
 ---
 
 # Current project digest

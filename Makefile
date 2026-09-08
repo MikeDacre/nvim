@@ -1,5 +1,5 @@
 # nvim config maintenance targets. None of this is needed to *use* the config.
-.PHONY: init doc test check doctor ctx clean help
+.PHONY: init doc docs test check doctor ctx clean help
 .DEFAULT_GOAL := help
 
 VIM  ?= vim
@@ -12,6 +12,9 @@ help:  ## list targets
 init:  ## install plugins in both editors
 	-$(NVIM) --headless -c 'PlugInstall --sync' -c 'qa' </dev/null 2>&1 | tail -3
 	-$(VIM) -es -N -c 'PlugInstall --sync' -c 'qa' </dev/null 2>&1 | tail -3
+	@test -x .venv/bin/python3 || python3 -m venv .venv
+	.venv/bin/python3 -m pip install -q -U pip pynvim
+	@echo ".venv ready: g:python3_host_prog -> .venv/bin/python3"
 
 doc:  ## regenerate doc/mikevim.txt and doc/tags from README.md
 	@command -v pandoc >/dev/null || { echo "pandoc missing: brew install pandoc"; exit 1; }
@@ -30,7 +33,9 @@ doc:  ## regenerate doc/mikevim.txt and doc/tags from README.md
 	@echo "doc/$(DOCNAME).txt regenerated. :help $(DOCNAME)"
 
 test:  ## both editors must start cleanly with this config (honest exit codes)
-	@bash scripts/check.sh editors
+	@bash scripts/check.local.sh
+
+docs: doc  ## alias: what the kit's session.sh end calls
 
 check:  ## the gate
 	@bash scripts/check.sh

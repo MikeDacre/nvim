@@ -13,93 +13,165 @@ Nothing here is actioned. Rows get approved one at a time (see
 
 ## Structural issues (not plugins)
 
-| Issue | Detail | Change | Pri |
-|---|---|---|---|
-| `g:vim_mini` shells out at startup | `system('if [ -n "$VIM_MINIMAL" ]...')` spawns `/bin/sh` on **every** launch, in both editors | `let g:vim_minimal = $VIM_MINIMAL ==# 'true'` — pure vimscript, no fork | P1 |
-| `nvim-treesitter` declared twice | Once in the early `has('nvim')` block, again in "NeoVim Only" | Delete one; then handle the archive (below) | P1 |
-| `spellwarn.nvim` unguarded | Lua/Neovim-only plugin sourced in the `vim_minimal == 0` block with no `has('nvim')` | Move inside a guard, or drop for a dual speller | P1 |
-| `autoload/plug.vim.old` | Stale copy of the plugin manager tracked in the repo | Delete | P3 |
-| Completion asymmetry | `YouCompleteMe` sits inside the **tmux** `else` branch; Neovim gets no completion plugin at all | Move out of the tmux block; adopt nvim 0.12 native `'autocomplete'` for nvim, keep a light vim option | P2 |
+ | Issue                              | Detail                                                                                          | Change                                                                                                | Pri |
+ |------------------------------------|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|-----|
+ | `g:vim_mini` shells out at startup | `system('if [ -n "$VIM_MINIMAL" ]...')` spawns `/bin/sh` on **every** launch, in both editors   | `let g:vim_minimal = $VIM_MINIMAL ==# 'true'` — pure vimscript, no fork                               | P1  |
+ | `nvim-treesitter` declared twice   | Once in the early `has('nvim')` block, again in "NeoVim Only"                                   | Delete one; then handle the archive (below)                                                           | P1  |
+ | `spellwarn.nvim` unguarded         | Lua/Neovim-only plugin sourced in the `vim_minimal == 0` block with no `has('nvim')`            | Move inside a guard, or drop for a dual speller                                                       | P1  |
+ | `autoload/plug.vim.old`            | Stale copy of the plugin manager tracked in the repo                                            | Delete                                                                                                | P3  |
+ | Completion asymmetry               | `YouCompleteMe` sits inside the **tmux** `else` branch; Neovim gets no completion plugin at all | Move out of the tmux block; adopt nvim 0.12 native `'autocomplete'` for nvim, keep a light vim option | P2  |
+
+### User decision — applied 2026-09-07
+accept all above recommendations
 
 ## Everywhere (vim + nvim) — the shared core
 
-| Plugin | Role | Change | Pri |
-|---|---|---|---|
-| `tpope/vim-sensible` | sane defaults | Neovim defaults already match most of it; guard to vim-only | P3 |
-| `xolox/vim-misc` | library | Dependency of vim-session/vim-easytags, **neither installed** — likely orphaned; verify then drop | P2 |
-| `jlanzarotta/bufexplorer` | buffer list | Overlaps telescope/fzf buffer pickers on nvim | P3 |
-| `MikeDacre/tmux-zsh-vim-titles` | terminal titles | Yours; keep | — |
-| `preservim/nerdtree` | file tree | **Loads on nvim too, alongside `nvim-tree.lua`** — with Vim primary, keep nerdtree as the single dual answer and drop nvim-tree | P1 |
-| `preservim/nerdcommenter` | commenting | Neovim 0.10+ has built-in `gc` commenting → guard to vim-only | P2 |
-| `tpope/vim-repeat` | repeat plugin maps | Keep — dual, tiny | — |
-| `wellle/targets.vim` | extra text objects | Overlaps treesitter textobjects on nvim; keep as the dual baseline | P3 |
-| `editorconfig/editorconfig-vim` | editorconfig | **Built into Neovim since 0.9** → guard to vim-only | P2 |
-| `freitass/todo.txt-vim` | TODO.txt syntax | Keep — dual, and this repo now ships a TODO.txt | — |
-| `SirVer/ultisnips` + `honza/vim-snippets` | snippets | Needs `+python3`; dual but heavy. Alternative for later: vim9script/Lua snippet engine per editor | P3 |
-| `vim-scripts/taglist.vim` | tag browser | Ancient (vim-scripts mirror). Replace with `preservim/tagbar` (dual) or drop | P2 |
-| `nathanaelkane/vim-indent-guides` | indent guides | Neovim has `'listchars'`/treesitter options; keep dual for now | P3 |
-| `junegunn/vim-easy-align` | alignment | Overlaps `godlygeek/tabular` — **pick one**, easy-align is the maintained choice | P2 |
-| `godlygeek/tabular` | alignment | Redundant with easy-align unless vim-markdown needs it (it does, for tables) — verify before dropping | P2 |
-| `dhruvasagar/vim-table-mode` | table editing | Overlaps tabular + vim-markdown tables; lazy-loaded on command already | P3 |
-| `jamessan/vim-gnupg` | transparent GPG | Keep — dual, no replacement | — |
-| `leafOfTree/vim-project` | project switcher | Overlaps your own `vim-project-config/`; decide which owns project state | P2 |
-| `mhinz/vim-startify` | start screen | Keep — dual | — |
-| `python-mode/python-mode` | python IDE | Very heavy, largely superseded by LSP; `for: python` limits the cost. Replace with native LSP on nvim + minimal on vim | P2 |
-| `maksimr/vim-jsbeautify` | JS formatting | Superseded by prettier/LSP formatters | P3 |
-| `othree/html5.vim` | HTML syntax | Mostly in-tree now | P3 |
-| `elzr/vim-json` | JSON syntax/conceal | Overlaps `jacinto.vim`; **pick one** | P2 |
-| `alfredodeza/jacinto.vim` | JSON tools | Overlaps `vim-json` | P2 |
-| `reedes/vim-pencil` | prose mode | Keep — dual | — |
-| `plasticboy/vim-markdown` | markdown | Repo is quiet; `preservim/vim-markdown` is the maintained fork — verify and switch | P2 |
-| `ravibrock/spellwarn.nvim` | spelling diagnostics | **nvim-only but unguarded** (see structural) | P1 |
-| `vimoutliner/vimoutliner` | outliner | Overlaps vimwiki + obsidian.nvim | P2 |
-| `MikeDacre/vim-checkbox` | checkboxes | Yours; keep | — |
-| `vimwiki/vimwiki` | wiki/notes | Overlaps obsidian.nvim (nvim) and vimoutliner — **the note stack is the biggest consolidation win** | P2 |
-| `gu-fan/riv.vim` | reStructuredText | `for: rst`; keep if you still write RST, else drop | P3 |
-| `lifepillar/vim-solarized8` | colourscheme | Keep — dual; repo also ships `colors/` | — |
-| `junegunn/fzf` + `fzf.vim` | fuzzy find | **The dual answer, and now the preferred one.** Telescope duplicates it on nvim | P2 |
-| `sharkdp/fd` | file finder | **Not a vim plugin** — a Rust binary cloned into `plugged/` and never built. Install via brew; remove the `Plug` line | P1 |
-| `BurntSushi/ripgrep` | grep | **Not a vim plugin** — same as above | P1 |
-| `wincent/terminus` | cursor shape/focus | Neovim handles most of this natively → guard to vim-only | P3 |
-| `MikeDacre/vim-go` | Go support | **Confirmed: fork has no remaining reason — repoint to upstream `fatih/vim-go`** | P1 |
-| `tpope/vim-fugitive` | git | Keep — best-in-class, dual | — |
-| `airblade/vim-gitgutter` | git signs | Dual; `gitsigns.nvim` is nicer on nvim but fugitive+gitgutter is the honest dual pair — keep | P3 |
+ | Plugin                                    | Role                 | Change                                                                                                                          | Pri |
+ |-------------------------------------------|----------------------|---------------------------------------------------------------------------------------------------------------------------------|-----|
+ | `tpope/vim-sensible`                      | sane defaults        | Neovim defaults already match most of it; guard to vim-only                                                                     | P3  |
+ | `xolox/vim-misc`                          | library              | Dependency of vim-session/vim-easytags, **neither installed** — likely orphaned; verify then drop                               | P2  |
+ | `jlanzarotta/bufexplorer`                 | buffer list          | Overlaps telescope/fzf buffer pickers on nvim                                                                                   | P3  |
+ | `MikeDacre/tmux-zsh-vim-titles`           | terminal titles      | Yours; keep                                                                                                                     | —   |
+ | `preservim/nerdtree`                      | file tree            | **Loads on nvim too, alongside `nvim-tree.lua`** — with Vim primary, keep nerdtree as the single dual answer and drop nvim-tree | P1  |
+ | `preservim/nerdcommenter`                 | commenting           | Neovim 0.10+ has built-in `gc` commenting → guard to vim-only                                                                   | P2  |
+ | `tpope/vim-repeat`                        | repeat plugin maps   | Keep — dual, tiny                                                                                                               | —   |
+ | `wellle/targets.vim`                      | extra text objects   | Overlaps treesitter textobjects on nvim; keep as the dual baseline                                                              | P3  |
+ | `editorconfig/editorconfig-vim`           | editorconfig         | **Built into Neovim since 0.9** → guard to vim-only                                                                             | P2  |
+ | `freitass/todo.txt-vim`                   | TODO.txt syntax      | Keep — dual, and this repo now ships a TODO.txt                                                                                 | —   |
+ | `SirVer/ultisnips` + `honza/vim-snippets` | snippets             | Needs `+python3`; dual but heavy. Alternative for later: vim9script/Lua snippet engine per editor                               | P3  |
+ | `vim-scripts/taglist.vim`                 | tag browser          | Ancient (vim-scripts mirror). Replace with `preservim/tagbar` (dual) or drop                                                    | P2  |
+ | `nathanaelkane/vim-indent-guides`         | indent guides        | Neovim has `'listchars'`/treesitter options; keep dual for now                                                                  | P3  |
+ | `junegunn/vim-easy-align`                 | alignment            | Overlaps `godlygeek/tabular` — **pick one**, easy-align is the maintained choice                                                | P2  |
+ | `godlygeek/tabular`                       | alignment            | Redundant with easy-align unless vim-markdown needs it (it does, for tables) — verify before dropping                           | P2  |
+ | `dhruvasagar/vim-table-mode`              | table editing        | Overlaps tabular + vim-markdown tables; lazy-loaded on command already                                                          | P3  |
+ | `jamessan/vim-gnupg`                      | transparent GPG      | Keep — dual, no replacement                                                                                                     | —   |
+ | `leafOfTree/vim-project`                  | project switcher     | Overlaps your own `vim-project-config/`; decide which owns project state                                                        | P2  |
+ | `mhinz/vim-startify`                      | start screen         | Keep — dual                                                                                                                     | —   |
+ | `python-mode/python-mode`                 | python IDE           | Very heavy, largely superseded by LSP; `for: python` limits the cost. Replace with native LSP on nvim + minimal on vim          | P2  |
+ | `maksimr/vim-jsbeautify`                  | JS formatting        | Superseded by prettier/LSP formatters                                                                                           | P3  |
+ | `othree/html5.vim`                        | HTML syntax          | Mostly in-tree now                                                                                                              | P3  |
+ | `elzr/vim-json`                           | JSON syntax/conceal  | Overlaps `jacinto.vim`; **pick one**                                                                                            | P2  |
+ | `alfredodeza/jacinto.vim`                 | JSON tools           | Overlaps `vim-json`                                                                                                             | P2  |
+ | `reedes/vim-pencil`                       | prose mode           | Keep — dual                                                                                                                     | —   |
+ | `plasticboy/vim-markdown`                 | markdown             | Repo is quiet; `preservim/vim-markdown` is the maintained fork — verify and switch                                              | P2  |
+ | `ravibrock/spellwarn.nvim`                | spelling diagnostics | **nvim-only but unguarded** (see structural)                                                                                    | P1  |
+ | `vimoutliner/vimoutliner`                 | outliner             | Overlaps vimwiki + obsidian.nvim                                                                                                | P2  |
+ | `MikeDacre/vim-checkbox`                  | checkboxes           | Yours; keep                                                                                                                     | —   |
+ | `vimwiki/vimwiki`                         | wiki/notes           | Overlaps obsidian.nvim (nvim) and vimoutliner — **the note stack is the biggest consolidation win**                             | P2  |
+ | `gu-fan/riv.vim`                          | reStructuredText     | `for: rst`; keep if you still write RST, else drop                                                                              | P3  |
+ | `lifepillar/vim-solarized8`               | colourscheme         | Keep — dual; repo also ships `colors/`                                                                                          | —   |
+ | `junegunn/fzf` + `fzf.vim`                | fuzzy find           | **The dual answer, and now the preferred one.** Telescope duplicates it on nvim                                                 | P2  |
+ | `sharkdp/fd`                              | file finder          | **Not a vim plugin** — a Rust binary cloned into `plugged/` and never built. Install via brew; remove the `Plug` line           | P1  |
+ | `BurntSushi/ripgrep`                      | grep                 | **Not a vim plugin** — same as above                                                                                            | P1  |
+ | `wincent/terminus`                        | cursor shape/focus   | Neovim handles most of this natively → guard to vim-only                                                                        | P3  |
+ | `MikeDacre/vim-go`                        | Go support           | **Confirmed: fork has no remaining reason — repoint to upstream `fatih/vim-go`**                                                | P1  |
+ | `tpope/vim-fugitive`                      | git                  | Keep — best-in-class, dual                                                                                                      | —   |
+ | `airblade/vim-gitgutter`                  | git signs            | Dual; `gitsigns.nvim` is nicer on nvim but fugitive+gitgutter is the honest dual pair — keep                                    | P3  |
+
+### User decision — applied 2026-09-07 (prose/wiki stack still deferred, see below)
+Accept changes except:
+- maintain python-mode in vim, switch to LSP on nvim — **applied**: python-mode
+  guarded vim-only; nvim-side LSP setup is a separate task (`lua/plugin_config.lua`
+  currently has zero LSP wiring at all — flagged for the deferred nvim-only session)
+- easy-align, tabular, table-mode: keep whichever has the command TableFormat —
+  **no plugin actually has that command**; resolved by asking directly: keep
+  tabular (vim-markdown table dependency) + table-mode, drop easy-align
+- confused by vim-project and vim-project-config, not sure what to keep, I
+  thought the vim-project-config folder was a place to keep project configs, not
+  the project itself — **clarified**: `leafOfTree/vim-project` (the plugin) does
+  auto-detection/rooting; `vim-project-config/` (the subrepo) is just your private
+  data store and doesn't do detection itself. Resolved: drop the plugin, keep only
+  the subrepo — its ~100-line dead config block in init.vim is removed too
+- pick the best plugin of jacinto and vim-json — **resolved**: jacinto.vim last
+  pushed 2017 (32★, dead); vim-json last pushed 2024 (1.2k★) — kept vim-json,
+  dropped jacinto.vim
+- for vim-markdown and vim-pencil plus any additional prose tools, let's work
+  through those interactively since I want to create a whole writing mode for
+  distraction free writing. same for vimwiki and obsidian.nvim — **deferred**,
+  as requested. One zero-risk mechanical fix applied now regardless: repointed
+  `plasticboy/vim-markdown` to `preservim/vim-markdown` (same repo, transferred
+  upstream, no functional change)
+- drop rst — **applied**: riv.vim removed
+- fd and ripgrep, create a small script to warn of these dependencies if not
+  installed, possibly as part of a greater `doctor.sh` script — **applied**, but
+  in `scripts/check.local.sh` instead of `doctor.sh`: `doctor.sh` is a verbatim
+  kit script per `CLAUDE.md` §0b/§1 and isn't rewritten per-project;
+  `check.local.sh` is the project-owned equivalent and now warns if `fd`/`rg`
+  are missing
 
 ## Neovim only
 
-| Plugin | Role | Change | Pri |
-|---|---|---|---|
-| `nvim-treesitter` (×2) | parsers/highlight | **Upstream archived 2026-04-03**; `master` frozen, `main` an incompatible rewrite; nvim 0.12 has treesitter in core. Needs a designed migration, not a bump | P1 |
-| `nvim-treesitter-refactor` | ts module | Deprecated with the rewrite → remove | P1 |
-| `nvim-treesitter-textobjects` | ts textobjects | Standalone on `main` now; re-pin during the migration | P1 |
-| `ValdezFOmar/tree-sitter-editorconfig`, `tree-sitter/tree-sitter-go`, `tree-sitter-grammars/tree-sitter-gpg-config` | grammars | Grammars, not plugins — belong to whatever parser manager survives the migration | P2 |
-| `michaelb/sniprun` | run snippets | Overlaps `code_runner.nvim` and `iron.nvim` — three ways to execute code | P2 |
-| `CRAG666/code_runner.nvim` | run code | See above | P2 |
-| `hkupty/iron.nvim` | REPL | See above; iron is the one worth keeping for Python REPL work | P2 |
-| `MunifTanjim/nui.nvim` | UI library | Dependency only — confirm something still needs it | P3 |
-| `nvim-tree/nvim-tree.lua` | file tree | Duplicate of nerdtree (see above) | P1 |
-| `Nedra1998/nvim-mdlink` | markdown links | Overlaps obsidian.nvim | P3 |
-| `kylechui/nvim-surround` | surround | Correctly guarded against `vim-surround` — keep | — |
-| `GCBallesteros/jupytext.nvim` | notebooks | Keep if you still use it | P3 |
-| `epwalsh/obsidian.nvim` | Obsidian vault | Repo was renamed/handed over upstream — verify the source before next update | P2 |
-| `neomake/neomake` | linting | vim gets `syntastic`, nvim gets `neomake`, and `linters.vim` configures both. Native LSP diagnostics on nvim + ALE as the dual option would collapse three stacks into one | P2 |
-| `mfussenegger/nvim-dap` | debugging | Keep — no dual equivalent | — |
-| `folke/twilight.nvim` + `zen-mode.nvim` | focus modes | Overlaps `vim-pencil`/goyo; nvim-only | P3 |
-| `vimlab/split-term.vim` | terminal splits | Neovim `:term` + `:split` covers most of it | P3 |
-| `ggandor/leap.nvim` | motions | nvim-only; the dual equivalent is `justinmk/vim-sneak` if you want parity | P3 |
-| `nvim-lua/plenary.nvim` | library | Telescope dependency | — |
-| `nvim-telescope/telescope.nvim` | picker | Duplicates fzf.vim. **Choose: fzf everywhere (dual) or telescope on nvim + fzf on vim** | P2 |
-| `nvim-lualine/lualine.nvim` | statusline | Correctly paired against airline — keep | — |
-| `aserowy/tmux.nvim`, `nvim-focus/focus.nvim` | tmux/focus | Paired against the vim tmux stack — keep | — |
-| `glacambre/firenvim` | browser | Keep if still used; heavy install hook | P3 |
-| `nvim-tree/nvim-web-devicons` | icons | Correctly paired — keep | — |
+ | Plugin                                                                                                              | Role              | Change                                                                                                                                                                     | Pri |
+ |---------------------------------------------------------------------------------------------------------------------|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----|
+ | `nvim-treesitter` (×2)                                                                                              | parsers/highlight | **Upstream archived 2026-04-03**; `master` frozen, `main` an incompatible rewrite; nvim 0.12 has treesitter in core. Needs a designed migration, not a bump                | P1  |
+ | `nvim-treesitter-refactor`                                                                                          | ts module         | Deprecated with the rewrite → remove                                                                                                                                       | P1  |
+ | `nvim-treesitter-textobjects`                                                                                       | ts textobjects    | Standalone on `main` now; re-pin during the migration                                                                                                                      | P1  |
+ | `ValdezFOmar/tree-sitter-editorconfig`, `tree-sitter/tree-sitter-go`, `tree-sitter-grammars/tree-sitter-gpg-config` | grammars          | Grammars, not plugins — belong to whatever parser manager survives the migration                                                                                           | P2  |
+ | `michaelb/sniprun`                                                                                                  | run snippets      | Overlaps `code_runner.nvim` and `iron.nvim` — three ways to execute code                                                                                                   | P2  |
+ | `CRAG666/code_runner.nvim`                                                                                          | run code          | See above                                                                                                                                                                  | P2  |
+ | `hkupty/iron.nvim`                                                                                                  | REPL              | See above; iron is the one worth keeping for Python REPL work                                                                                                              | P2  |
+ | `MunifTanjim/nui.nvim`                                                                                              | UI library        | Dependency only — confirm something still needs it                                                                                                                         | P3  |
+ | `nvim-tree/nvim-tree.lua`                                                                                           | file tree         | Duplicate of nerdtree (see above)                                                                                                                                          | P1  |
+ | `Nedra1998/nvim-mdlink`                                                                                             | markdown links    | Overlaps obsidian.nvim                                                                                                                                                     | P3  |
+ | `kylechui/nvim-surround`                                                                                            | surround          | Correctly guarded against `vim-surround` — keep                                                                                                                            | —   |
+ | `GCBallesteros/jupytext.nvim`                                                                                       | notebooks         | Keep if you still use it                                                                                                                                                   | P3  |
+ | `epwalsh/obsidian.nvim`                                                                                             | Obsidian vault    | Repo was renamed/handed over upstream — verify the source before next update                                                                                               | P2  |
+ | `neomake/neomake`                                                                                                   | linting           | vim gets `syntastic`, nvim gets `neomake`, and `linters.vim` configures both. Native LSP diagnostics on nvim + ALE as the dual option would collapse three stacks into one | P2  |
+ | `mfussenegger/nvim-dap`                                                                                             | debugging         | Keep — no dual equivalent                                                                                                                                                  | —   |
+ | `folke/twilight.nvim` + `zen-mode.nvim`                                                                             | focus modes       | Overlaps `vim-pencil`/goyo; nvim-only                                                                                                                                      | P3  |
+ | `vimlab/split-term.vim`                                                                                             | terminal splits   | Neovim `:term` + `:split` covers most of it                                                                                                                                | P3  |
+ | `ggandor/leap.nvim`                                                                                                 | motions           | nvim-only; the dual equivalent is `justinmk/vim-sneak` if you want parity                                                                                                  | P3  |
+ | `nvim-lua/plenary.nvim`                                                                                             | library           | Telescope dependency                                                                                                                                                       | —   |
+ | `nvim-telescope/telescope.nvim`                                                                                     | picker            | Duplicates fzf.vim. **Choose: fzf everywhere (dual) or telescope on nvim + fzf on vim**                                                                                    | P2  |
+ | `nvim-lualine/lualine.nvim`                                                                                         | statusline        | Correctly paired against airline — keep                                                                                                                                    | —   |
+ | `aserowy/tmux.nvim`, `nvim-focus/focus.nvim`                                                                        | tmux/focus        | Paired against the vim tmux stack — keep                                                                                                                                   | —   |
+ | `glacambre/firenvim`                                                                                                | browser           | Keep if still used; heavy install hook                                                                                                                                     | P3  |
+ | `nvim-tree/nvim-web-devicons`                                                                                       | icons             | Correctly paired — keep                                                                                                                                                    | —   |
+
+### User decision — applied 2026-09-07
+Worked through interactively:
+- `nui.nvim` — verified orphaned (only referenced by its own `Plug` line; its
+  would-be dependents `fidget.nvim`/`rest.nvim` are commented out) — **dropped**
+- `nvim-treesitter-refactor` — confirmed archived upstream, unreferenced in
+  `lua/` — **dropped**, independent of the still-frozen `nvim-treesitter` migration
+- `epwalsh/obsidian.nvim` — verified: still `epwalsh/obsidian.nvim`, active,
+  not archived (pushed 2026-06-04) — no action needed, table note resolved
+- sniprun / code_runner.nvim / iron.nvim (three code runners) — **kept iron.nvim
+  only**, dropped the other two
+- telescope.nvim + plenary.nvim vs fzf.vim — **dropped telescope + plenary**
+  (plenary had no other referrer either), fzf.vim is the sole dual finder
+- neomake (nvim) vs ALE (vim) — **consolidated onto ALE for both editors**;
+  `linters.vim`'s nvim branch (neomake config, pyneo toggle, CleanCheckers) is
+  replaced by the existing vim ALE block, now unconditional
+- `jupytext.nvim`, `firenvim`, `leap.nvim`, `split-term.vim` — confirmed unused
+  — **all dropped**
+- `nvim-mdlink` — overlaps `obsidian.nvim`'s own link handling — **dropped**
+- `nvim-treesitter` (+`textobjects`, grammar repos), `twilight.nvim`/`zen-mode.nvim`
+  (prose/writing-mode stack) — still deferred, unchanged
 
 ## Vim only
 
-| Plugin | Role | Change | Pri |
-|---|---|---|---|
-| `scrooloose/syntastic` | linting | Long superseded by ALE. `dense-analysis/ale` works in **both** editors and is the strongest single consolidation available: it would replace syntastic + neomake and much of `linters.vim` | P2 |
-| `Valloric/YouCompleteMe` | completion | Heaviest thing in the config, needs compilation. `vim-lsp`+`asyncomplete` or `ALE` completion is lighter; nvim uses native | P2 |
-| `bling/vim-airline` + `vim-airline-themes` | statusline | Note: upstream is `vim-airline/vim-airline`, `bling/` is the old redirect — repoint | P3 |
-| `tmux-plugins/vim-tmux`, `vim-tmux-focus-events`, `benmills/vimux`, `christoomey/vim-tmux-navigator`, `roxma/vim-tmux-clipboard` | tmux | `vim-tmux-navigator` works in **both** editors and could replace part of `tmux.nvim` for a single dual answer | P2 |
-| `ryanoasis/vim-devicons`, `vwxyutarooo/nerdtree-devicons-syntax`, `lambdalisue/vim-nerdfont`, `lambdalisue/vim-glyph-palette` | icons | Four icon plugins for one job; `vim-devicons` alone usually suffices | P2 |
+ | Plugin                                                                                                                           | Role       | Change                                                                                                                                                                                     | Pri |
+ |----------------------------------------------------------------------------------------------------------------------------------|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----|
+ | `scrooloose/syntastic`                                                                                                           | linting    | Long superseded by ALE. `dense-analysis/ale` works in **both** editors and is the strongest single consolidation available: it would replace syntastic + neomake and much of `linters.vim` | P2  |
+ | `Valloric/YouCompleteMe`                                                                                                         | completion | Heaviest thing in the config, needs compilation. `vim-lsp`+`asyncomplete` or `ALE` completion is lighter; nvim uses native                                                                 | P2  |
+ | `bling/vim-airline` + `vim-airline-themes`                                                                                       | statusline | Note: upstream is `vim-airline/vim-airline`, `bling/` is the old redirect — repoint                                                                                                        | P3  |
+ | `tmux-plugins/vim-tmux`, `vim-tmux-focus-events`, `benmills/vimux`, `christoomey/vim-tmux-navigator`, `roxma/vim-tmux-clipboard` | tmux       | `vim-tmux-navigator` works in **both** editors and could replace part of `tmux.nvim` for a single dual answer                                                                              | P2  |
+ | `ryanoasis/vim-devicons`, `vwxyutarooo/nerdtree-devicons-syntax`, `lambdalisue/vim-nerdfont`, `lambdalisue/vim-glyph-palette`    | icons      | Four icon plugins for one job; `vim-devicons` alone usually suffices                                                                                                                       | P2  |
+
+### User decision — applied 2026-09-07
+- syntastic->ALE — **applied**: moved to the unguarded "everywhere" block since
+  ALE works in both editors (14k★, pushed 2026-08-21); the vim-side linting
+  config in `linters.vim` was ported from syntastic globals to ALE equivalents
+- drop youcompleteme for something better, focus on vim — **applied**:
+  `yegappan/lsp`, a native Vim9 LSP client requiring exactly Vim 9.0+ (matches
+  the project floor), 773★, pushed 2026-09-06. No compile step. You'll still
+  need to point it at actual language servers per `:help lsp-options`
+- help me make vim/tmux work even better together — **partial**: dropped
+  `tmux-plugins/vim-tmux` (last push 2021, superseded default-bundle); kept
+  `vim-tmux-navigator`, `vimux`, `vim-tmux-focus-events`, `vim-tmux-clipboard`
+  (all still functionally distinct and reasonably alive). Deeper integration
+  (shared keymaps, etc.) is still open — revisit if you want more here
+- switch to vim-devicons — **applied**: dropped `nerdtree-devicons-syntax`,
+  `vim-nerdfont`, `vim-glyph-palette` (which also resolves the E488 hazard);
+  `vim-devicons` is now the sole icon plugin

@@ -5,30 +5,17 @@ vim.g.loaded_netrwPlugin = 1
 -- optionally enable 24-bit colour
 vim.opt.termguicolors = true
 
--- NvimTree
-require("nvim-tree").setup({
-  sort = {
-    sorter = "case_sensitive",
-  },
-  view = {
-    width = 30,
-  },
-  renderer = {
-    group_empty = true,
-  },
-  filters = {
-    dotfiles = true,
-  },
-})
-
-require('nvim-mdlink').setup({
-  keymap = true,
-  cmp = true
-})
+-- nvim-tree.lua dropped in the 2026-09-07 plugin audit: nerdtree (init.vim)
+-- is now the single dual file-tree answer for both editors.
+-- nvim-mdlink dropped the same audit pass: obsidian.nvim owns markdown link
+-- handling now.
 
 require'nvim-treesitter.configs'.setup {
   -- A list of parser names, or "all" (the listed parsers MUST always be installed)
-  ensure_installed = {"bash", "c", "cmake", "comment", "cpp", "css", "csv", "diff", "dockerfile", "editorconfig", "func", "git_config", "git_rebase", "gitattributes", "gitcommit", "gitignore", "go", "gpg", "html", "javascript", "jsdoc", "json", "json5", "latex", "llvm", "lua", "luadoc", "make", "markdown", "markdown_inline", "nginx", "objc", "objdump", "passwd", "perl", "php", "printf", "python", "query", "readline", "regex", "ruby", "sql", "ssh_config", "tmux", "todotxt", "typescript", "vim", "vimdoc", "xml", "yaml"},
+  -- "latex" excluded: this frozen nvim-treesitter fork marks it as needing
+  -- generation from the grammar definition, which needs the tree-sitter CLI
+  -- (not installed) — errors on every startup otherwise.
+  ensure_installed = {"bash", "c", "cmake", "comment", "cpp", "css", "csv", "diff", "dockerfile", "editorconfig", "func", "git_config", "git_rebase", "gitattributes", "gitcommit", "gitignore", "go", "gpg", "html", "javascript", "jsdoc", "json", "json5", "llvm", "lua", "luadoc", "make", "markdown", "markdown_inline", "nginx", "objc", "objdump", "passwd", "perl", "php", "printf", "python", "query", "readline", "regex", "ruby", "sql", "ssh_config", "tmux", "todotxt", "typescript", "vim", "vimdoc", "xml", "yaml"},
 
   -- Install parsers synchronously (only applied to `ensure_installed`)
   sync_install = false,

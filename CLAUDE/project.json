@@ -19,10 +19,17 @@
     "trunk": "master",
     "claude_mode": "tracked",
     "checkout_is_runtimepath": true,
-    "note": "~/nvim and ~/.config/nvim are the same directory; ~/.vim and ~/.vimrc symlink into it",
+    "note": "release branch is master (recorded, not renamed); day-to-day work lands on dev since 2026-09-07",
     "archived_branches": [
       "nyaovim -> tag archive/nyaovim"
-    ]
+    ],
+    "release_branch": "master",
+    "dev_branch": "dev",
+    "feature_prefix": "feat/",
+    "fix_prefix": "fix/",
+    "merge": "--no-ff",
+    "commit_style": "conventional-commits-1.0.0",
+    "push_branches": "all"
   },
   "machines": [
     "rincewind"
@@ -37,7 +44,18 @@
     "refs": "bash scripts/session.sh refs",
     "todo": "python3 scripts/todo.py list",
     "changelog": "python3 scripts/changelog.py from-git",
-    "mcp-fix": "bash scripts/mcp-fix.sh"
+    "mcp-fix": "bash scripts/mcp-fix.sh",
+    "install": "make init",
+    "docs": "make docs",
+    "manifest": "Makefile",
+    "generated": [
+      {
+        "source": "README.md",
+        "artifact": "doc/mikevim.txt",
+        "via": "make doc"
+      }
+    ],
+    "local_checks": "scripts/check.local.sh \u2014 vim and nvim must load init.vim cleanly, lua must parse"
   },
   "deps": [
     {
@@ -90,15 +108,18 @@
     },
     {
       "name": "end",
-      "trigger": "end session, wrap up, close out, push and finish"
+      "trigger": "end session, wrap up, close out, push and finish",
+      "path": ".claude/skills/end/SKILL.md"
     },
     {
       "name": "ctx",
-      "trigger": "where are we, refresh context, re-read the digest"
+      "trigger": "where are we, refresh context, re-read the digest",
+      "path": ".claude/skills/ctx/SKILL.md"
     },
     {
       "name": "release",
-      "trigger": "cut a release, tag a version, release x.y.z"
+      "trigger": "cut a release, tag a version, release x.y.z",
+      "path": ".claude/skills/release/SKILL.md"
     }
   ],
   "docs_refs": [
@@ -159,14 +180,24 @@
     }
   ],
   "hazards": [
-    "nvim-treesitter was archived 2026-04-03; master is frozen, main is an incompatible rewrite. plugins.vim declares it TWICE. Do not update it casually.",
+    "nvim-treesitter was archived 2026-04-03; master is frozen, main is an incompatible rewrite. Do not update it casually — it needs a designed migration, not a bump.",
     "plugged/ is 2.6GB and gitignored. Never commit it.",
     "The checkout IS the runtimepath: a syntax error in init.vim breaks the editor on every machine at next pull.",
-    "MacVim syncs Vim upstream on a lag (r183 = Vim 9.2 patches 1-332). Two command-injection CVEs are reported unfixed on its tracker, one in tag-file handling. Relevant here because taglist.vim and tag sessions are in daily use.",
-    "check.sh reports v:errmsg after startup as WARN, not FAIL: silent!-suppressed plugin errors land there (E216 FileExplorer in nvim from a plugin's netrw hijack, E488 glyph-palette in vim). A WARN is a lead, not a gate failure."
+    "MacVim syncs Vim upstream on a lag (r183 = Vim 9.2 patches 1-332). Two command-injection CVEs are reported unfixed on its tracker, one in tag-file handling. Relevant here because tag sessions are in daily use (tagbar, since the 2026-09-07 plugin audit replaced taglist.vim).",
+    "check.sh reports v:errmsg after startup as WARN, not FAIL: silent!-suppressed plugin errors land there. A WARN is a lead, not a gate failure — the E216/E488 examples once cited here were resolved by the 2026-09-07 plugin audit (nvim-tree.lua and vim-glyph-palette both dropped) and no longer reproduce."
   ],
   "release": {
-    "assets": []
+    "assets": [],
+    "version_file": "VERSION",
+    "changelog": "CHANGELOG.txt",
+    "changelog_spec": "keepachangelog-1.1.0",
+    "version_spec": "semver-2.0.0",
+    "tag_format": "v{version}",
+    "github_release_on": [
+      "minor",
+      "major"
+    ],
+    "requires_user_approval": true
   },
   "editors": {
     "primary": [
@@ -189,5 +220,22 @@
     "session_hook": "SessionStart: startup -> session.sh start --hook; resume|clear|compact|fork -> session.sh ctx --hook",
     "rules": ".claude/rules/plugins.md is path-scoped: loads only when plugins.vim, PLUGINS.md or lua/plugin_config.lua is read",
     "permissions": "allow scripts/, git status/diff/log/add/commit, make, vim/nvim headless; deny force-push, history rewrite, PlugClean, edits to priv/, generated doc/, CLAUDE.md"
-  }
+  },
+  "schema": 2,
+  "version": "0.1.0",
+  "claude_repo": {
+    "mode": "tracked",
+    "path": "CLAUDE",
+    "remote": "none",
+    "symlink": "CLAUDE.md -> CLAUDE/CLAUDE.md"
+  },
+  "todo": {
+    "file": "TODO.txt",
+    "archive": "done.txt",
+    "helper": "scripts/todo.py",
+    "owner": "user",
+    "format": "todo.txt (http://todotxt.org/)",
+    "comment_marker": "#"
+  },
+  "kit_version": "1.7.0"
 }

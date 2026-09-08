@@ -1,87 +1,164 @@
 #!/usr/bin/env bash
-# check.sh [all|editors] — the gate. Must exit 0 before hand-over or session end.
-#   all     : scaffold integrity + both editors (default)
-#   editors : only "does init.vim load cleanly in vim and nvim" (what `make test` runs)
-# Exit codes are honest: nothing here is wrapped in silent!. WARN lines never fail
-# the gate; they are leads (v:errmsg also captures silent!-suppressed plugin errors).
-set -uo pipefail
-cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || exit 1
-. scripts/lib.sh
-MODE="${1:-all}"
+# check.sh — one-shot repo health gate. Replaces a handful of manual greps.
+# Exit 0 = all pass. Exit 1 = at least one FAIL. WARNs never fail the run.
+# session.sh end and release.sh refuse to push on a FAIL.
+cd "$(git rev-parse --show-toplevel)"
+. scripts/lib.sh 2>/dev/null || true
 fail=0
-ok()   { printf 'PASS  %s\n' "$1"; }
-bad()  { printf 'FAIL  %s\n' "$1"; fail=1; }
-warn() { printf 'WARN  %s\n' "$1"; }
-skip() { printf 'SKIP  %s\n' "$1"; }
+pass() { printf "  PASS  %s\n" "$1"; }
+warn() { printf "  WARN  %s\n" "$1"; }
+bad()  { printf "  FAIL  %s\n" "$1"; fail=$((fail+1)); }
+cfg()  { bash scripts/cfg.sh "$1" "${2:-}" 2>/dev/null || echo "${2:-}"; }
 
-scaffold() {
-  # 1. no unreplaced placeholders in tracked scaffold files
-  if git grep -qlE '\{\{[A-Z_]+\}\}' -- CLAUDE .claude README.md ROADMAP.md TODO.txt CHANGELOG.txt Makefile 2>/dev/null; then
-    bad "placeholders remain: $(git grep -lE '\{\{[A-Z_]+\}\}' -- CLAUDE .claude README.md ROADMAP.md TODO.txt CHANGELOG.txt Makefile | tr '\n' ' ')"
-  else ok "no placeholders"; fi
-  # 2. JSON files parse
-  python3 -c 'import json; json.load(open("CLAUDE/project.json"))' 2>/dev/null && ok "project.json valid" || bad "project.json invalid"
-  if [ -f .claude/settings.json ]; then
-    python3 -c 'import json; json.load(open(".claude/settings.json"))' 2>/dev/null && ok ".claude/settings.json valid" || bad ".claude/settings.json invalid"
-  else warn ".claude/settings.json missing (no Claude Code hook/permissions)"; fi
-  # 3. symlinks
-  { [ -L CLAUDE.md ] && [ -e CLAUDE.md ]; } && ok "CLAUDE.md symlink" || bad "CLAUDE.md symlink broken"
-  { [ -L CLAUDE/skills ] && [ -d CLAUDE/skills ]; } && ok "CLAUDE/skills -> .claude/skills" || bad "CLAUDE/skills is not a symlink to .claude/skills"
-  # 4. changelog shape
-  grep -q '^## \[0.1.0\]' CHANGELOG.txt && ok "changelog seeded" || bad "changelog missing [0.1.0]"
-  python3 scripts/changelog.py check >/dev/null 2>&1 && ok "changelog [Unreleased] well-formed" || bad "changelog [Unreleased] has duplicate sections (python3 scripts/changelog.py normalize)"
-  # 5. private things never tracked
-  if git ls-files --error-unmatch priv >/dev/null 2>&1; then bad "priv/ is tracked"; else ok "priv/ untracked"; fi
-  git ls-files | grep -q '^vim-project-config' && bad "vim-project-config tracked in parent" || ok "vim-project-config not in parent"
-  git ls-files | grep -q '^plugged/' && bad "plugged/ is tracked" || ok "plugged/ untracked"
-  # 6. generated docs present and current (git-based, see lib.sh)
-  [ -f doc/mikevim.txt ] && ok "doc/mikevim.txt present" || bad "doc/mikevim.txt missing (make doc)"
-  [ -f doc/tags ] && ok "doc/tags present" || bad "doc/tags missing (make doc)"
-  doc_stale && bad "doc stale: README.md changed after doc/mikevim.txt (make doc)" || ok "doc current vs README.md"
-  # 7. scripts executable
-  local x=0; for f in scripts/*.sh scripts/*.py; do [ -x "$f" ] || { warn "$f not executable"; x=1; }; done
-  [ "$x" = 0 ] && ok "scripts executable"
-}
+# Kit mode: this repo IS claude_init. It is also a kit-managed project (it
+# dogfoods its own conventions), so the project checks run as usual and the
+# kit checks in 5a run in addition. templates/ is never scanned for
+# placeholders — they are the point.
+KIT=0
+[ -f project-init.md ] && [ -d templates ] && KIT=1
 
-editors() {
-  local tmp rc e err
-  # -N (= --cmd 'set nocompatible') is mandatory: -es starts in compatible mode,
-  # which disables \ line continuations and produces a bogus E10/E697 cascade.
-  tmp=$(mktemp)
-  T 45 vim -es -N -u init.vim -c "redir! > $tmp" -c 'silent echo v:errmsg' -c 'redir END' -c 'qa!' </dev/null >/dev/null 2>&1
-  rc=$?
-  [ "$rc" -eq 0 ] && ok "vim loads init.vim" || bad "vim cannot load init.vim (exit $rc)"
-  e=$(tr -d '\n' < "$tmp" 2>/dev/null); rm -f "$tmp"
-  [ -n "$e" ] && warn "vim v:errmsg after startup: $e"
-  if command -v nvim >/dev/null 2>&1; then
-    err=$(mktemp)
-    e=$(T 90 nvim --headless -u init.vim -c 'lua io.stdout:write(vim.v.errmsg)' -c 'qa!' </dev/null 2>"$err")
-    rc=$?
-    if [ "$rc" -eq 0 ] && ! grep -qE '\bE[0-9]+:' "$err"; then ok "nvim loads init.vim"
-    else bad "nvim init.vim errors: $(grep -E '\bE[0-9]+:' "$err" | head -2 | tr '\n' ' ')(exit $rc)"; fi
-    rm -f "$err"
-    [ -n "$e" ] && warn "nvim v:errmsg after startup: $e"
-  else skip "nvim not installed on this machine"; fi
-  # lua syntax: luajit if present, else nvim's own luajit, else skip
-  if command -v luajit >/dev/null 2>&1; then
-    for f in $(git ls-files 'lua/*.lua'); do
-      luajit -bl "$f" >/dev/null 2>&1 && ok "lua parses $f" || bad "lua syntax error $f"
-    done
-  elif command -v nvim >/dev/null 2>&1; then
-    local out
-    out=$(nvim -l /dev/stdin <<'LUA'
-for _, f in ipairs(vim.fn.split(vim.fn.system("git ls-files 'lua/*.lua'"), "\n")) do
-  local fn = loadfile(f); print((fn and "ok" or "FAIL") .. " " .. f)
-end
-LUA
-)
-    while read -r st f; do [ -z "$f" ] && continue; [ "$st" = ok ] && ok "lua parses $f" || bad "lua syntax error $f"; done <<< "$out"
-  else skip "no luajit or nvim: lua files not syntax-checked"; fi
-}
+echo "CHECK $(basename "$PWD")$( [ $KIT -eq 1 ] && echo ' (kit + project)' )"
 
-case "$MODE" in
-  all)     scaffold; editors ;;
-  editors) editors ;;
-  *) echo "usage: check.sh [all|editors]" >&2; exit 2 ;;
-esac
+# 1. unfilled template placeholders — only in kit-managed files. A whole-repo
+# scan false-positives on Hugo/Jinja/JS templates ({{ .Title }}), so the scan is
+# scoped and the token shape is exact: {{UPPER_SNAKE}}.
+SCOPE="CLAUDE .claude README.md ROADMAP.md TODO.txt CHANGELOG.txt CHANGELOG.md Makefile Makefile.kit priv/README.md VERSION"
+ph=""
+for p in $SCOPE; do
+  [ -e "$p" ] || continue
+  ph="$ph $(grep -rlE '\{\{[A-Z][A-Z0-9_]*\}\}' --exclude-dir=legacy "$p" 2>/dev/null | tr '\n' ' ')"
+done
+ph=$(echo "$ph" | tr -s ' ')
+[ -z "${ph// /}" ] && pass "no unfilled {{PLACEHOLDERS}}" || bad "unfilled placeholders in:$ph"
+
+# 2. shell + python + json syntax
+bs=0; for f in scripts/*.sh scripts/hooks/*; do [ -f "$f" ] && { bash -n "$f" 2>/dev/null || { bad "syntax: $f"; bs=1; }; }; done
+for f in scripts/*.py; do [ -f "$f" ] && { python3 -m py_compile "$f" 2>/dev/null || { bad "syntax: $f"; bs=1; }; }; done
+for f in CLAUDE/project.json .claude/settings.json .claude/settings.local.json; do
+  [ -f "$f" ] && { python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f" 2>/dev/null || { bad "invalid JSON: $f"; bs=1; }; }
+done
+[ $bs -eq 0 ] && pass "scripts and JSON parse"
+rm -rf scripts/__pycache__
+
+# 3. VERSION agrees with CHANGELOG; changelog well-formed
+CHLOG=$(cfg release.changelog CHANGELOG.txt)
+if [ -f VERSION ] && [ -f "$CHLOG" ]; then
+  v=$(tr -d ' \n' < VERSION)
+  if [ "$v" = "0.1.0" ] || grep -q "^## \[$v\]" "$CHLOG"; then
+    pass "VERSION $v present in $CHLOG"
+  else
+    bad "VERSION $v has no section in $CHLOG"
+  fi
+  python3 scripts/changelog.py lint >/dev/null 2>&1 && pass "changelog format" \
+    || bad "changelog format (run: python3 scripts/changelog.py lint)"
+fi
+
+# 4. tag agrees with VERSION
+t=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+if [ -n "$t" ]; then
+  [ "v$(tr -d ' \n' < VERSION 2>/dev/null)" = "$t" ] && pass "latest tag $t matches VERSION" \
+    || warn "latest tag $t != v$(cat VERSION 2>/dev/null) (expected mid-cycle)"
+fi
+
+# 5a. kit checks (claude_init itself): templates valid, this repo's installed
+# copies in step with templates/, and every shipped script in both copy lists.
+if [ $KIT -eq 1 ]; then
+  [ -f templates/CLAUDE.md ] && pass "kit templates present" || bad "templates/CLAUDE.md missing"
+  grep -qE '\{\{[A-Z][A-Z0-9_]*\}\}' templates/CLAUDE.md && bad "templates/CLAUDE.md must stay invariant (no placeholders)" \
+    || pass "templates/CLAUDE.md invariant"
+  python3 -c 'import json; json.load(open("templates/claude-settings.json"))' 2>/dev/null \
+    && pass "templates/claude-settings.json valid" || bad "templates/claude-settings.json missing or invalid"
+  drift=0
+  cmp -s templates/claude-settings.json .claude/settings.json || { bad ".claude/settings.json differs from templates/claude-settings.json (make sync-self)"; drift=1; }
+  cmp -s templates/CLAUDE.md CLAUDE/CLAUDE.md || { bad "CLAUDE/CLAUDE.md differs from templates/CLAUDE.md (make sync-self)"; drift=1; }
+  for d in templates/skills/*/; do
+    n=$(basename "$d")
+    cmp -s "$d/SKILL.md" ".claude/skills/$n/SKILL.md" 2>/dev/null || { bad ".claude/skills/$n/SKILL.md differs from templates/skills/$n (make sync-self)"; drift=1; }
+  done
+  [ $drift -eq 0 ] && pass "installed copies match templates/"
+  miss=0
+  for f in scripts/*.sh scripts/*.py; do
+    n=$(basename "$f")
+    case "$n" in bootstrap.sh|adopt.sh|check.local.sh) continue;; esac
+    grep -q "$n" scripts/bootstrap.sh && grep -q "$n" scripts/adopt.sh \
+      || { bad "scripts/$n is missing from adopt.sh KIT_SCRIPTS or the bootstrap.sh copy loop"; miss=1; }
+  done
+  [ $miss -eq 0 ] && pass "every kit script is in both copy lists"
+fi
+
+# 5. CLAUDE symlink, layout mode, skills location, Claude Code settings
+cmode=$(cfg claude_repo.mode tracked)
+if [ -e CLAUDE/CLAUDE.md ]; then
+  [ -L CLAUDE.md ] && pass "CLAUDE.md symlink intact" || bad "CLAUDE.md symlink missing (ln -sf CLAUDE/CLAUDE.md CLAUDE.md)"
+  if [ -d .claude/skills ]; then
+    { [ -L CLAUDE/skills ] && [ -d CLAUDE/skills ]; } && pass "skills in .claude/skills (CLAUDE/skills symlinked)" \
+      || warn "CLAUDE/skills is not a symlink to ../.claude/skills — Claude Code only discovers .claude/skills"
+  else
+    warn ".claude/skills missing — Claude Code will find no project skills"
+  fi
+  [ -f .claude/settings.json ] && pass ".claude/settings.json present" \
+    || warn ".claude/settings.json missing — no SessionStart digest hook or permission rules in Claude Code"
+  if [ "$cmode" = subrepo ]; then
+    [ -d CLAUDE/.git ] && pass "CLAUDE/ sub-repo present" || bad "mode=subrepo but CLAUDE/.git is missing"
+    git check-ignore -q CLAUDE/ 2>/dev/null && pass "CLAUDE/ ignored by parent" || bad "mode=subrepo but CLAUDE/ is not gitignored"
+    if [ -d CLAUDE/.git ]; then
+      (cd CLAUDE && git remote get-url origin >/dev/null 2>&1) \
+        && { (cd CLAUDE && [ -z "$(git status --porcelain)" ]) && pass "CLAUDE/ committed" || warn "CLAUDE/ has uncommitted changes"; } \
+        || warn "CLAUDE/ has no remote — your notes will not travel to another machine"
+    fi
+  else
+    git ls-files --error-unmatch CLAUDE/CLAUDE.md >/dev/null 2>&1 \
+      && pass "CLAUDE/ tracked in the main repo" \
+      || bad "mode=tracked but CLAUDE/CLAUDE.md is not tracked by git"
+    [ -d CLAUDE/.git ] && bad "mode=tracked but CLAUDE/.git exists — the parent will ignore that directory" || true
+  fi
+  [ -d CLAUDE/legacy ] && warn "CLAUDE/legacy/ present — adoption merge unfinished (adopt.md Phase 3)"
+else
+  bad "CLAUDE/CLAUDE.md missing"
+fi
+
+# 6. priv/ ignore rules actually work
+if [ -d priv ]; then
+  leak=0
+  for f in priv/*; do
+    case "$f" in priv/README.md|priv/*.example|priv/*.template|priv/.gitkeep|'priv/*') continue;; esac
+    git check-ignore -q "$f" || { bad "priv/ leak: $f is not gitignored"; leak=1; }
+  done
+  [ $leak -eq 0 ] && pass "priv/ ignore rules correct"
+  git ls-files priv/ | grep -qvE 'README.md|\.example|\.template|\.gitkeep' && bad "a secret file is TRACKED in git" || true
+fi
+
+# 7. submodules initialised, and clonable without SSH on a public repo
+if [ -f .gitmodules ]; then
+  git submodule status 2>/dev/null | grep -q '^-' && bad "uninitialised submodule (git submodule update --init --recursive)" \
+    || pass "submodules initialised"
+  if [ "$(cfg visibility private)" = public ] && grep -qE 'url *= *git@' .gitmodules; then
+    warn ".gitmodules uses an SSH url — a clone without a GitHub key cannot init it (use https://)"
+  fi
+fi
+
+# 8. generated files current (git-based; see lib.sh stale)
+if command -v generated_pairs >/dev/null 2>&1; then
+  while IFS=$'\t' read -r src art; do
+    [ -n "$src" ] || continue
+    if [ ! -f "$art" ]; then warn "$art not generated yet (make docs)"
+    elif stale "$src" "$art"; then bad "$art stale vs $src (make docs)"
+    else pass "$art current vs $src"; fi
+  done < <(generated_pairs)
+fi
+
+# 9. project-specific checks (project-owned, never touched by --update)
+if [ -f scripts/check.local.sh ]; then
+  echo "  ---   scripts/check.local.sh"
+  if bash scripts/check.local.sh; then pass "project checks (check.local.sh)"; else bad "project checks failed (scripts/check.local.sh)"; fi
+fi
+
+# 10. branch hygiene
+b=$(git rev-parse --abbrev-ref HEAD)
+rel=$(cfg git.release_branch main)
+[ "$b" = "$rel" ] && warn "on $rel — work belongs on dev or a feature branch" || pass "on $b"
+[ -z "$(git status --porcelain)" ] && pass "worktree clean" || warn "uncommitted changes ($(git status --porcelain | wc -l | tr -d ' ') files)"
+
+echo
+[ $fail -eq 0 ] && echo "check: OK" || echo "check: $fail FAILURE(S)"
 exit $fail

@@ -12,18 +12,28 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
-### Added
+## [0.2.0] - 2026-09-07
 
+### Added
 - add: Claude Code integration — SessionStart digest hook, permission allow/deny lists, /end /ctx /release skills, path-scoped plugin rules; skills now live in .claude/skills (CLAUDE/skills symlinked) (c04b4bc)
 
 ### Changed
-
+- Replace archived/orphaned plugins with maintained alternatives: syntastic -> dense-analysis/ale (dual editor), vim-scripts/taglist.vim -> preservim/tagbar, YouCompleteMe -> yegappan/lsp (native Vim9 LSP), MikeDacre/vim-go fork -> upstream fatih/vim-go, plasticboy/vim-markdown -> preservim/vim-markdown, bling/vim-airline -> vim-airline/vim-airline.
+- consolidate toward maintained, dual-editor plugins (1064207).
+- Resolve the Neovim-only plugin audit backlog: drop nui.nvim, nvim-treesitter-refactor, jupytext.nvim, firenvim, leap.nvim, split-term.vim, and nvim-mdlink (unused/superseded); consolidate the three code-runner plugins (sniprun, code_runner.nvim, iron.nvim) down to iron.nvim; drop telescope.nvim + plenary.nvim now that fzf.vim is the sole dual finder; consolidate linting onto ALE for both editors, dropping neomake.
 - Correct the premise: Vim 9 is primary, Neovim secondary; resolve ONI and vim-go questions (225b569)
 - Record vim-project-config subrepo and nyaovim archive; harden check.sh for compatible mode (f4b036c)
 - docs: merge duplicate changelog sections; resolve ONI todo; add E216 and skill-invocation todos (def2dc3)
 
-### Fixed
+### Removed
+- Drop orphaned, redundant, or non-plugin entries from plugins.vim: vim-misc, nvim-tree.lua (nerdtree is now the single dual file-tree answer), vim-easy-align, vim-project (and its dead config block in init.vim), vim-jsbeautify, html5.vim, jacinto.vim, riv.vim, tmux-plugins/vim-tmux, nerdtree-devicons-syntax, vim-nerdfont, vim-glyph-palette, and the fd/ripgrep Plug lines (not vim plugins — now checked by check.local.sh instead).
 
+### Fixed
+- Remove the system() shell-out at startup for g:vim_minimal, the duplicate nvim-treesitter Plug declaration, and the unguarded spellwarn.nvim on plain Vim; resolve the E216 and E488 startup hazards.
+- pin nvim-treesitter to master, add plugged/ parity check (b4d66f8).
+- Set g:python3_host_prog to a dedicated .venv (created by 'make init') instead of leaving Neovim to guess among system/pyenv/anaconda python3 installs; fixes UltiSnips' 'Python 3 is not available' warning by giving the python3 provider a stable interpreter with pynvim installed.
+- Drop 'latex' from nvim-treesitter's ensure_installed — it can't compile without the tree-sitter CLI (not installed) and was erroring on every nvim startup.
+- stop nvim-treesitter erroring on latex every startup (9877b19).
 - fix: honest check.sh gates (no silent!, nvim exit code, git-based doc staleness), changelog section merge, https submodule url; add mcp-fix.sh, cfg.sh, lib.sh, todo.py from the kit; session.sh ctx/refs/end flow; jq no longer required (3595bd2)
 
 ## [0.1.0] - 2026-09-03
@@ -48,4 +58,8 @@ February 2018 and was adopted as a managed project in September 2026.
 
 - Nothing yet. Editor behaviour is deliberately untouched in this release.
 
-<!-- changelog-synced: def2dc3 -->
+[Unreleased]: https://github.com/MikeDacre/nvim/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/MikeDacre/nvim/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/MikeDacre/nvim/releases/tag/v0.1.0
+
+<!-- changelog-synced: dab4542 -->
