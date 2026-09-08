@@ -12,6 +12,9 @@ help:  ## list targets
 init:  ## install plugins in both editors
 	-$(NVIM) --headless -c 'PlugInstall --sync' -c 'qa' </dev/null 2>&1 | tail -3
 	-$(VIM) -es -N -c 'PlugInstall --sync' -c 'qa' </dev/null 2>&1 | tail -3
+	@test -x .venv/bin/python3 || python3 -m venv .venv
+	.venv/bin/python3 -m pip install -q -U pip pynvim
+	@echo ".venv ready: g:python3_host_prog -> .venv/bin/python3"
 
 doc:  ## regenerate doc/mikevim.txt and doc/tags from README.md
 	@command -v pandoc >/dev/null || { echo "pandoc missing: brew install pandoc"; exit 1; }

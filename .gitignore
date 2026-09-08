@@ -1,4 +1,5 @@
 plugged
+.venv
 vim-project-config
 sessions
 .DS_Store

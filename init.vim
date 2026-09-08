@@ -4,6 +4,13 @@
 " Get our location
 let g:vimdir_path = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 
+" Neovim's python3 provider: a dedicated venv (see `make init`), never the
+" system/pyenv/anaconda python3 on $PATH, so pynvim doesn't have to be
+" installed into whichever interpreter happens to be active.
+if has('nvim')
+  let g:python3_host_prog = g:vimdir_path . '/.venv/bin/python3'
+endif
+
 exec "source " . g:vimdir_path . "/plugins.vim"
 
 set encoding=UTF-8
