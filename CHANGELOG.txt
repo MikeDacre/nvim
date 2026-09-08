@@ -19,6 +19,7 @@ February 2018 and was adopted as a managed project in September 2026.
 ### Changed
 - Replace archived/orphaned plugins with maintained alternatives: syntastic -> dense-analysis/ale (dual editor), vim-scripts/taglist.vim -> preservim/tagbar, YouCompleteMe -> yegappan/lsp (native Vim9 LSP), MikeDacre/vim-go fork -> upstream fatih/vim-go, plasticboy/vim-markdown -> preservim/vim-markdown, bling/vim-airline -> vim-airline/vim-airline.
 - consolidate toward maintained, dual-editor plugins (1064207).
+- Resolve the Neovim-only plugin audit backlog: drop nui.nvim, nvim-treesitter-refactor, jupytext.nvim, firenvim, leap.nvim, split-term.vim, and nvim-mdlink (unused/superseded); consolidate the three code-runner plugins (sniprun, code_runner.nvim, iron.nvim) down to iron.nvim; drop telescope.nvim + plenary.nvim now that fzf.vim is the sole dual finder; consolidate linting onto ALE for both editors, dropping neomake.
 
 - Correct the premise: Vim 9 is primary, Neovim secondary; resolve ONI and vim-go questions (225b569)
 - Record vim-project-config subrepo and nyaovim archive; harden check.sh for compatible mode (f4b036c)
@@ -56,4 +57,4 @@ February 2018 and was adopted as a managed project in September 2026.
 
 - Nothing yet. Editor behaviour is deliberately untouched in this release.
 
-<!-- changelog-synced: 92de42a -->
+<!-- changelog-synced: 8276d86 -->
