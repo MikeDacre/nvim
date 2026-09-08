@@ -128,8 +128,26 @@ Accept changes except:
  | `glacambre/firenvim`                                                                                                | browser           | Keep if still used; heavy install hook                                                                                                                                     | P3  |
  | `nvim-tree/nvim-web-devicons`                                                                                       | icons             | Correctly paired — keep                                                                                                                                                    | —   |
 
-### User decision
-Let's work through these interactively, vim 9 is more important
+### User decision — applied 2026-09-07
+Worked through interactively:
+- `nui.nvim` — verified orphaned (only referenced by its own `Plug` line; its
+  would-be dependents `fidget.nvim`/`rest.nvim` are commented out) — **dropped**
+- `nvim-treesitter-refactor` — confirmed archived upstream, unreferenced in
+  `lua/` — **dropped**, independent of the still-frozen `nvim-treesitter` migration
+- `epwalsh/obsidian.nvim` — verified: still `epwalsh/obsidian.nvim`, active,
+  not archived (pushed 2026-06-04) — no action needed, table note resolved
+- sniprun / code_runner.nvim / iron.nvim (three code runners) — **kept iron.nvim
+  only**, dropped the other two
+- telescope.nvim + plenary.nvim vs fzf.vim — **dropped telescope + plenary**
+  (plenary had no other referrer either), fzf.vim is the sole dual finder
+- neomake (nvim) vs ALE (vim) — **consolidated onto ALE for both editors**;
+  `linters.vim`'s nvim branch (neomake config, pyneo toggle, CleanCheckers) is
+  replaced by the existing vim ALE block, now unconditional
+- `jupytext.nvim`, `firenvim`, `leap.nvim`, `split-term.vim` — confirmed unused
+  — **all dropped**
+- `nvim-mdlink` — overlaps `obsidian.nvim`'s own link handling — **dropped**
+- `nvim-treesitter` (+`textobjects`, grammar repos), `twilight.nvim`/`zen-mode.nvim`
+  (prose/writing-mode stack) — still deferred, unchanged
 
 ## Vim only
 
