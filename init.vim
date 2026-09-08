@@ -297,166 +297,47 @@ if g:vim_minimal == 0
           \ { 'type': 'commands',  'header': ['   Commands']       },
           \ ]
 
-  " vim-project
-  let g:vim_project_config = {
-      \'config_home':                   '~/.vim/vim-project-config',
-      \'project_base':                  ['~/.vim/projects'],
-      \'use_session':                   0,
-      \'open_root_when_use_session':    0,
-      \'check_branch_when_use_session': 0,
-      \'project_root':                  './',
-      \'auto_load_on_start':            1,
-      \'include':                       ['./'],
-      \'exclude':                       ['.git', 'node_modules', '.DS_Store', '.github', '.next'],
-      \'search_include':                [],
-      \'find_in_files_include':         [],
-      \'search_exclude':                [],
-      \'find_in_files_exclude':         [],
-      \'auto_detect':                   'yes',
-      \'auto_detect_file':              ['.git', '.svn'],
-      \'ask_create_directory':          'no',
-      \'project_views':                 [],
-      \'file_mappings':                 {},
-      \'tasks':                         [],
-      \'new_tasks':                     [
-        \{ 'name': 'git', 'cmd': 'git clone', 'args': 'url' },
-        \{ 'name': 'empty', 'cmd': 'mkdir' },
-        \{ 'name': 'existing', 'cmd': 'cd .' },
-      \],
-      \'new_project_base':              '',
-      \'new_tasks_post_cmd':            '',
-      \'commit_message':                '',
-      \'debug':                         0,
-      \}
+  " NERDtree — the single dual file-tree answer (nvim-tree.lua dropped, see
+  " PLUGINS.md); vim-project plugin dropped too, so its ~100-line config block
+  " that used to live here is gone along with it (vim-project-config/ subrepo
+  " is unaffected — it was always just a private data store, not this plugin)
+  noremap <F5> :NERDTree<CR>
 
-  " Keymappings for list prompt
-  let g:vim_project_config.list_mappings = {
-        \'open':                 "\<cr>",
-        \'close_list':           "\<esc>",
-        \'clear_char':           ["\<bs>", "\<c-a>"],
-        \'clear_word':           "\<c-w>",
-        \'clear_all':            "\<c-u>",
-        \'prev_item':            ["\<c-k>", "\<up>"],
-        \'next_item':            ["\<c-j>", "\<down>"],
-        \'first_item':           ["\<c-h>", "\<left>"],
-        \'last_item':            ["\<c-l>", "\<right>"],
-        \'scroll_up':            "\<c-p>",
-        \'scroll_down':          "\<c-n>",
-        \'paste':                "\<c-b>",
-        \'switch_to_list':       "\<c-o>",
-        \}
-  let g:vim_project_config.list_mappings_projects = {
-        \'prev_view':            "\<s-tab>",
-        \'next_view':            "\<tab>",
-        \}
-  let g:vim_project_config.list_mappings_search_files = {
-        \'open_split':           "\<c-s>",
-        \'open_vsplit':          "\<c-v>",
-        \'open_tabedit':         "\<c-t>",
-        \}
-  let g:vim_project_config.list_mappings_find_in_files = {
-        \'open_split':           "\<c-s>",
-        \'open_vsplit':          "\<c-v>",
-        \'open_tabedit':         "\<c-t>",
-        \'replace_prompt':       "\<c-r>",
-        \'replace_dismiss_item': "\<c-d>",
-        \'replace_confirm':      "\<cr>",
-        \}
-  let g:vim_project_config.list_mappings_run_tasks = {
-        \'run_task':              "\<cr>",
-        \'stop_task':             "\<c-q>",
-        \'open_task_terminal':    "\<c-o>",
-        \}
+  " Mirror the NERDTree before showing it. This makes it the same on all tabs.
+  nnoremap <C-n> :NERDTreeMirror<CR>:NERDTreeFocus<CR>
 
-  let g:vim_project_config.list_mappings_git = {
-        \'checkout_revision':     "\<c-o>",
-        \}
+  " New tree
+  nnoremap <leader>nnt :NERDTreeMirror<CR>:NERDTreeFocus<CR>
 
-  let g:vim_project_config.git_diff_mappings = {
-        \'jump_to_source': "\<cr>",
-        \}
-  let g:vim_project_config.git_changes_mappings = {
-        \'open_file': "\<cr>",
-        \}
-  let g:vim_project_config.git_local_changes_mappings = {
-        \'commit': 'c',
-        \'rollback_file': 'R',
-        \'open_changelist_or_file': "\<cr>",
-        \'new_changelist': 'a',
-        \'move_to_changelist': 'm',
-        \'rename_changelist': 'r',
-        \'delete_changelist': 'd',
-        \'pull': 'u',
-        \'push': 'p',
-        \'pull_and_push': 'P',
-        \}
+  " Toggle
+  nnoremap <leader>nt :NERDTreeToggle<CR>
+  nnoremap <leader>nf :NERDTreeFocus<CR>
+  nnoremap <leader>ns :NERDTreeFind<CR>
 
-  function! GetTitle()
-    if exists('g:vim_project') && !empty(g:vim_project)
-      return g:vim_project.name.' - '.expand('%')
-    else
-      return expand('%:p').' - '.expand('%')
-    endif
-  endfunction
+  let g:NERDTreeWinPos = "left"
 
-  if exists('g:vim_project') && !empty(g:vim_project)
-    set title titlestring=%{GetTitle()}
-  endif
+  " Start NERDTree when Vim is started without file arguments.
+  autocmd StdinReadPre * let s:std_in=1
+  autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | wincmd p | endif
 
-  if has('nvim')
-    " Toggle
-    nnoremap <leader>nt :NvimTreeToggle<CR>
-    nnoremap <leader>nf :NvimTreeFocus<CR>
+  " Exit Vim if NERDTree is the only window remaining in the only tab.
+  autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
 
-  else
-    " NERDtree
-    noremap <F5> :NERDTree<CR>
+  " Close the tab if NERDTree is the only window remaining in it.
+  autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
 
-    " Mirror the NERDTree before showing it. This makes it the same on all tabs.
-    nnoremap <C-n> :NERDTreeMirror<CR>:NERDTreeFocus<CR>
-
-    " New tree
-    nnoremap <leader>nnt :NERDTreeMirror<CR>:NERDTreeFocus<CR>
-
-    " Toggle
-    nnoremap <leader>nt :NERDTreeToggle<CR>
-    nnoremap <leader>nf :NERDTreeFocus<CR>
-    nnoremap <leader>ns :NERDTreeFind<CR>
-
-    let g:NERDTreeWinPos = "left"
-
-    " Start NERDTree when Vim is started without file arguments.
-    autocmd StdinReadPre * let s:std_in=1
-    autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | wincmd p | endif
-
-    " Exit Vim if NERDTree is the only window remaining in the only tab.
-    autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
-
-    " Close the tab if NERDTree is the only window remaining in it.
-    autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
-  endif
-
-  " Easy Align
-  xmap ga <Plug>(EasyAlign)
-  nmap ga <Plug>(EasyAlign)
-
-  " Tag List
-  noremap <F6> :TlistToggle<CR>
-  map <leader>to :TlistSessionLoad .tlist<cr>
-  map <leader>ts :TlistSessionSave .tlist<cr>y<cr>
-  let Tlist_GainFocus_On_ToggleOpen = 0
-  let Tlist_Use_Right_Window = 1
-  let Tlist_Process_file_Always = 1
-  let tlist_php_settings = 'php;c:class;d:constant;f:function'
-  let tlist_python3_settings = 'Python;c:classes;f:functions;m:class_members;v:variables;i:imports'
-  let tlist_python_settings = 'Python;c:classes;f:functions;m:class_members;v:variables;i:imports'
+  " Tagbar — replaces taglist.vim (see PLUGINS.md). No session-save/load
+  " equivalent to taglist's :TlistSessionLoad/:TlistSessionSave; dropped rather
+  " than faked.
+  noremap <F6> :TagbarToggle<CR>
+  let g:tagbar_autofocus = 0
 
   " Toggle error window
   let g:toggle_list_no_mappings = 1
   nmap <script> <silent> <leader>ll :call ToggleLocationList()<CR>
   nmap <script> <silent> <leader>lq :call ToggleQuickfixList()<CR>
 
-  " Neomake and Syntastic
+  " Neomake and ALE
   if !$VIM_MINIMAL
     exec "source " . g:vimdir_path . "/linters.vim"
   endif

@@ -5,21 +5,8 @@ vim.g.loaded_netrwPlugin = 1
 -- optionally enable 24-bit colour
 vim.opt.termguicolors = true
 
--- NvimTree
-require("nvim-tree").setup({
-  sort = {
-    sorter = "case_sensitive",
-  },
-  view = {
-    width = 30,
-  },
-  renderer = {
-    group_empty = true,
-  },
-  filters = {
-    dotfiles = true,
-  },
-})
+-- nvim-tree.lua dropped in the 2026-09-07 plugin audit: nerdtree (init.vim)
+-- is now the single dual file-tree answer for both editors.
 
 require('nvim-mdlink').setup({
   keymap = true,
