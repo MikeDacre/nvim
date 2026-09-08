@@ -30,6 +30,7 @@ February 2018 and was adopted as a managed project in September 2026.
 ### Fixed
 - Remove the system() shell-out at startup for g:vim_minimal, the duplicate nvim-treesitter Plug declaration, and the unguarded spellwarn.nvim on plain Vim; resolve the E216 and E488 startup hazards.
 - pin nvim-treesitter to master, add plugged/ parity check (b4d66f8).
+- Set g:python3_host_prog to a dedicated .venv (created by 'make init') instead of leaving Neovim to guess among system/pyenv/anaconda python3 installs; fixes UltiSnips' 'Python 3 is not available' warning by giving the python3 provider a stable interpreter with pynvim installed.
 
 - fix: honest check.sh gates (no silent!, nvim exit code, git-based doc staleness), changelog section merge, https submodule url; add mcp-fix.sh, cfg.sh, lib.sh, todo.py from the kit; session.sh ctx/refs/end flow; jq no longer required (3595bd2)
 
