@@ -2,8 +2,10 @@
 # check.local.sh — this project's own gate, called by the kit's check.sh and by
 # `make test`: both editors must load init.vim cleanly and every lua file must
 # parse. Exit codes are honest. v:errmsg is reported as WARN because silent!-
-# suppressed plugin errors land there too (E216 FileExplorer in nvim, E488
-# glyph-palette in vim) — a WARN is a lead, not a failure.
+# suppressed plugin errors can land there — a WARN is a lead, not a failure.
+# (The E216/E488 WARNs this comment used to cite as examples are resolved:
+# nvim-tree.lua and vim-glyph-palette were both dropped in the 2026-09-07
+# plugin audit.)
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 . scripts/lib.sh
@@ -45,4 +47,11 @@ LUA
 )
   while read -r st f; do [ -z "$f" ] && continue; [ "$st" = ok ] && ok "lua parses $f" || bad "lua syntax error $f"; done <<< "$out"
 else skip "no luajit or nvim: lua files not syntax-checked"; fi
+
+# fzf.vim shells out to these; they're binaries, not vim plugins, so vim-plug
+# can't install them — brew install fd ripgrep
+declare -A bin_pkg=([fd]=fd [rg]=ripgrep)
+for bin in fd rg; do
+  command -v "$bin" >/dev/null 2>&1 && ok "$bin on PATH" || warn "$bin not found — brew install ${bin_pkg[$bin]} (fzf.vim degrades without it)"
+done
 exit $fail

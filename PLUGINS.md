@@ -21,7 +21,7 @@ Nothing here is actioned. Rows get approved one at a time (see
  | `autoload/plug.vim.old`            | Stale copy of the plugin manager tracked in the repo                                            | Delete                                                                                                | P3  |
  | Completion asymmetry               | `YouCompleteMe` sits inside the **tmux** `else` branch; Neovim gets no completion plugin at all | Move out of the tmux block; adopt nvim 0.12 native `'autocomplete'` for nvim, keep a light vim option | P2  |
 
-### User decision
+### User decision — applied 2026-09-07
 accept all above recommendations
 
 ## Everywhere (vim + nvim) — the shared core
@@ -68,20 +68,36 @@ accept all above recommendations
  | `tpope/vim-fugitive`                      | git                  | Keep — best-in-class, dual                                                                                                      | —   |
  | `airblade/vim-gitgutter`                  | git signs            | Dual; `gitsigns.nvim` is nicer on nvim but fugitive+gitgutter is the honest dual pair — keep                                    | P3  |
 
-### User decision
+### User decision — applied 2026-09-07 (prose/wiki stack still deferred, see below)
 Accept changes except:
-- maintain python-mode in vim, switch to LSP on nvim
-- easy-align, tabular, table-mode: keep whichever has the command TableFormat
+- maintain python-mode in vim, switch to LSP on nvim — **applied**: python-mode
+  guarded vim-only; nvim-side LSP setup is a separate task (`lua/plugin_config.lua`
+  currently has zero LSP wiring at all — flagged for the deferred nvim-only session)
+- easy-align, tabular, table-mode: keep whichever has the command TableFormat —
+  **no plugin actually has that command**; resolved by asking directly: keep
+  tabular (vim-markdown table dependency) + table-mode, drop easy-align
 - confused by vim-project and vim-project-config, not sure what to keep, I
-thought the vim-project-config folder was a place to keep project configs, not
-the project itself
-- pick the best plugin of jacinto and vim-json
+  thought the vim-project-config folder was a place to keep project configs, not
+  the project itself — **clarified**: `leafOfTree/vim-project` (the plugin) does
+  auto-detection/rooting; `vim-project-config/` (the subrepo) is just your private
+  data store and doesn't do detection itself. Resolved: drop the plugin, keep only
+  the subrepo — its ~100-line dead config block in init.vim is removed too
+- pick the best plugin of jacinto and vim-json — **resolved**: jacinto.vim last
+  pushed 2017 (32★, dead); vim-json last pushed 2024 (1.2k★) — kept vim-json,
+  dropped jacinto.vim
 - for vim-markdown and vim-pencil plus any additional prose tools, let's work
-through those interactively since I want to create a whole writing mode for
-distraction free writing. same for vimwiki and obsidian.nvim
-- drop rst
+  through those interactively since I want to create a whole writing mode for
+  distraction free writing. same for vimwiki and obsidian.nvim — **deferred**,
+  as requested. One zero-risk mechanical fix applied now regardless: repointed
+  `plasticboy/vim-markdown` to `preservim/vim-markdown` (same repo, transferred
+  upstream, no functional change)
+- drop rst — **applied**: riv.vim removed
 - fd and ripgrep, create a small script to warn of these dependencies if not
-installed, possibly as part of a greater `doctor.sh` script
+  installed, possibly as part of a greater `doctor.sh` script — **applied**, but
+  in `scripts/check.local.sh` instead of `doctor.sh`: `doctor.sh` is a verbatim
+  kit script per `CLAUDE.md` §0b/§1 and isn't rewritten per-project;
+  `check.local.sh` is the project-owned equivalent and now warns if `fd`/`rg`
+  are missing
 
 ## Neovim only
 
@@ -125,8 +141,19 @@ Let's work through these interactively, vim 9 is more important
  | `tmux-plugins/vim-tmux`, `vim-tmux-focus-events`, `benmills/vimux`, `christoomey/vim-tmux-navigator`, `roxma/vim-tmux-clipboard` | tmux       | `vim-tmux-navigator` works in **both** editors and could replace part of `tmux.nvim` for a single dual answer                                                                              | P2  |
  | `ryanoasis/vim-devicons`, `vwxyutarooo/nerdtree-devicons-syntax`, `lambdalisue/vim-nerdfont`, `lambdalisue/vim-glyph-palette`    | icons      | Four icon plugins for one job; `vim-devicons` alone usually suffices                                                                                                                       | P2  |
 
-### User decision
-- syntastic->ALE
-- drop youcompleteme for something better, focus on vim
-- help me make vim/tmux work even better together
-- switch to vim-devicons
+### User decision — applied 2026-09-07
+- syntastic->ALE — **applied**: moved to the unguarded "everywhere" block since
+  ALE works in both editors (14k★, pushed 2026-08-21); the vim-side linting
+  config in `linters.vim` was ported from syntastic globals to ALE equivalents
+- drop youcompleteme for something better, focus on vim — **applied**:
+  `yegappan/lsp`, a native Vim9 LSP client requiring exactly Vim 9.0+ (matches
+  the project floor), 773★, pushed 2026-09-06. No compile step. You'll still
+  need to point it at actual language servers per `:help lsp-options`
+- help me make vim/tmux work even better together — **partial**: dropped
+  `tmux-plugins/vim-tmux` (last push 2021, superseded default-bundle); kept
+  `vim-tmux-navigator`, `vimux`, `vim-tmux-focus-events`, `vim-tmux-clipboard`
+  (all still functionally distinct and reasonably alive). Deeper integration
+  (shared keymaps, etc.) is still open — revisit if you want more here
+- switch to vim-devicons — **applied**: dropped `nerdtree-devicons-syntax`,
+  `vim-nerdfont`, `vim-glyph-palette` (which also resolves the E488 hazard);
+  `vim-devicons` is now the sole icon plugin

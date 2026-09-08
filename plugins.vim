@@ -2,35 +2,31 @@
 "                              Plugins for NVIM                               "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-let g:vim_mini = system('if [ -n "$VIM_MINIMAL" ] && $VIM_MINIMAL; then echo true; else echo false; fi')
-if g:vim_mini == 'true'
-  let g:vim_minimal = 1
-else
-  let g:vim_minimal = 0
-endif
+let g:vim_minimal = $VIM_MINIMAL ==# 'true' ? 1 : 0
 
 " Plugins with [vim-plug](https://github.com/junegunn/vim-plug)
 call plug#begin(g:vimdir_path . '/plugged')
 
 " Plugins that work everywhere
-Plug 'tpope/vim-sensible'
-Plug 'xolox/vim-misc'
+if !has('nvim')
+  Plug 'tpope/vim-sensible'  " nvim's own defaults already cover most of this
+endif
 Plug 'jlanzarotta/bufexplorer', { 'on': 'BufExplorer' }
 
 Plug 'MikeDacre/tmux-zsh-vim-titles'
 
-" NerdTree
+" NerdTree — the single dual file-tree answer (nvim-tree.lua dropped)
 Plug 'preservim/nerdtree'
 if has('nvim')
   Plug 'michaelb/sniprun'
   " Plug 'j\-hui/fidget.nvim'
   Plug 'MunifTanjim/nui.nvim'
   " Plug 'rest-nvim/rest.nvim'
-  Plug 'nvim-tree/nvim-tree.lua'
   Plug 'Nedra1998/nvim-mdlink'
-  Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 endif
-Plug 'preservim/nerdcommenter'
+if !has('nvim')
+  Plug 'preservim/nerdcommenter'  " nvim 0.10+ has built-in gc commenting
+endif
 
 " Extra targets and actions
 Plug 'tpope/vim-repeat'    " Select within surrounding with cin<surround>
@@ -41,22 +37,23 @@ else
   Plug 'tpope/vim-surround'  " Change surroundings with cs<surround>
 endif
 
+" Linting — dual answer, replaces syntastic (archived). Neomake stays on the
+" nvim side for now; full lint-stack consolidation is a nvim-only-session topic.
+Plug 'dense-analysis/ale'
 
 if g:vim_minimal == 0
-  Plug 'editorconfig/editorconfig-vim'
+  if !has('nvim')
+    Plug 'editorconfig/editorconfig-vim'  " built into nvim since 0.9
+  endif
   Plug 'freitass/todo.txt-vim'
   " Plug 'AndrewRadev/linediff.vim'
   " Plug 'tpope/vim-speeddating'  " Increment dates and times
   Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
-  Plug 'vim-scripts/taglist.vim'
+  Plug 'preservim/tagbar'  " maintained fork of vim-scripts/taglist.vim
   Plug 'nathanaelkane/vim-indent-guides'
-  Plug 'junegunn/vim-easy-align'
-  Plug 'godlygeek/tabular'
+  Plug 'godlygeek/tabular'  " kept: vim-markdown's table support depends on it
   Plug 'dhruvasagar/vim-table-mode', { 'on': 'TableModeToggle' }
   Plug 'jamessan/vim-gnupg'
-
-  " Projects
-  Plug 'leafOfTree/vim-project'
 
   Plug 'mhinz/vim-startify'
 
@@ -64,39 +61,32 @@ if g:vim_minimal == 0
   if has('nvim')
     Plug 'GCBallesteros/jupytext.nvim'
   endif
-  Plug 'python-mode/python-mode' , { 'for': 'python' }
+  if !has('nvim')
+    Plug 'python-mode/python-mode', { 'for': 'python' }  " nvim side: native LSP
+  endif
   " Plug 'phelipetls/vim-hugo'
-  Plug 'maksimr/vim-jsbeautify'
-  Plug 'othree/html5.vim'
 
   " JSON
   Plug 'elzr/vim-json'
-  Plug 'alfredodeza/jacinto.vim'
   " Markdown writing
   Plug 'reedes/vim-pencil'
   " Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
-  Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
-  Plug 'ravibrock/spellwarn.nvim'
+  Plug 'preservim/vim-markdown', { 'for': 'markdown' }  " plasticboy transferred here
   if has('nvim')
+    Plug 'ravibrock/spellwarn.nvim'
     Plug 'epwalsh/obsidian.nvim'
   endif
   Plug 'vimoutliner/vimoutliner'
   Plug 'MikeDacre/vim-checkbox'
   Plug 'vimwiki/vimwiki'
 
-  " RST
-  Plug 'gu-fan/riv.vim', { 'for': 'rst' }
-
   " Color schemes
   Plug 'lifepillar/vim-solarized8'
 endif
 
-" FZF searching
+" FZF searching — the dual answer
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
-
-Plug 'sharkdp/fd'
-Plug 'BurntSushi/ripgrep'
 
 " NeoVim Only
 if has('nvim')
@@ -104,7 +94,7 @@ if has('nvim')
   Plug 'neomake/neomake'
   " Debugging
   Plug 'mfussenegger/nvim-dap'
-  " Tree-Sitter
+  " Tree-Sitter — upstream archived 2026-04-03; do not bump, needs a designed migration
   Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
   Plug 'ValdezFOmar/tree-sitter-editorconfig'
   Plug 'tree-sitter/tree-sitter-go'
@@ -117,7 +107,6 @@ if has('nvim')
   " NeoVim terminal
   Plug 'hkupty/iron.nvim', { 'do': ':UpdateRemotePlugins' }
   Plug 'vimlab/split-term.vim'
-  " Linters
   " Leap movement
   Plug 'ggandor/leap.nvim'
   " Telescope
@@ -125,18 +114,18 @@ if has('nvim')
   Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
   " Code runner
   Plug 'CRAG666/code_runner.nvim'
-else
-  Plug 'scrooloose/syntastic'
 endif
 
 
-Plug 'wincent/terminus'
+if !has('nvim')
+  Plug 'wincent/terminus'  " nvim handles cursor shape/focus natively
+endif
 
 " Status bar
 if has('nvim')
   Plug 'nvim-lualine/lualine.nvim'
 else
-  Plug 'bling/vim-airline'
+  Plug 'vim-airline/vim-airline'  " bling/vim-airline is the old redirect
   Plug 'vim-airline/vim-airline-themes'
   " Plug 'edkolev/tmuxline.vim'
 endif
@@ -146,9 +135,8 @@ if has('nvim')
   Plug 'aserowy/tmux.nvim'
   Plug 'nvim-focus/focus.nvim'
 else
-  " Completion
-  Plug 'Valloric/YouCompleteMe'
-  Plug 'tmux-plugins/vim-tmux'
+  " Completion / language intelligence — replaces YouCompleteMe
+  Plug 'yegappan/lsp'
   Plug 'tmux-plugins/vim-tmux-focus-events'
   Plug 'benmills/vimux'
   Plug 'christoomey/vim-tmux-navigator'
@@ -156,7 +144,7 @@ else
 endif
 
 " Go language
-Plug 'MikeDacre/vim-go'
+Plug 'fatih/vim-go'  " upstream; MikeDacre/vim-go fork had no remaining reason
 
 " Git support
 Plug 'tpope/vim-fugitive'
@@ -172,11 +160,7 @@ endif
 if has('nvim')
   Plug 'nvim-tree/nvim-web-devicons'
 else
-  Plug 'ryanoasis/vim-devicons'
-  Plug 'vwxyutarooo/nerdtree-devicons-syntax'
-  Plug 'lambdalisue/vim-nerdfont'
-  " Plug 'ryanoasis/nerd-fonts'
-  Plug 'lambdalisue/vim-glyph-palette'
+  Plug 'ryanoasis/vim-devicons'  " single icon plugin now (was 4)
 endif
 " set encoding=UTF-8
 " set guifont=DejaVuSansMNFM:h12
