@@ -18,11 +18,8 @@ Plug 'MikeDacre/tmux-zsh-vim-titles'
 " NerdTree — the single dual file-tree answer (nvim-tree.lua dropped)
 Plug 'preservim/nerdtree'
 if has('nvim')
-  Plug 'michaelb/sniprun'
-  " Plug 'j\-hui/fidget.nvim'
-  Plug 'MunifTanjim/nui.nvim'
-  " Plug 'rest-nvim/rest.nvim'
-  Plug 'Nedra1998/nvim-mdlink'
+  " Plug 'j\-hui/fidget.nvim'   " needs MunifTanjim/nui.nvim if re-enabled
+  " Plug 'rest-nvim/rest.nvim'  " needs MunifTanjim/nui.nvim if re-enabled
 endif
 if !has('nvim')
   Plug 'preservim/nerdcommenter'  " nvim 0.10+ has built-in gc commenting
@@ -37,8 +34,8 @@ else
   Plug 'tpope/vim-surround'  " Change surroundings with cs<surround>
 endif
 
-" Linting — dual answer, replaces syntastic (archived). Neomake stays on the
-" nvim side for now; full lint-stack consolidation is a nvim-only-session topic.
+" Linting — the single dual answer, replaces syntastic (archived) and neomake
+" (dropped 2026-09-07, see PLUGINS.md)
 Plug 'dense-analysis/ale'
 
 if g:vim_minimal == 0
@@ -58,9 +55,6 @@ if g:vim_minimal == 0
   Plug 'mhinz/vim-startify'
 
   " Languages
-  if has('nvim')
-    Plug 'GCBallesteros/jupytext.nvim'
-  endif
   if !has('nvim')
     Plug 'python-mode/python-mode', { 'for': 'python' }  " nvim side: native LSP
   endif
@@ -90,8 +84,6 @@ Plug 'junegunn/fzf.vim'
 
 " NeoVim Only
 if has('nvim')
-  " Linters
-  Plug 'neomake/neomake'
   " Debugging
   Plug 'mfussenegger/nvim-dap'
   " Tree-Sitter — upstream archived 2026-04-03; 'main' is an incompatible
@@ -101,21 +93,13 @@ if has('nvim')
   Plug 'ValdezFOmar/tree-sitter-editorconfig'
   Plug 'tree-sitter/tree-sitter-go'
   Plug 'tree-sitter-grammars/tree-sitter-gpg-config'
-  Plug 'nvim-treesitter/nvim-treesitter-refactor'
   Plug 'nvim-treesitter/nvim-treesitter-textobjects'
   Plug 'folke/twilight.nvim'
   Plug 'folke/zen-mode.nvim'
 
-  " NeoVim terminal
+  " NeoVim terminal / REPL — the single code-execution answer (sniprun and
+  " code_runner.nvim dropped 2026-09-07, see PLUGINS.md)
   Plug 'hkupty/iron.nvim', { 'do': ':UpdateRemotePlugins' }
-  Plug 'vimlab/split-term.vim'
-  " Leap movement
-  Plug 'ggandor/leap.nvim'
-  " Telescope
-  Plug 'nvim-lua/plenary.nvim'
-  Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
-  " Code runner
-  Plug 'CRAG666/code_runner.nvim'
 endif
 
 
@@ -153,11 +137,6 @@ Plug 'tpope/vim-fugitive'
 " Git Realtime Info
 Plug 'airblade/vim-gitgutter'
 " Plug 'itchyny/vim-gitbranch'
-
-" Vim in the browser
-if has('nvim')
-  Plug 'glacambre/firenvim', { 'do': { _ -> firenvim#install(0) } }
-endif
 
 if has('nvim')
   Plug 'nvim-tree/nvim-web-devicons'
