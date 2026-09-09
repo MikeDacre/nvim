@@ -45,7 +45,7 @@
     "todo": "python3 scripts/todo.py list",
     "changelog": "python3 scripts/changelog.py from-git",
     "mcp-fix": "bash scripts/mcp-fix.sh",
-    "install": "make init",
+    "install": "bash scripts/install.sh",
     "docs": "make docs",
     "manifest": "Makefile",
     "generated": [
@@ -55,7 +55,8 @@
         "via": "make doc"
       }
     ],
-    "local_checks": "scripts/check.local.sh \u2014 vim and nvim must load init.vim cleanly, lua must parse"
+    "local_checks": "scripts/check.local.sh \u2014 vim and nvim must load init.vim cleanly, lua must parse",
+    "install_modes": "light|normal|heavy \u2014 see scripts/install.sh --help"
   },
   "deps": [
     {
