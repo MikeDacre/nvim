@@ -17,7 +17,7 @@ Nothing here is actioned. Rows get approved one at a time (see
  |------------------------------------|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|-----|
  | `g:vim_mini` shells out at startup | `system('if [ -n "$VIM_MINIMAL" ]...')` spawns `/bin/sh` on **every** launch, in both editors   | `let g:vim_minimal = $VIM_MINIMAL ==# 'true'` — pure vimscript, no fork                               | P1  |
  | `nvim-treesitter` declared twice   | Once in the early `has('nvim')` block, again in "NeoVim Only"                                   | Delete one; then handle the archive (below)                                                           | P1  |
- | `spellwarn.nvim` unguarded         | Lua/Neovim-only plugin sourced in the `vim_minimal == 0` block with no `has('nvim')`            | Move inside a guard, or drop for a dual speller                                                       | P1  |
+ | `spellwarn.nvim` unguarded         | Lua/Neovim-only plugin sourced in the `vim_minimal == 0` block with no `has('nvim')`            | **RESOLVED 2026-09-08** — dropped outright in the prose audit; `setlocal spell` is the dual answer     | —   |
  | `autoload/plug.vim.old`            | Stale copy of the plugin manager tracked in the repo                                            | Delete                                                                                                | P3  |
  | Completion asymmetry               | `YouCompleteMe` sits inside the **tmux** `else` branch; Neovim gets no completion plugin at all | Move out of the tmux block; adopt nvim 0.12 native `'autocomplete'` for nvim, keep a light vim option | P2  |
 
@@ -52,12 +52,12 @@ accept all above recommendations
  | `othree/html5.vim`                        | HTML syntax          | Mostly in-tree now                                                                                                              | P3  |
  | `elzr/vim-json`                           | JSON syntax/conceal  | Overlaps `jacinto.vim`; **pick one**                                                                                            | P2  |
  | `alfredodeza/jacinto.vim`                 | JSON tools           | Overlaps `vim-json`                                                                                                             | P2  |
- | `reedes/vim-pencil`                       | prose mode           | Keep — dual                                                                                                                     | —   |
- | `plasticboy/vim-markdown`                 | markdown             | Repo is quiet; `preservim/vim-markdown` is the maintained fork — verify and switch                                              | P2  |
- | `ravibrock/spellwarn.nvim`                | spelling diagnostics | **nvim-only but unguarded** (see structural)                                                                                    | P1  |
- | `vimoutliner/vimoutliner`                 | outliner             | Overlaps vimwiki + obsidian.nvim                                                                                                | P2  |
+ | `reedes/vim-pencil`                       | prose mode           | **Kept 2026-09-08**, repointed to `preservim/vim-pencil` (`reedes/*` 301-redirects). See the E216 note below                     | —   |
+ | `plasticboy/vim-markdown`                 | markdown             | **Applied** — now `preservim/vim-markdown`. It had never actually loaded: vimwiki was hijacking every markdown buffer            | —   |
+ | `ravibrock/spellwarn.nvim`                | spelling diagnostics | **Dropped 2026-09-08** — nvim-only; the P1 is closed                                                                            | —   |
+ | `vimoutliner/vimoutliner`                 | outliner             | **Dropped 2026-09-08** — the note stack collapsed onto wiki.vim                                                                  | —   |
  | `MikeDacre/vim-checkbox`                  | checkboxes           | Yours; keep                                                                                                                     | —   |
- | `vimwiki/vimwiki`                         | wiki/notes           | Overlaps obsidian.nvim (nvim) and vimoutliner — **the note stack is the biggest consolidation win**                             | P2  |
+ | `vimwiki/vimwiki`                         | wiki/notes           | **Dropped 2026-09-08** — held no data, and was hijacking every markdown buffer (see below). Replaced by `lervag/wiki.vim`        | —   |
  | `gu-fan/riv.vim`                          | reStructuredText     | `for: rst`; keep if you still write RST, else drop                                                                              | P3  |
  | `lifepillar/vim-solarized8`               | colourscheme         | Keep — dual; repo also ships `colors/`                                                                                          | —   |
  | `junegunn/fzf` + `fzf.vim`                | fuzzy find           | **The dual answer, and now the preferred one.** Telescope duplicates it on nvim                                                 | P2  |
@@ -115,10 +115,10 @@ Accept changes except:
  | `Nedra1998/nvim-mdlink`                                                                                             | markdown links    | Overlaps obsidian.nvim                                                                                                                                                     | P3  |
  | `kylechui/nvim-surround`                                                                                            | surround          | Correctly guarded against `vim-surround` — keep                                                                                                                            | —   |
  | `GCBallesteros/jupytext.nvim`                                                                                       | notebooks         | Keep if you still use it                                                                                                                                                   | P3  |
- | `epwalsh/obsidian.nvim`                                                                                             | Obsidian vault    | Repo was renamed/handed over upstream — verify the source before next update                                                                                               | P2  |
+ | `epwalsh/obsidian.nvim`                                                                                             | Obsidian vault    | **Dropped 2026-09-08** — nvim-only and stale (no release since v3.9.0, 2024-07-11). Replaced by the dual-editor `lervag/wiki.vim`                                           | —   |
  | `neomake/neomake`                                                                                                   | linting           | vim gets `syntastic`, nvim gets `neomake`, and `linters.vim` configures both. Native LSP diagnostics on nvim + ALE as the dual option would collapse three stacks into one | P2  |
  | `mfussenegger/nvim-dap`                                                                                             | debugging         | Keep — no dual equivalent                                                                                                                                                  | —   |
- | `folke/twilight.nvim` + `zen-mode.nvim`                                                                             | focus modes       | Overlaps `vim-pencil`/goyo; nvim-only                                                                                                                                      | P3  |
+ | `folke/twilight.nvim` + `zen-mode.nvim`                                                                             | focus modes       | **Dropped 2026-09-08** — replaced by the dual `goyo.vim` + `limelight.vim` pair                                                                                             | —   |
  | `vimlab/split-term.vim`                                                                                             | terminal splits   | Neovim `:term` + `:split` covers most of it                                                                                                                                | P3  |
  | `ggandor/leap.nvim`                                                                                                 | motions           | nvim-only; the dual equivalent is `justinmk/vim-sneak` if you want parity                                                                                                  | P3  |
  | `nvim-lua/plenary.nvim`                                                                                             | library           | Telescope dependency                                                                                                                                                       | —   |
@@ -182,3 +182,39 @@ Worked through interactively:
 - switch to vim-devicons — **applied**: dropped `nerdtree-devicons-syntax`,
   `vim-nerdfont`, `vim-glyph-palette` (which also resolves the E488 hazard);
   `vim-devicons` is now the sole icon plugin
+
+## Prose / writing audit — applied 2026-09-08
+
+The whole note-and-writing stack was rebuilt in one pass, on the rule at the top
+of this file: dual-editor or it does not ship.
+
+**Added**
+
+ | Plugin                  | Role                   | Licence | Notes                                                                          |
+ |-------------------------|------------------------|---------|--------------------------------------------------------------------------------|
+ | `preservim/vim-litecorrect` | autocorrect        | MIT     | Buffer-local abbreviations; `\sa` toggles them                                  |
+ | `junegunn/goyo.vim`     | zen mode               | MIT     | Lazy on `:Goyo`; drives limelight through its `User GoyoEnter/Leave` events      |
+ | `junegunn/limelight.vim`| paragraph dimming      | MIT     | Lazy on `:Limelight`; last commit 2026-03-09                                    |
+ | `lervag/wiki.vim`       | Obsidian / wiki        | MIT     | Guarded on `has('nvim-0.10') \|\| has('patch-9.1.0')`; last commit 2026-08-29    |
+
+**Dropped**: `vimwiki/vimwiki`, `vimoutliner/vimoutliner`,
+`ravibrock/spellwarn.nvim`, `epwalsh/obsidian.nvim`, `folke/twilight.nvim`,
+`folke/zen-mode.nvim`. **Repointed**: `reedes/vim-pencil` ->
+`preservim/vim-pencil` (`reedes/*` 301-redirects; vim-plug followed it, so
+nothing was broken — the declaration was just stale).
+
+**vimwiki was hijacking every markdown buffer.** With no `g:vimwiki_list`,
+`g:vimwiki_ext2syntax` still defaults to mapping `.md`/`.mkdn`/`.markdown`, and
+`g:vimwiki_global_ext` defaults to 1, so `vimwiki#u#ft_set()`
+(`autoload/vimwiki/u.vim:245`) set `filetype=vimwiki` on any markdown file
+anywhere on disk. Every `FileType markdown` autocmd in this config was starved,
+and `preservim/vim-markdown` — declared `{'for': 'markdown'}` — had never loaded
+at all. Removing vimwiki fixes it; `g:vimwiki_global_ext = 0` is the equivalent
+fix if it is ever reinstated.
+
+**Known WARN — `vim-pencil` pollutes `v:errmsg` with E216.** With
+`g:pencil#autoformat = 0`, pencil runs `sil! au! pencil_autoformat * <buffer>`
+(`autoload/pencil.vim:175`) against an augroup it never creates. `silent!` hides
+the message but not `v:errmsg`, so `check.sh` reports **E216: No such group or
+event: pencil_autoformat** as a WARN after opening a prose buffer. Cosmetic,
+pre-existing, and upstream's. Do **not** "fix" it by flipping `autoformat` on.
