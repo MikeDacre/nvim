@@ -49,6 +49,13 @@ isolated `-u` rc files and shallow clones in `/tmp/wtest`:
 - Licences confirmed by reading the LICENSE bodies: goyo, limelight, wiki.vim
   = MIT; vim-pencil, vim-litecorrect, vim-lexical = MIT (GitHub reports
   NOASSERTION because the file is named `License` with a preamble).
+- **vimwiki currently hijacks every `.md` buffer.** With no `g:vimwiki_list`,
+  vimwiki's `g:vimwiki_ext2syntax` still defaults to mapping `.md` -> markdown,
+  so `vimwiki#u#ft_set()` (autoload/vimwiki/u.vim:245) sets `filetype=vimwiki`
+  on any markdown file, anywhere. Reproduced against the live config in both
+  editors. `let g:vimwiki_global_ext = 0` restores `filetype=markdown`;
+  verified in both editors. See Phase 2a — this is a required fix, not an
+  option.
 - Spellfile needs no change: `~/.vim` and `~/.config/nvim` are both symlinks to
   `~/nvim`, so `zg` already writes to the repo's `spell/en.utf-8.add` in both
   editors.
@@ -113,6 +120,25 @@ Also drop the now-false comment in `lua/plugin_config.lua:10-11`
 ("obsidian.nvim owns markdown link handling now") — wiki.vim does.
 
 `refactor(plugins): dual-editor prose stack; drop nvim-only writing plugins`
+
+## Phase 2a — stop vimwiki claiming every markdown buffer (REQUIRED)
+
+In `init.vim`, before anything markdown-related:
+
+```vim
+  " vimwiki's ext2syntax maps .md -> markdown by default, which makes it set
+  " filetype=vimwiki on EVERY markdown buffer, anywhere on disk. That starves
+  " every `FileType markdown` autocmd in this config. Scope it to its own
+  " wiki paths.
+  let g:vimwiki_global_ext = 0
+```
+
+Without this, the `augroup mikevim_prose` autocmd in Phase 3 never fires,
+because `FileType markdown` never happens: no pencil, no litecorrect, no spell.
+`vim-markdown` (declared `{'for': 'markdown'}`) never loads either. wiki.vim is
+unaffected — its trigger is `BufRead *.md`, a file pattern, not a filetype.
+
+`fix(markdown): scope vimwiki to its own paths (g:vimwiki_global_ext)`
 
 ## Phase 3 — init.vim
 
@@ -227,11 +253,11 @@ Inside the existing `if g:vim_minimal == 0` block, replace the four-line
 
 ## Open decision — do not act without asking
 
-`vimwiki` is kept for now. It was never configured (no `g:vimwiki_list`), so it
-runs on its `.wiki` default extension and does **not** currently fight wiki.vim
-over `.md`. If you want belt-and-braces, `let g:vimwiki_global_ext = 0` makes
-that explicit. Removing vimwiki entirely is the bigger consolidation win but is
-a behaviour change the user has not approved.
+`vimwiki` is kept, with Phase 2a scoping it to its own wiki paths. Removing it
+entirely remains the bigger consolidation win and would close the ROADMAP note-
+stack item outright, but it is a behaviour change the user has not approved.
+Note that Phase 2a is required either way: if vimwiki stays, it needs the
+scoping; if it goes, the hijack goes with it.
 
 ## Acceptance tests
 
@@ -239,11 +265,14 @@ Run these before `session.sh end`:
 
 1. `bash scripts/check.sh` — passes. Expect one new WARN (E216, above).
 2. `vim -c 'q'` and `nvim -c 'q'` — clean start, no errors.
-3. In each editor, open a `.md` file **inside** a vault: `:echo exists('b:wiki')`
+3. In each editor, open a plain `.md` file **outside** any wiki:
+   `:echo &ft` is `markdown`, not `vimwiki`. This is the Phase 2a regression
+   test and it gates every prose autocmd.
+4. In each editor, open a `.md` file **inside** a vault: `:echo exists('b:wiki')`
    is 1, `:echo &l:spell` is 1, `:echo &l:wrap` is 1.
-4. Same, **outside** a vault: `:echo exists('b:wiki')` is 0.
-5. `:Goyo` then `:Goyo!` — no errors, `laststatus` restored.
-6. `\sa` twice — abbreviation count drops to zero and comes back.
-7. `\kw` opens the wiki index inside a vault.
-8. `VIM_MINIMAL=true vim -c 'q'` — still clean (none of this is in the minimal
+5. Same, **outside** a vault: `:echo exists('b:wiki')` is 0.
+6. `:Goyo` then `:Goyo!` — no errors, `laststatus` restored.
+7. `\sa` twice — abbreviation count drops to zero and comes back.
+8. `\kw` opens the wiki index inside a vault.
+9. `VIM_MINIMAL=true vim -c 'q'` — still clean (none of this is in the minimal
    path).
