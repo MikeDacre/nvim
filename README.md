@@ -99,6 +99,30 @@ editor and whether tmux is running (Iron on nvim, Vimux or raw tmux on vim).
 | `\pu` | both | Reset checkers |
 | `\pt` | vim | Toggle the Python checker set |
 
+### Prose and notes
+
+Markdown, reStructuredText, plain text and mail buffers open in prose mode:
+soft wrap via vim-pencil, spellcheck on (`spelllang=en_us`), and vim-litecorrect
+autocorrecting the usual typos.
+
+| Mapping | Does |
+|---|---|
+| `\z` | Zen mode — Goyo, with Limelight dimming everything but the current paragraph |
+| `\ss` | Toggle spellcheck for this buffer |
+| `\sa` | Toggle autocorrect (litecorrect's abbreviations) for this buffer |
+| `\kw` | Open the wiki index (vault only) |
+| `\kk` | Open today's journal page (vault only) |
+
+`\k` is wiki.vim's whole mapping prefix — `:help wiki-mappings` lists the rest.
+`\w` is not used for it, because `\ww` is the wrap toggle.
+
+**Obsidian.** `lervag/wiki.vim` loads only on Vim 9.1+ / Neovim 0.10+, and even
+then it activates only for files that sit inside an Obsidian vault — detected by
+searching upward from the file for a `.obsidian/` directory. `$OBSIDIAN_VAULT`
+is the per-machine fallback when the marker is not found; set it in your shell
+rc, not in this repo. Outside a vault, markdown files stay plain markdown: no
+wiki mappings, no `<CR>` or `<Tab>` takeover.
+
 ### tmux
 
 `\tp` pulls the tmux paste buffer into the unnamed register.

@@ -21,11 +21,16 @@
 - nvim-treesitter migration off the archived repo onto core treesitter
 - Collapse three linting stacks (syntastic + neomake + `linters.vim`) into one
   dual-editor answer
-- Collapse the note stack (vimwiki / vimoutliner / riv / obsidian.nvim)
 - fzf everywhere rather than telescope-on-nvim — with Vim primary, the dual
   answer wins on principle, not just on taste
 - Add `desc` to every mapping as the machine-readable cheatsheet source
 - Re-evaluate `vim.pack` if the Vim 9 constraint is ever dropped
+
+## Done
+- Collapse the note stack (vimwiki / vimoutliner / riv / obsidian.nvim) — shipped
+  unreleased on `dev`, for v0.2.0. `lervag/wiki.vim` replaces all of them, in
+  both editors, and activates only inside an Obsidian vault. riv.vim was already
+  gone before this pass.
 
 ## Non-goals
 - Migrating to lazy.nvim, LazyVim, or any Neovim-only framework. Vim is the
