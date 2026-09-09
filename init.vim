@@ -252,10 +252,98 @@ let g:UltiSnipsExpandTrigger="<c-a>"
 let g:UltiSnipsEditSplit = "vertical"
 
 if g:vim_minimal == 0
-  " Pencil and markdown
+  " ---- Prose / writing -------------------------------------------------
   let g:pencil#autoformat = 0
+  let g:pencil#wrapModeDefault = 'soft'
   let g:vim_markdown_frontmatter = 1
   let g:vim_markdown_toc_autofit = 1
+
+  " Obsidian: wiki.vim activates iff the file sits under a .obsidian/ vault.
+  " g:wiki_root is lowercase so it CANNOT hold a Funcref (E704) — wiki.vim
+  " resolves it with exists('*'.name), so this function must be global.
+  " Outside a vault it returns an empty sentinel directory, never '': '' makes
+  " wiki.vim resolve the global root to the cwd, and its own gate then fires
+  " for any markdown file opened while cwd holds an index.md (a Hugo page
+  " bundle, for instance).
+  let g:mikevim_wiki_none = expand('~/.cache/mikevim/no-wiki')
+  function! MikevimWikiRoot() abort
+    let l:marker = finddir('.obsidian', expand('%:p:h') . ';')
+    if !empty(l:marker)
+      return fnamemodify(l:marker, ':p:h:h')
+    endif
+    if !empty($OBSIDIAN_VAULT) && isdirectory($OBSIDIAN_VAULT)
+      return $OBSIDIAN_VAULT
+    endif
+    if !isdirectory(g:mikevim_wiki_none)
+      call mkdir(g:mikevim_wiki_none, 'p')
+    endif
+    return g:mikevim_wiki_none
+  endfunction
+
+  let g:wiki_root            = 'MikevimWikiRoot'
+  let g:wiki_global_load     = 0
+  let g:wiki_filetypes       = ['md']
+  let g:wiki_mappings_prefix = '<leader>k'   " <leader>w is ToggleWrap
+
+  " :WikiEnable has no -bar, so it cannot be inlined between | bars (E488).
+  function! s:VaultEnable() abort
+    if exists(':WikiEnable') && !empty(finddir('.obsidian', expand('%:p:h') . ';'))
+      WikiEnable
+    endif
+  endfunction
+
+  function! s:ProseInit() abort
+    call pencil#init({'wrap': 'soft'})
+    call litecorrect#init()
+    let b:mikevim_autocorrect = 1
+    setlocal spell spelllang=en_us
+  endfunction
+
+  function! s:AutocorrectToggle() abort
+    if get(b:, 'mikevim_autocorrect', 0)
+      iabclear <buffer>
+      let b:mikevim_autocorrect = 0
+    else
+      call litecorrect#init()
+      let b:mikevim_autocorrect = 1
+    endif
+    echo 'autocorrect ' . (b:mikevim_autocorrect ? 'on' : 'off')
+  endfunction
+  command! AutocorrectToggle call s:AutocorrectToggle()
+
+  augroup mikevim_prose
+    autocmd!
+    autocmd FileType markdown,rst,text,mail call s:ProseInit()
+    autocmd BufRead,BufNewFile *.md call s:VaultEnable()
+  augroup END
+
+  " Zen mode — goyo drives limelight
+  let g:goyo_width = 90
+  let g:limelight_conceal_ctermfg = 'gray'
+  let g:limelight_conceal_guifg   = '#777777'
+  " Do NOT write `if ... | Limelight | endif`: vim-plug's lazy-load stub for an
+  " 'on' command is defined without -bar, so the trailing `| endif` is eaten
+  " and you get E171. Same trap as :WikiEnable above.
+  function! s:GoyoEnter() abort
+    if exists(':Limelight')
+      Limelight
+    endif
+    setlocal spell
+  endfunction
+  function! s:GoyoLeave() abort
+    if exists(':Limelight')
+      Limelight!
+    endif
+  endfunction
+  augroup mikevim_goyo
+    autocmd!
+    autocmd User GoyoEnter nested call s:GoyoEnter()
+    autocmd User GoyoLeave nested call s:GoyoLeave()
+  augroup END
+
+  nnoremap <leader>z  :Goyo<CR>
+  nnoremap <leader>ss :setlocal spell!<CR>:setlocal spell?<CR>
+  nnoremap <leader>sa :AutocorrectToggle<CR>
 
   " Indent guides
   let g:indent_guides_enable_on_vim_startup = 1
