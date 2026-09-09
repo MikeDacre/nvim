@@ -12,6 +12,9 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+### Fixed
+- restore deny-list Write guards, gate git merge, correct main->master (640becb).
+
 ## [0.2.0] - 2026-09-07
 
 ### Added
@@ -62,4 +65,4 @@ February 2018 and was adopted as a managed project in September 2026.
 [0.2.0]: https://github.com/MikeDacre/nvim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MikeDacre/nvim/releases/tag/v0.1.0
 
-<!-- changelog-synced: dab4542 -->
+<!-- changelog-synced: 640becb -->
