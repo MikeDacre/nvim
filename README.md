@@ -14,20 +14,45 @@ Neovim must be additive and guarded, never a replacement.
 ## Installation
 
 ```shell
-git clone git@github.com:MikeDacre/nvim.git ~/.config/nvim
-cd ~/.config/nvim
-ln -s .config/nvim ~/.vim
-ln -s .config/nvim/init.vim ~/.vimrc
-make init          # installs vim-plug's plugins in both editors
+git clone git@github.com:MikeDacre/nvim.git ~/nvim
+bash ~/nvim/scripts/install.sh          # normal mode (default) — see below
 ```
 
-`make init` runs `:PlugInstall` headlessly. Some plugins compile
-(`YouCompleteMe` on vim, `firenvim` on nvim) and will take a while.
+One command, no root required except in `heavy` mode. It symlinks
+`~/.config/nvim`, `~/.vim` and `~/.vimrc` into the checkout (never overwriting
+pre-existing content — anything in the way is moved aside with a timestamped
+suffix), points Neovim's data directory at a gitignored `nvimdata/` inside the
+checkout (see Layout below), then installs plugins. Re-running it is always
+safe — every step checks current state before touching anything.
+
+Three modes:
+
+| Mode | What it does | Needs sudo? |
+|---|---|---|
+| `light` | Symlinks, data dir, minimal plugin set (`VIM_MINIMAL=true`). No venv, no fonts. | No |
+| `normal` (default) | Everything `light` does, plus the full plugin set, the Python venv (`pynvim`), and a Nerd Font for icons/glyphs. | No |
+| `heavy` | Everything `normal` does, plus system packages — vim, neovim, ripgrep, fd, universal-ctags, pandoc, a C toolchain — via Homebrew (macOS) or the system package manager (Linux). | Yes |
+
+```shell
+bash scripts/install.sh light             # remote boxes, containers
+bash scripts/install.sh normal            # a machine you'll actually use (default)
+bash scripts/install.sh heavy             # + system packages; prompts once before using sudo
+bash scripts/install.sh heavy --yes       # same, non-interactive
+bash scripts/install.sh normal --no-font  # skip the font install
+```
+
+Windows: run this from WSL2 — it's treated as Linux. There is no native
+PowerShell path.
+
+`make init` (what the installer calls internally) runs `:PlugInstall`
+headlessly for both editors. Some plugins compile (`YouCompleteMe` on vim,
+`firenvim` on nvim) and will take a while.
 
 ### Minimal mode
 
-Set `VIM_MINIMAL=true` in the environment to skip the heavy plugin set. Useful
-on servers and in containers.
+Set `VIM_MINIMAL=true` in the environment to skip the heavy plugin set at
+runtime — this is what `install.sh light` does at install time, and it can
+also be used ad hoc on an already-installed machine:
 
 ```shell
 VIM_MINIMAL=true vim
@@ -143,6 +168,7 @@ wiki mappings, no `<CR>` or `<Tab>` takeover.
 | `CLAUDE/` | working notes, rules, project facts |
 | `priv/` | machine-local, never committed |
 | `vim-project-config/` | private subrepo, one branch per machine |
+| `plugged/`, `nvimdata/` | gitignored, machine-local: installed plugins, Neovim's data dir (`stdpath('data')`) |
 
 ## Maintenance
 
