@@ -134,8 +134,15 @@ Worked through interactively:
   would-be dependents `fidget.nvim`/`rest.nvim` are commented out) — **dropped**
 - `nvim-treesitter-refactor` — confirmed archived upstream, unreferenced in
   `lua/` — **dropped**, independent of the still-frozen `nvim-treesitter` migration
-- `epwalsh/obsidian.nvim` — verified: still `epwalsh/obsidian.nvim`, active,
-  not archived (pushed 2026-06-04) — no action needed, table note resolved
+- `epwalsh/obsidian.nvim` — **this entry was wrong; corrected 2026-09-08.**
+  "Active, no action needed" read the push date of a repo that has not cut a
+  release since v3.9.0 (2024-07-11) and carries 196 open issues; the live fork
+  is `obsidian-nvim/obsidian.nvim` (v3.16.7, 2026-09-01, 50 open). Moot either
+  way — obsidian.nvim is nvim-only and was dropped for the dual-editor
+  `lervag/wiki.vim` in the 2026-09-08 prose audit
+- `reedes/*` (`vim-pencil`, `vim-litecorrect`) 301-redirects to `preservim/*`.
+  vim-plug follows the redirect, so nothing was broken, but the declaration was
+  stale — the `Plug` lines now name `preservim/` directly
 - sniprun / code_runner.nvim / iron.nvim (three code runners) — **kept iron.nvim
   only**, dropped the other two
 - telescope.nvim + plenary.nvim vs fzf.vim — **dropped telescope + plenary**
