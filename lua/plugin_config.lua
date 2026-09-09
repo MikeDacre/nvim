@@ -7,8 +7,8 @@ vim.opt.termguicolors = true
 
 -- nvim-tree.lua dropped in the 2026-09-07 plugin audit: nerdtree (init.vim)
 -- is now the single dual file-tree answer for both editors.
--- nvim-mdlink dropped the same audit pass: obsidian.nvim owns markdown link
--- handling now.
+-- nvim-mdlink dropped the same audit pass: wiki.vim (plugins.vim) owns
+-- markdown link handling now, in both editors.
 
 require'nvim-treesitter.configs'.setup {
   -- A list of parser names, or "all" (the listed parsers MUST always be installed)
