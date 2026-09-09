@@ -10,6 +10,7 @@ help:  ## list targets
 	@grep -hE '^[a-z-]+:.*##' $(MAKEFILE_LIST) | sed 's/:.*## /\t/' | expand -t20
 
 init:  ## install plugins in both editors
+	bash scripts/link-data-dir.sh
 	-$(NVIM) --headless -c 'PlugInstall --sync' -c 'qa' </dev/null 2>&1 | tail -3
 	-$(VIM) -es -N -c 'PlugInstall --sync' -c 'qa' </dev/null 2>&1 | tail -3
 	@test -x .venv/bin/python3 || python3 -m venv .venv
