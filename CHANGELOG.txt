@@ -27,6 +27,7 @@ February 2018 and was adopted as a managed project in September 2026.
 - restore deny-list Write guards, gate git merge, correct main->master (640becb).
 - Markdown files open as `filetype=markdown` again. vimwiki was claiming every markdown buffer anywhere on disk, which starved every `FileType markdown` autocmd and meant vim-markdown had never loaded.
 - check.sh no longer drops an editor guard when plugins.vim contains a conditional it does not recognise.
+- Neovim's data directory (stdpath('data')) no longer aliases the repo checkout: nvim-treesitter was littering tree-sitter-*.tar.gz into the repo root on every startup and never actually finishing parser installs. `make init` now runs scripts/link-data-dir.sh, which points ~/.local/share/nvim at a gitignored nvimdata/ inside the checkout, and prefer_git is set before nvim-treesitter's install kicks off so future installs use git clone, not tarball download.
 
 ## [0.2.0] - 2026-09-07
 
