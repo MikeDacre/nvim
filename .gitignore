@@ -9,3 +9,5 @@ session
 priv/
 .claude/settings.local.json
 CLAUDE.local.md
+tree-sitter-*.tar.gz
+nvimdata
