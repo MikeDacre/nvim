@@ -12,8 +12,21 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+### Added
+- Prose mode for markdown, rST, text and mail buffers: soft wrap, spellcheck and autocorrect the moment the file opens. `\ss` toggles spelling, `\sa` toggles autocorrect.
+- Zen writing mode on `\z` — Goyo with Limelight dimming everything but the current paragraph — in both Vim and Neovim.
+- Obsidian vault support through `lervag/wiki.vim`, on `\k`. It activates only for files that sit inside a `.obsidian/` vault, so plain markdown stays plain markdown; `$OBSIDIAN_VAULT` is the per-machine fallback. Needs Vim 9.1+ or Neovim 0.10+.
+
+### Changed
+- vim-pencil is declared as `preservim/vim-pencil`; `reedes/*` only redirects.
+
+### Removed
+- vimwiki, vimoutliner, spellwarn.nvim, obsidian.nvim, twilight.nvim and zen-mode.nvim. The note and focus stacks now have one dual-editor answer each.
+
 ### Fixed
 - restore deny-list Write guards, gate git merge, correct main->master (640becb).
+- Markdown files open as `filetype=markdown` again. vimwiki was claiming every markdown buffer anywhere on disk, which starved every `FileType markdown` autocmd and meant vim-markdown had never loaded.
+- check.sh no longer drops an editor guard when plugins.vim contains a conditional it does not recognise.
 
 ## [0.2.0] - 2026-09-07
 
@@ -65,4 +78,4 @@ February 2018 and was adopted as a managed project in September 2026.
 [0.2.0]: https://github.com/MikeDacre/nvim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MikeDacre/nvim/releases/tag/v0.1.0
 
-<!-- changelog-synced: 640becb -->
+<!-- changelog-synced: 398f100 -->
