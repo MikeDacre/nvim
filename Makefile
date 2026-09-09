@@ -9,13 +9,17 @@ DOCNAME := mikevim
 help:  ## list targets
 	@grep -hE '^[a-z-]+:.*##' $(MAKEFILE_LIST) | sed 's/:.*## /\t/' | expand -t20
 
-init:  ## install plugins in both editors
+init:  ## install plugins in both editors (VIM_MINIMAL=true skips the venv, for light installs)
 	bash scripts/link-data-dir.sh
 	-$(NVIM) --headless -c 'PlugInstall --sync' -c 'qa' </dev/null 2>&1 | tail -3
 	-$(VIM) -es -N -c 'PlugInstall --sync' -c 'qa' </dev/null 2>&1 | tail -3
-	@test -x .venv/bin/python3 || python3 -m venv .venv
-	.venv/bin/python3 -m pip install -q -U pip pynvim
-	@echo ".venv ready: g:python3_host_prog -> .venv/bin/python3"
+	@if [ "$$VIM_MINIMAL" = "true" ]; then \
+		echo "VIM_MINIMAL=true: skipping .venv/pynvim setup"; \
+	else \
+		test -x .venv/bin/python3 || python3 -m venv .venv; \
+		.venv/bin/python3 -m pip install -q -U pip pynvim; \
+		echo ".venv ready: g:python3_host_prog -> .venv/bin/python3"; \
+	fi
 
 doc:  ## regenerate doc/mikevim.txt and doc/tags from README.md
 	@command -v pandoc >/dev/null || { echo "pandoc missing: brew install pandoc"; exit 1; }
