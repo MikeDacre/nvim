@@ -18,6 +18,9 @@ support that activates **if and only if** the file is inside a vault.
   public repo — detection is by `.obsidian/` marker, with `$OBSIDIAN_VAULT` as
   the per-machine fallback (set in rincewind's zshrc, outside this repo).
 - Zen mode is `goyo.vim` + `limelight.vim`; the Neovim-only pair goes.
+- `vimwiki` is **removed** (decided 2026-09-08, after evidence below). Long-form
+  prose, Hugo content and Obsidian vaults are the actual targets; wiki.vim
+  covers the wiki half of that in both editors.
 
 ## Already verified — do not redo
 
@@ -56,6 +59,13 @@ isolated `-u` rc files and shallow clones in `/tmp/wtest`:
   editors. `let g:vimwiki_global_ext = 0` restores `filetype=markdown`;
   verified in both editors. See Phase 2a — this is a required fix, not an
   option.
+- **vimwiki holds no data and provides no configured behaviour.** On baboona:
+  no `~/vimwiki`, no `*.wiki` file anywhere within five levels of `$HOME`, no
+  `g:vimwiki_list`, no vimwiki mapping or command anywhere in the config, no
+  cache directory. Its only observable effect is the filetype hijack above.
+  Not checked on rincewind — if `.wiki` files turn up there they still open as
+  plain text in any editor, and wiki.vim reads them if `'wiki'` is added to
+  `g:wiki_filetypes`.
 - Spellfile needs no change: `~/.vim` and `~/.config/nvim` are both symlinks to
   `~/nvim`, so `zg` already writes to the repo's `spell/en.utf-8.add` in both
   editors.
@@ -103,7 +113,6 @@ Replace the "Markdown writing" block (currently lines 62-75):
     Plug 'lervag/wiki.vim'
   endif
   Plug 'MikeDacre/vim-checkbox'
-  Plug 'vimwiki/vimwiki'
 ```
 
 Removals in this phase:
@@ -112,6 +121,9 @@ Removals in this phase:
 - `vimoutliner/vimoutliner` — overlap, unmaintained since 2023
 - `folke/twilight.nvim` and `folke/zen-mode.nvim` (lines ~97-98) — duplicated by
   goyo/limelight, nvim-only
+- `vimwiki/vimwiki` — holds no data here, adds no configured behaviour, and its
+  only observable effect is hijacking every markdown buffer (see Phase 2a).
+  wiki.vim replaces it
 
 The `if has('nvim')` block at lines 69-72 becomes empty — delete it entirely,
 don't leave a bare `if`/`endif`.
@@ -121,24 +133,31 @@ Also drop the now-false comment in `lua/plugin_config.lua:10-11`
 
 `refactor(plugins): dual-editor prose stack; drop nvim-only writing plugins`
 
-## Phase 2a — stop vimwiki claiming every markdown buffer (REQUIRED)
+## Phase 2a — confirm the markdown filetype hijack is gone
 
-In `init.vim`, before anything markdown-related:
+Removing vimwiki in Phase 2 removes the hijack with it, so there is nothing to
+configure here — but this is the single highest-consequence check in the work
+order, so verify it explicitly before going on.
 
-```vim
-  " vimwiki's ext2syntax maps .md -> markdown by default, which makes it set
-  " filetype=vimwiki on EVERY markdown buffer, anywhere on disk. That starves
-  " every `FileType markdown` autocmd in this config. Scope it to its own
-  " wiki paths.
-  let g:vimwiki_global_ext = 0
-```
+Before Phase 2, opening any `.md` file in either editor gives
+`filetype=vimwiki`, set by `vimwiki#u#ft_set()`
+(`autoload/vimwiki/u.vim:245`). vimwiki's `g:vimwiki_ext2syntax` defaults to
+mapping `.md`/`.mkdn`/`.markdown` to markdown syntax, and with
+`g:vimwiki_global_ext` defaulting to 1 it claims those extensions anywhere on
+disk, not only inside a configured wiki. Consequences while it is installed:
 
-Without this, the `augroup mikevim_prose` autocmd in Phase 3 never fires,
-because `FileType markdown` never happens: no pencil, no litecorrect, no spell.
-`vim-markdown` (declared `{'for': 'markdown'}`) never loads either. wiki.vim is
-unaffected — its trigger is `BufRead *.md`, a file pattern, not a filetype.
+- every `FileType markdown` autocmd in the config is starved, including the
+  entire `mikevim_prose` group added in Phase 3
+- `preservim/vim-markdown` never loads at all — it is declared
+  `{'for': 'markdown'}`, so vim-plug waits for a filetype that never arrives
+- wiki.vim is unaffected either way; its trigger is `BufRead *.md`, a file
+  pattern, not a filetype
 
-`fix(markdown): scope vimwiki to its own paths (g:vimwiki_global_ext)`
+`:PlugClean` needs the user's explicit approval before you run it — ask. Once
+the plugin directory is gone, open a plain `.md` file outside any wiki in both
+editors and confirm `:echo &ft` reports `markdown`. If vimwiki is ever reinstated instead,
+the equivalent fix is `let g:vimwiki_global_ext = 0` (verified to restore
+`filetype=markdown` in both editors).
 
 ## Phase 3 — init.vim
 
@@ -248,16 +267,20 @@ Inside the existing `if g:vim_minimal == 0` block, replace the four-line
 - `CLAUDE/project.json`: nothing to change unless a hazard is added — consider
   adding the pencil E216 WARN as a hazard so it is not re-investigated.
 - `ROADMAP.md`: "Collapse the note stack (vimwiki / vimoutliner / riv /
-  obsidian.nvim)" is now mostly done — propose moving it to Done, don't reword.
+  obsidian.nvim)" is fully closed by this work order — propose moving it to
+  Done, don't reword it.
 - `python3 scripts/todo.py` for any follow-ups. Do not hand-edit TODO.txt.
 
-## Open decision — do not act without asking
+## Removed from scope
 
-`vimwiki` is kept, with Phase 2a scoping it to its own wiki paths. Removing it
-entirely remains the bigger consolidation win and would close the ROADMAP note-
-stack item outright, but it is a behaviour change the user has not approved.
-Note that Phase 2a is required either way: if vimwiki stays, it needs the
-scoping; if it goes, the hijack goes with it.
+The vimwiki keep-or-drop question is settled: dropped. This closes the
+ROADMAP's "collapse the note stack" item in full — vimoutliner, obsidian.nvim
+and vimwiki all go in this work order, leaving wiki.vim as the single answer.
+
+A separate, broader question is open and deliberately **not** in this work
+order: per-project prose behaviour (Hugo content directories, Obsidian vaults,
+multi-chapter manuscripts) driven by root detection. Do not design for it here;
+the `WikiRoot()` marker-search pattern in Phase 3 is the seed it will build on.
 
 ## Acceptance tests
 
