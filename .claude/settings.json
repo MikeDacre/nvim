@@ -95,8 +95,7 @@
       "Bash(git filter-*)",
       "Bash(git tag -d*)",
       "Bash(git clean *)",
-      "Bash(nvim --headless -c PlugClean*)",
-      "Bash(vim -es -c PlugClean*)",
+      "Bash(*PlugClean*)",
       "Edit(priv/**)",
       "Write(priv/**)",
       "Edit(doc/mikevim.txt)",
@@ -115,9 +114,8 @@
     ],
     "defaultMode": "acceptEdits",
     "ask": [
-      "Bash(git checkout main*)",
-      "Bash(git switch main*)",
-      "Bash(git push*origin main*)",
+      "Bash(git merge*)",
+      "Bash(git push*origin master*)",
       "Bash(git push --all*)",
       "Bash(git push --tags*)",
       "Bash(bash scripts/release.sh*)",
@@ -138,8 +136,7 @@
       "Bash(npm i *)",
       "Bash(cargo add*)",
       "Bash(brew install*)",
-      "Edit(templates/CLAUDE.md)",
-      "Write(templates/CLAUDE.md)"
+      "Edit(templates/CLAUDE.md)"
     ]
   }
 }

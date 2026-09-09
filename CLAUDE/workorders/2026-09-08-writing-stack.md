@@ -138,6 +138,62 @@ the six being dropped, plus the four new ones), the real `init.vim` and
   `$HOME`, no `g:vimwiki_list`, no mapping, no cache. Checked on baboona only —
   see Residual risks.
 
+## Phase 0 — permission config repaired (ALREADY APPLIED — verify only)
+
+Done in the claude.ai session on 2026-09-08 and committed; this section is the
+record and the verification step, not work to redo. Run
+`git show --stat HEAD -- .claude/settings.json` to see it, and
+`python3 -c "import json;json.load(open('.claude/settings.json'))"` to confirm
+it still parses.
+
+**What was wrong.**
+
+1. *An out-of-project Claude session had weakened the deny list.* Seven
+   `Write(...)` rules were deleted from `permissions.deny` while their
+   `Edit(...)` counterparts stayed: `priv/**`, `doc/mikevim.txt`, `doc/tags`,
+   `CLAUDE.md`, `CLAUDE/CLAUDE.md`, `plugged/**`, `man/**`. The change was
+   uncommitted and postdates `81b7277`. This mattered more than it looks,
+   because `permissions.allow` contains a bare `Bash(*)` plus bare `Read`,
+   `Edit` and `Write` — the allow list grants everything, so **deny is the only
+   real control in this file**. Half-removing a guard left `priv/` reading as
+   protected while whole-file writes to it were permitted. All seven restored.
+
+2. *Every branch guard named the wrong branch.* `ask` contained
+   `git checkout main*`, `git switch main*` and `git push*origin main*`, but
+   `git.release_branch` in `CLAUDE/project.json` is **master**. All three were
+   dead patterns. Rewritten to `master`.
+
+3. *The project's "ask before merging to master" rule had no rule at all.*
+   Nothing in `deny` or `ask` matched `git merge`. Added `Bash(git merge*)` to
+   `ask` — this is the gate the instructions have always claimed to have.
+
+4. *The `:PlugClean` deny only covered two exact spellings*
+   (`nvim --headless -c PlugClean*`, `vim -es -c PlugClean*`), so any other
+   invocation slipped through a `Bash(*)` allow. Replaced with
+   `Bash(*PlugClean*)`.
+
+**What was deliberately loosened.** `git checkout master*` and
+`git switch master*` were removed from `ask`. Moving onto the release branch to
+read something is not a gated action — merging and pushing are, and both remain
+gated. `check.sh` already emits a WARN whenever the worktree sits on the
+release branch, so the accident it guarded against is still caught.
+
+**Confirmed unblocked.** Every command and edit this work order needs was
+checked against the resulting lists: `git add/commit/push origin dev`,
+`session.sh end`, `check.sh`, `make doc`, `todo.py add`, `feature.sh new`,
+`PlugInstall` from either editor, and edits to `plugins.vim`, `init.vim`,
+`README.md`, `PLUGINS.md`, `ROADMAP.md`, `CLAUDE/project.json`,
+`scripts/check.local.sh`, `lua/plugin_config.lua` and `functions.vim` — all
+allow. The only hit is `:PlugClean`, which is denied on purpose and stays a
+user decision.
+
+**Known gap, left alone deliberately.** `ask` gates `rm -r*` and `rm -fr*` but
+not a plain `rm` of a single file, so the stated "ask before deleting my files"
+rule is not fully enforced by config. Gating every `rm` would prompt on routine
+temp-file cleanup, which is worse friction than the risk it removes — most
+candidates are tracked and recoverable from git. The CLAUDE.md rule remains the
+control here. Raise it again if an untracked file is ever lost.
+
 ## Phase 1 — correct PLUGINS.md (commit on its own)
 
 The 2026-09-07 audit recorded `epwalsh/obsidian.nvim` as "verified, still
@@ -341,27 +397,31 @@ check emits a false `vim missing: wiki.vim`. That is expected, not a fault.
 
 Headless, both editors:
 
-1. `bash scripts/check.sh` — passes. Expect one new WARN (E216, Bug 8), plus
+1. `python3 -c "import json;json.load(open('.claude/settings.json'))"` parses,
+   and `permissions.deny` still contains all seven `Write(...)` rules from
+   Phase 0. If an out-of-project session has stripped them again, restore them
+   and say so — silent re-weakening is the failure mode this test exists for.
+2. `bash scripts/check.sh` — passes. Expect one new WARN (E216, Bug 8), plus
    the pre-existing `fd`/`rg` WARNs on machines without them.
-2. `vim -c 'q'` and `nvim -c 'q'` — clean start.
-3. `VIM_MINIMAL=true vim -c 'q'` — still clean; none of this is in the minimal
+3. `vim -c 'q'` and `nvim -c 'q'` — clean start.
+4. `VIM_MINIMAL=true vim -c 'q'` — still clean; none of this is in the minimal
    path.
-4. Open a plain `.md` outside any vault: `:echo &ft` is `markdown`, not
+5. Open a plain `.md` outside any vault: `:echo &ft` is `markdown`, not
    `vimwiki`. **This gates every prose autocmd — check it first.**
-5. Reproduce the Bug 5 trap: `mkdir -p /tmp/t && touch /tmp/t/index.md
+6. Reproduce the Bug 5 trap: `mkdir -p /tmp/t && touch /tmp/t/index.md
    /tmp/t/doc.md`, `cd /tmp/t`, open `doc.md`, `:echo exists('b:wiki')` is 0.
-6. Open a `.md` inside a vault from a cwd outside it:
+7. Open a `.md` inside a vault from a cwd outside it:
    `:echo exists('b:wiki')` is 1, `&l:spell` is 1, `&l:wrap` is 1.
-7. `:Goyo` then `:Goyo!` — no errors, `laststatus` restored.
-8. `\sa` twice — abbreviation count drops to zero and comes back.
-9. `\kw` opens the wiki index inside a vault.
+8. `:Goyo` then `:Goyo!` — no errors, `laststatus` restored.
+9. `\sa` twice — abbreviation count drops to zero and comes back.
+10. `\kw` opens the wiki index inside a vault.
 
 Interactive, in MacVim and in a real terminal — headless cannot confirm these:
 
-10. `\z` dims the surrounding paragraphs (limelight needs syntax and conceal in
+11. `\z` dims the surrounding paragraphs (limelight needs syntax and conceal in
     a real screen; `exists('#limelight')` read 0 under `vim -es`, which is
     probably a headless artifact but has not been confirmed).
-11. `:NERDTreeToggle` still opens on the left, and Goyo -> pick a file ->
+12. `:NERDTreeToggle` still opens on the left, and Goyo -> pick a file ->
     Goyo behaves sanely. Goyo tears down other windows by design, so a sidebar
     and zen mode are mutually exclusive; that is expected.
 
@@ -384,6 +444,10 @@ deleted the other editor's plugins here before (2026-09-07).
 - **`<leader>kw` outside a vault** opens an index inside the sentinel
   directory rather than doing nothing. Harmless but odd; on rincewind
   `$OBSIDIAN_VAULT` makes it open the real vault index instead.
+
+- **`.claude/settings.json` is shared with sessions outside this Project.**
+  The Phase 0 damage came from one. Nothing prevents it recurring, so the
+  deny-list check is acceptance test 1 rather than a one-off repair.
 
 ## Out of scope
 
