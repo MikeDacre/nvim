@@ -17,6 +17,7 @@ February 2018 and was adopted as a managed project in September 2026.
 - Zen writing mode on `\z` — Goyo with Limelight dimming everything but the current paragraph — in both Vim and Neovim.
 - Obsidian vault support through `lervag/wiki.vim`, on `\k`. It activates only for files that sit inside a `.obsidian/` vault, so plain markdown stays plain markdown; `$OBSIDIAN_VAULT` is the per-machine fallback. Needs Vim 9.1+ or Neovim 0.10+.
 - scripts/install.sh: one-command bootstrap for a freshly cloned machine — symlinks (~/.config/nvim, ~/.vim, ~/.vimrc), the nvimdata/ data dir, and plugins, in three modes: light (minimal plugin set, no venv/fonts, for remote boxes), normal (full plugin set + Python venv + a Nerd Font, no sudo), and heavy (normal, plus vim/neovim/ripgrep/fd/ctags/pandoc via Homebrew or the system package manager, the only mode that uses sudo). Windows is supported via WSL2, treated as Linux.
+- Explicit writing-mode commands: :WriteOn/:WriteOff toggle soft-wrap prose formatting (vim-pencil), :SpellOn/:SpellOff toggle spell-check independently of autocorrect, :AutoCorrectOn/:AutoCorrectOff toggle vim-litecorrect, :ZenOn/:ZenOff idempotently enter/exit Goyo+Limelight. Each has a bare alias (:Write, :Spell, :AutoCorrect, :Zen) equivalent to its On form.
 
 ### Changed
 - vim-pencil is declared as `preservim/vim-pencil`; `reedes/*` only redirects.
