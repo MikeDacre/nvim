@@ -62,3 +62,21 @@ require'nvim-treesitter.configs'.setup {
     additional_vim_regex_highlighting = false,
   },
 }
+
+-- Status bar. Vim uses vim-airline (wired in init.vim); this is lualine's
+-- first setup() call — it was Plug'd but unconfigured before, so Neovim was
+-- falling back to the built-in statusline. The write-mode indicators
+-- (spell/autocorrect/last-save) are Vimscript functions defined in init.vim
+-- (MikevimWriteStatusline, MikevimWriteModeActive) so both editors read one
+-- definition of "in write mode" instead of one per statusline plugin.
+require('lualine').setup {
+  sections = {
+    lualine_x = {
+      {
+        function() return vim.fn.MikevimWriteStatusline() end,
+        cond = function() return vim.fn.MikevimWriteModeActive() == 1 end,
+      },
+      'encoding', 'fileformat', 'filetype',
+    },
+  },
+}

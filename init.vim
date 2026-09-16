@@ -347,11 +347,65 @@ if g:vim_minimal == 0
   command! AutoCorrect       AutoCorrectOn
   command! AutoCorrectToggle call s:AutoCorrectToggle()
 
+  " ---- Write-mode statusbar indicators ---------------------------------
+  " Global (not s:) so vim-airline's autoload parts and lualine's Lua
+  " components (vim.fn.*) can both call them: one definition of write-mode
+  " state instead of one per statusline plugin. "In write mode" reuses
+  " pencil's own b:pencil_wrap_mode rather than re-deriving it from
+  " filetype, so it tracks :WriteOn/:WriteOff exactly.
+  function! MikevimWriteModeActive() abort
+    return exists('b:pencil_wrap_mode') && b:pencil_wrap_mode !=# 0
+  endfunction
+
+  function! MikevimSpellStatus() abort
+    return &spell ? 'spell' : 'spell:off'
+  endfunction
+
+  function! MikevimAutoCorrectStatus() abort
+    return get(b:, 'mikevim_autocorrect', 0) ? 'autocorrect' : 'autocorrect:off'
+  endfunction
+
+  function! s:RelativeTime(epoch) abort
+    let l:delta = localtime() - a:epoch
+    if l:delta < 60
+      return 'just now'
+    elseif l:delta < 3600
+      return printf('%dm ago', l:delta / 60)
+    elseif l:delta < 86400
+      return printf('%dh ago', l:delta / 3600)
+    else
+      return printf('%dd ago', l:delta / 86400)
+    endif
+  endfunction
+
+  function! MikevimLastSaveStatus() abort
+    if !exists('b:mikevim_last_save')
+      return 'unsaved'
+    endif
+    return 'saved ' . s:RelativeTime(b:mikevim_last_save) . (&modified ? '*' : '')
+  endfunction
+
+  function! MikevimWriteStatusline() abort
+    if !MikevimWriteModeActive()
+      return ''
+    endif
+    return join([MikevimSpellStatus(), MikevimAutoCorrectStatus(), MikevimLastSaveStatus()], '  ')
+  endfunction
+
   augroup mikevim_prose
     autocmd!
     autocmd FileType markdown,rst,text,mail call s:ProseInit()
     autocmd BufRead,BufNewFile *.md call s:VaultEnable()
+    autocmd BufWritePost * let b:mikevim_last_save = localtime()
   augroup END
+
+  " vim-airline reads MikevimWriteStatusline() through a custom part;
+  " lualine (Neovim, wired in lua/plugin_config.lua) calls the same
+  " Vimscript functions directly via vim.fn.
+  if !has('nvim')
+    call airline#parts#define_function('mikevim_write', 'MikevimWriteStatusline')
+    let g:airline_section_y = airline#section#create_right(['ffenc', 'mikevim_write'])
+  endif
 
   " Zen mode — goyo drives limelight
   let g:goyo_width = 90

@@ -130,6 +130,10 @@ Markdown, reStructuredText, plain text and mail buffers open in prose mode:
 soft wrap via vim-pencil, spellcheck on (`spelllang=en_us`), and vim-litecorrect
 autocorrecting the usual typos.
 
+While write mode is active the statusbar (vim-airline in Vim, lualine in
+Neovim) shows spellcheck state, autocorrect state, and time since last save
+(`saved 2m ago`, `unsaved`); it disappears outside write mode.
+
 | Mapping | Does |
 |---|---|
 | `\z` | Zen mode — Goyo, with Limelight dimming everything but the current paragraph |

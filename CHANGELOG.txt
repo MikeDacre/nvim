@@ -12,6 +12,9 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+### Added
+- Statusbar shows spellcheck/autocorrect state and time since last save while write mode is active (vim-airline in Vim, lualine in Neovim).
+
 ## [0.3.0] - 2026-09-15
 
 ### Added
