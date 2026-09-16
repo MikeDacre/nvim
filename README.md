@@ -139,18 +139,42 @@ Neovim) shows spellcheck state, autocorrect state, and time since last save
 | `\z` | Zen mode — Goyo, with Limelight dimming everything but the current paragraph |
 | `\ss` | Toggle spellcheck for this buffer |
 | `\sa` | Toggle autocorrect (litecorrect's abbreviations) for this buffer |
-| `\kw` | Open the wiki index (vault only) |
-| `\kk` | Open today's journal page (vault only) |
-
-`\k` is wiki.vim's whole mapping prefix — `:help wiki-mappings` lists the rest.
-`\w` is not used for it, because `\ww` is the wrap toggle.
 
 **Obsidian.** `lervag/wiki.vim` loads only on Vim 9.1+ / Neovim 0.10+, and even
 then it activates only for files that sit inside an Obsidian vault — detected by
-searching upward from the file for a `.obsidian/` directory. `$OBSIDIAN_VAULT`
-is the per-machine fallback when the marker is not found; set it in your shell
-rc, not in this repo. Outside a vault, markdown files stay plain markdown: no
-wiki mappings, no `<CR>` or `<Tab>` takeover.
+searching upward from the current file for a `.obsidian/` directory.
+`$OBSIDIAN_VAULT` is the per-machine fallback when no marker is found (set it
+in your shell rc, not in this repo — see `CLAUDE/workorders/2026-09-08-writing-stack.md`
+for why it can't live here). Outside a vault, markdown files stay plain
+markdown: no wiki mappings, no `<CR>` or `<Tab>` takeover.
+
+Vault detection is otherwise invisible — if a mapping below seems to do
+nothing, run `:WikiVaultStatus` to see whether the current buffer was
+recognised as being inside a vault, and which detection path (`.obsidian/` or
+`$OBSIDIAN_VAULT`) found it.
+
+`\k` is wiki.vim's whole mapping prefix (`\w` is taken by the wrap toggle).
+The mappings below are the ones worth remembering day to day; the rest —
+tags, related-page graphs, journal week/month navigation — are the same
+prefix, listed in full by `:help wiki-mappings-default`.
+
+| Mapping | Does |
+|---|---|
+| `\kw` | Open the wiki index |
+| `\k\k` | Open today's journal entry |
+| `<CR>` | Follow the link under the cursor |
+| `<Tab>` / `<S-Tab>` | Jump to the next / previous link in the buffer |
+| `<BS>` | Jump back to where you followed a link from |
+| `\ka` | Insert a link, picking the target page from a list |
+| `\kn` | Open (or create) a page by name |
+| `\kr` | Rename the current page, updating links to it |
+| `\kd` | Delete the current page |
+| `\kgb` | Show backlinks to the current page |
+| `\kgc` | Check the current page for broken links |
+| `\kt` | Generate a table of contents for the current page |
+
+`:WikiVaultStatus` works everywhere `wiki.vim` is available, even outside a
+vault, so it doubles as a quick "is wiki.vim even loaded here" check.
 
 ### tmux
 

@@ -292,6 +292,20 @@ if g:vim_minimal == 0
     endif
   endfunction
 
+  " Vault detection is invisible otherwise — this is the "am I in a vault?"
+  " check for when \k mappings seem to do nothing.
+  function! s:WikiVaultStatus() abort
+    let l:marker = finddir('.obsidian', expand('%:p:h') . ';')
+    if !empty(l:marker)
+      echo 'Obsidian vault: ' . fnamemodify(l:marker, ':p:h:h') . ' (.obsidian/ marker found)'
+    elseif !empty($OBSIDIAN_VAULT) && isdirectory($OBSIDIAN_VAULT)
+      echo 'Obsidian vault: ' . $OBSIDIAN_VAULT . ' ($OBSIDIAN_VAULT fallback)'
+    else
+      echo 'No Obsidian vault detected for this buffer — wiki.vim mappings are inactive'
+    endif
+  endfunction
+  command! WikiVaultStatus call s:WikiVaultStatus()
+
   function! s:ProseInit() abort
     call pencil#init({'wrap': 'soft'})
     call litecorrect#init()
