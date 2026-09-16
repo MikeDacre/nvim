@@ -299,17 +299,53 @@ if g:vim_minimal == 0
     setlocal spell spelllang=en_us
   endfunction
 
-  function! s:AutocorrectToggle() abort
-    if get(b:, 'mikevim_autocorrect', 0)
-      iabclear <buffer>
-      let b:mikevim_autocorrect = 0
-    else
-      call litecorrect#init()
-      let b:mikevim_autocorrect = 1
-    endif
-    echo 'autocorrect ' . (b:mikevim_autocorrect ? 'on' : 'off')
+  " ---- Write/Spell/AutoCorrect — independent toggles. SpellOn/Off never
+  " touches b:mikevim_autocorrect and vice versa, so either can run alone.
+  function! s:WriteOn() abort
+    call pencil#init({'wrap': 'soft'})
+    echo 'write mode on'
   endfunction
-  command! AutocorrectToggle call s:AutocorrectToggle()
+  function! s:WriteOff() abort
+    call pencil#init({'wrap': 'off'})
+    echo 'write mode off'
+  endfunction
+  command! WriteOn  call s:WriteOn()
+  command! WriteOff call s:WriteOff()
+  command! Write    WriteOn
+
+  function! s:SpellOn() abort
+    setlocal spell spelllang=en_us
+    echo 'spell check on'
+  endfunction
+  function! s:SpellOff() abort
+    setlocal nospell
+    echo 'spell check off'
+  endfunction
+  command! SpellOn  call s:SpellOn()
+  command! SpellOff call s:SpellOff()
+  command! Spell    SpellOn
+
+  function! s:AutoCorrectOn() abort
+    call litecorrect#init()
+    let b:mikevim_autocorrect = 1
+    echo 'autocorrect on'
+  endfunction
+  function! s:AutoCorrectOff() abort
+    iabclear <buffer>
+    let b:mikevim_autocorrect = 0
+    echo 'autocorrect off'
+  endfunction
+  function! s:AutoCorrectToggle() abort
+    if get(b:, 'mikevim_autocorrect', 0)
+      call s:AutoCorrectOff()
+    else
+      call s:AutoCorrectOn()
+    endif
+  endfunction
+  command! AutoCorrectOn     call s:AutoCorrectOn()
+  command! AutoCorrectOff    call s:AutoCorrectOff()
+  command! AutoCorrect       AutoCorrectOn
+  command! AutoCorrectToggle call s:AutoCorrectToggle()
 
   augroup mikevim_prose
     autocmd!
@@ -341,9 +377,26 @@ if g:vim_minimal == 0
     autocmd User GoyoLeave nested call s:GoyoLeave()
   augroup END
 
+  " :Goyo with no bang toggles; exists('#goyo') is the same check goyo#execute
+  " itself uses (autoload/goyo.vim), so ZenOn/ZenOff are idempotent instead of
+  " flipping whatever state Goyo happens to be in.
+  function! s:ZenOn() abort
+    if !exists('#goyo')
+      Goyo
+    endif
+  endfunction
+  function! s:ZenOff() abort
+    if exists('#goyo')
+      Goyo!
+    endif
+  endfunction
+  command! ZenOn  call s:ZenOn()
+  command! ZenOff call s:ZenOff()
+  command! Zen    ZenOn
+
   nnoremap <leader>z  :Goyo<CR>
   nnoremap <leader>ss :setlocal spell!<CR>:setlocal spell?<CR>
-  nnoremap <leader>sa :AutocorrectToggle<CR>
+  nnoremap <leader>sa :AutoCorrectToggle<CR>
 
   " Indent guides
   let g:indent_guides_enable_on_vim_startup = 1
