@@ -18,6 +18,9 @@ February 2018 and was adopted as a managed project in September 2026.
 - Obsidian vault support through `lervag/wiki.vim`, on `\k`. It activates only for files that sit inside a `.obsidian/` vault, so plain markdown stays plain markdown; `$OBSIDIAN_VAULT` is the per-machine fallback. Needs Vim 9.1+ or Neovim 0.10+.
 - scripts/install.sh: one-command bootstrap for a freshly cloned machine — symlinks (~/.config/nvim, ~/.vim, ~/.vimrc), the nvimdata/ data dir, and plugins, in three modes: light (minimal plugin set, no venv/fonts, for remote boxes), normal (full plugin set + Python venv + a Nerd Font, no sudo), and heavy (normal, plus vim/neovim/ripgrep/fd/ctags/pandoc via Homebrew or the system package manager, the only mode that uses sudo). Windows is supported via WSL2, treated as Linux.
 - Explicit writing-mode commands: :WriteOn/:WriteOff toggle soft-wrap prose formatting (vim-pencil), :SpellOn/:SpellOff toggle spell-check independently of autocorrect, :AutoCorrectOn/:AutoCorrectOff toggle vim-litecorrect, :ZenOn/:ZenOff idempotently enter/exit Goyo+Limelight. Each has a bare alias (:Write, :Spell, :AutoCorrect, :Zen) equivalent to its On form.
+- auto-link ~/.local/share/nvim to gitignored nvimdata/ on every machine (4140ad5).
+- add scripts/install.sh — one-command bootstrap in light/normal/heavy modes (2af376f).
+- add explicit :WriteOn/:SpellOn/:AutoCorrectOn/:ZenOn commands (5a6f6ea).
 
 ### Changed
 - vim-pencil is declared as `preservim/vim-pencil`; `reedes/*` only redirects.
@@ -30,6 +33,7 @@ February 2018 and was adopted as a managed project in September 2026.
 - Markdown files open as `filetype=markdown` again. vimwiki was claiming every markdown buffer anywhere on disk, which starved every `FileType markdown` autocmd and meant vim-markdown had never loaded.
 - check.sh no longer drops an editor guard when plugins.vim contains a conditional it does not recognise.
 - Neovim's data directory (stdpath('data')) no longer aliases the repo checkout: nvim-treesitter was littering tree-sitter-*.tar.gz into the repo root on every startup and never actually finishing parser installs. `make init` now runs scripts/link-data-dir.sh, which points ~/.local/share/nvim at a gitignored nvimdata/ inside the checkout, and prefer_git is set before nvim-treesitter's install kicks off so future installs use git clone, not tarball download.
+- set prefer_git before configs.setup() kicks off installs (c2ba329).
 
 ## [0.2.0] - 2026-09-07
 
@@ -81,4 +85,4 @@ February 2018 and was adopted as a managed project in September 2026.
 [0.2.0]: https://github.com/MikeDacre/nvim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MikeDacre/nvim/releases/tag/v0.1.0
 
-<!-- changelog-synced: 398f100 -->
+<!-- changelog-synced: 5a6f6ea -->
