@@ -59,6 +59,10 @@ done
 # currently running, so :PlugClean run from the wrong editor silently deletes
 # the OTHER editor's plugins (bit us once, 2026-09-07). Diff plugged/ against
 # both branches so that recurs as a WARN here, not a mystery later.
+#
+# A version-guarded Plug — wiki.vim's has('nvim-0.10') || has('patch-9.1.0') —
+# is attributed to BOTH editors, since only has('nvim') branches are classified.
+# On a Vim 9.0 machine that means a false "vim missing: wiki.vim". Expected.
 if command -v python3 >/dev/null 2>&1 && [ -f plugins.vim ]; then
   parity=$(python3 - <<'PY'
 import re, os
@@ -85,7 +89,10 @@ for raw in open('plugins.vim'):
     if line == 'endif':
         if cond_stack: cond_stack.pop()
         continue
-    if line.startswith('if g:vim_minimal'):
+    # Any other `if` (g:vim_minimal, the wiki.vim version guard, ...) is not
+    # editor-specific, but it must still push so its `endif` pops the right
+    # frame — otherwise the enclosing has('nvim') guard is dropped early.
+    if re.match(r'^if\b', line):
         cond_stack.append(None); continue
     for m in re.finditer(r"Plug '([^']+)'", line):
         name = m.group(1).split('/')[-1]

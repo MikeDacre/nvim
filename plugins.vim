@@ -62,17 +62,16 @@ if g:vim_minimal == 0
 
   " JSON
   Plug 'elzr/vim-json'
-  " Markdown writing
-  Plug 'reedes/vim-pencil'
-  " Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
+  " Prose / writing — all dual-editor (2026-09-08 audit)
+  Plug 'preservim/vim-pencil'
+  Plug 'preservim/vim-litecorrect'
+  Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
+  Plug 'junegunn/limelight.vim', { 'on': 'Limelight' }
   Plug 'preservim/vim-markdown', { 'for': 'markdown' }  " plasticboy transferred here
-  if has('nvim')
-    Plug 'ravibrock/spellwarn.nvim'
-    Plug 'epwalsh/obsidian.nvim'
+  if has('nvim-0.10') || has('patch-9.1.0')
+    Plug 'lervag/wiki.vim'
   endif
-  Plug 'vimoutliner/vimoutliner'
   Plug 'MikeDacre/vim-checkbox'
-  Plug 'vimwiki/vimwiki'
 
   " Color schemes
   Plug 'lifepillar/vim-solarized8'
@@ -94,8 +93,6 @@ if has('nvim')
   Plug 'tree-sitter/tree-sitter-go'
   Plug 'tree-sitter-grammars/tree-sitter-gpg-config'
   Plug 'nvim-treesitter/nvim-treesitter-textobjects'
-  Plug 'folke/twilight.nvim'
-  Plug 'folke/zen-mode.nvim'
 
   " NeoVim terminal / REPL — the single code-execution answer (sniprun and
   " code_runner.nvim dropped 2026-09-07, see PLUGINS.md)

@@ -23,3 +23,7 @@ x 2026-09-07 (A) Repoint MikeDacre/vim-go to upstream fatih/vim-go; fork has no 
 x 2026-09-07 (B) Investigate v:errmsg E216 FileExplorer at nvim startup; no FileExplorer autocmd exists in this config, so it is a plugin's silent! netrw hijack (nvim-tree or NERDTree, which loads on nvim too) +plugins @nvim
 (C) Verify /end and /release invoke under disable-model-invocation; claude-code issues 26251 and 38969 reported the flag blocking manual slash invocation in early 2026 +scaffold @both
 (C) Add .claude/rules for linters.vim once the linting stack is consolidated +scaffold @both
+(A) 2026-09-09 Run :PlugInstall from BOTH vim and nvim for the new prose stack (goyo, limelight, vim-litecorrect, wiki.vim); ask Mike before :PlugClean +writing @both
+(B) 2026-09-09 On rincewind: find ~ -maxdepth 5 -name '*.wiki' before any :PlugClean — vimwiki data was only checked on baboona +writing @rincewind
+(B) 2026-09-09 On rincewind: open a real note in ~/Ansetl and confirm b:wiki is set; set $OBSIDIAN_VAULT in zshrc outside this repo +writing @rincewind
+(C) 2026-09-09 Interactive check in MacVim and a real terminal: backslash-z dims paragraphs (limelight needs syntax+conceal), and NERDTree/Goyo interplay +writing @both

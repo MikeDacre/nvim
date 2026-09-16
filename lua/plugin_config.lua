@@ -7,8 +7,16 @@ vim.opt.termguicolors = true
 
 -- nvim-tree.lua dropped in the 2026-09-07 plugin audit: nerdtree (init.vim)
 -- is now the single dual file-tree answer for both editors.
--- nvim-mdlink dropped the same audit pass: obsidian.nvim owns markdown link
--- handling now.
+-- nvim-mdlink dropped the same audit pass: wiki.vim (plugins.vim) owns
+-- markdown link handling now, in both editors.
+
+-- Must run before .configs.setup{} below: ensure_installed installs
+-- run synchronously inside setup(), using whatever prefer_git is at that
+-- exact moment. Setting it after setup() (as this used to) means the
+-- first run always takes the curl+tar download path instead of git
+-- clone, and — if stdpath('data') ever points somewhere unexpected —
+-- leaves tree-sitter-*.tar.gz sitting wherever that curl ran.
+require("nvim-treesitter.install").prefer_git = true
 
 require'nvim-treesitter.configs'.setup {
   -- A list of parser names, or "all" (the listed parsers MUST always be installed)
@@ -54,4 +62,3 @@ require'nvim-treesitter.configs'.setup {
     additional_vim_regex_highlighting = false,
   },
 }
-require("nvim-treesitter.install").prefer_git = true
