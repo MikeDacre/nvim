@@ -357,39 +357,45 @@ if g:vim_minimal == 0
     return exists('b:pencil_wrap_mode') && b:pencil_wrap_mode !=# 0
   endfunction
 
+  " Plain Unicode (check/cross/refresh-arrow), not Nerd Font glyphs: those
+  " render fine given vim-devicons/nvim-web-devicons already require a
+  " patched font, but their exact codepoints can't be eyeballed from this
+  " session — these three are in the base Arrows/Dingbats blocks, so they
+  " are guaranteed to render correctly in any font. Swap for Nerd Font
+  " icons later if you want them to match the rest of the statusbar.
   function! MikevimSpellStatus() abort
-    return &spell ? 'spell' : 'spell:off'
+    return (&spell ? "✓" : "✗") . 'sp'
   endfunction
 
   function! MikevimAutoCorrectStatus() abort
-    return get(b:, 'mikevim_autocorrect', 0) ? 'autocorrect' : 'autocorrect:off'
+    return (get(b:, 'mikevim_autocorrect', 0) ? "✓" : "✗") . 'ac'
   endfunction
 
   function! s:RelativeTime(epoch) abort
     let l:delta = localtime() - a:epoch
     if l:delta < 60
-      return 'just now'
+      return 'now'
     elseif l:delta < 3600
-      return printf('%dm ago', l:delta / 60)
+      return printf('%dm', l:delta / 60)
     elseif l:delta < 86400
-      return printf('%dh ago', l:delta / 3600)
+      return printf('%dh', l:delta / 3600)
     else
-      return printf('%dd ago', l:delta / 86400)
+      return printf('%dd', l:delta / 86400)
     endif
   endfunction
 
   function! MikevimLastSaveStatus() abort
     if !exists('b:mikevim_last_save')
-      return 'unsaved'
+      return "↻" . 'unsaved'
     endif
-    return 'saved ' . s:RelativeTime(b:mikevim_last_save) . (&modified ? '*' : '')
+    return "↻" . s:RelativeTime(b:mikevim_last_save) . (&modified ? '*' : '')
   endfunction
 
   function! MikevimWriteStatusline() abort
     if !MikevimWriteModeActive()
       return ''
     endif
-    return join([MikevimSpellStatus(), MikevimAutoCorrectStatus(), MikevimLastSaveStatus()], '  ')
+    return join([MikevimSpellStatus(), MikevimAutoCorrectStatus(), MikevimLastSaveStatus()], ' ')
   endfunction
 
   augroup mikevim_prose
