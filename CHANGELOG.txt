@@ -17,6 +17,7 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ### Changed
 - Write-mode statusbar indicators are now compact icons (✓sp ✓ac ↻2m) instead of full words.
+- Write-mode statusbar uses Nerd Font glyphs (book/pencil + check/cross, save icon) and now replaces vim-airline's built-in SPELL indicator instead of duplicating it.
 
 ## [0.3.0] - 2026-09-15
 
