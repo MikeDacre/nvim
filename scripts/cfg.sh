@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # cfg.sh <dotted.key> [default] — read one value from CLAUDE/project.json.
 # No eval, no jq dependency. Lists are space-joined.
-cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh" 2>/dev/null
+cd "$(proot 2>/dev/null || echo .)" || cd .
 python3 -c 'import json,sys
 try: c=json.load(open("CLAUDE/project.json"))
 except Exception: print(sys.argv[2] if len(sys.argv)>2 else ""); raise SystemExit

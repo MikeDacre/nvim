@@ -97,20 +97,16 @@
       "Bash(git clean *)",
       "Bash(*PlugClean*)",
       "Edit(priv/**)",
-      "Write(priv/**)",
       "Edit(doc/mikevim.txt)",
       "Write(doc/mikevim.txt)",
       "Edit(doc/tags)",
       "Write(doc/tags)",
       "Edit(CLAUDE.md)",
-      "Write(CLAUDE.md)",
       "Edit(CLAUDE/CLAUDE.md)",
-      "Write(CLAUDE/CLAUDE.md)",
       "Edit(plugged/**)",
       "Write(plugged/**)",
       "Bash(python3 scripts/todo.py rm *)",
-      "Edit(man/**)",
-      "Write(man/**)"
+      "Edit(man/**)"
     ],
     "defaultMode": "acceptEdits",
     "ask": [
@@ -136,7 +132,10 @@
       "Bash(npm i *)",
       "Bash(cargo add*)",
       "Bash(brew install*)",
-      "Edit(templates/CLAUDE.md)"
+      "Edit(templates/CLAUDE.md)",
+      "Bash(git checkout main*)",
+      "Bash(git switch main*)",
+      "Bash(git push*origin main*)"
     ]
   }
 }

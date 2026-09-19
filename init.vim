@@ -357,18 +357,28 @@ if g:vim_minimal == 0
     return exists('b:pencil_wrap_mode') && b:pencil_wrap_mode !=# 0
   endfunction
 
-  " Plain Unicode (check/cross/refresh-arrow), not Nerd Font glyphs: those
-  " render fine given vim-devicons/nvim-web-devicons already require a
-  " patched font, but their exact codepoints can't be eyeballed from this
-  " session — these three are in the base Arrows/Dingbats blocks, so they
-  " are guaranteed to render correctly in any font. Swap for Nerd Font
-  " icons later if you want them to match the rest of the statusbar.
-  function! MikevimSpellStatus() abort
-    return (&spell ? "✓" : "✗") . 'sp'
+  " Font Awesome glyphs from the Nerd Font patched into guifont (DejaVu Sans
+  " Mono Nerd Font Mono) — book/pencil/check/xmark/save, codepoints verified
+  " against that font's own cmap (glyph names fa-book/fa-pencil/fa-check/
+  " fa-xmark/fa-save) before wiring these in, and rendered to a PNG and
+  " inspected, since a headless session can't otherwise confirm a PUA
+  " codepoint resolves to the intended shape.
+  function! MikevimSpellGlyph() abort
+    return "" . (&spell ? "" : "")
   endfunction
 
-  function! MikevimAutoCorrectStatus() abort
-    return (get(b:, 'mikevim_autocorrect', 0) ? "✓" : "✗") . 'ac'
+  function! MikevimAutoCorrectGlyph() abort
+    return "" . (get(b:, 'mikevim_autocorrect', 0) ? "" : "")
+  endfunction
+
+  " Replaces vim-airline's own section_a "SPELL" text (see the
+  " airline#parts#define_function('spell', ...) override below) — one
+  " compact cluster for both spell and autocorrect instead of a lone word.
+  function! MikevimSpellAutoCorrectStatus() abort
+    if !MikevimWriteModeActive()
+      return ''
+    endif
+    return MikevimSpellGlyph() . '/' . MikevimAutoCorrectGlyph()
   endfunction
 
   function! s:RelativeTime(epoch) abort
@@ -385,17 +395,20 @@ if g:vim_minimal == 0
   endfunction
 
   function! MikevimLastSaveStatus() abort
-    if !exists('b:mikevim_last_save')
-      return "↻" . 'unsaved'
+    if !MikevimWriteModeActive()
+      return ''
     endif
-    return "↻" . s:RelativeTime(b:mikevim_last_save) . (&modified ? '*' : '')
+    if !exists('b:mikevim_last_save')
+      return "" . 'unsaved'
+    endif
+    return "" . s:RelativeTime(b:mikevim_last_save) . (&modified ? '*' : '')
   endfunction
 
   function! MikevimWriteStatusline() abort
     if !MikevimWriteModeActive()
       return ''
     endif
-    return join([MikevimSpellStatus(), MikevimAutoCorrectStatus(), MikevimLastSaveStatus()], ' ')
+    return join([MikevimSpellAutoCorrectStatus(), MikevimLastSaveStatus()], ' ')
   endfunction
 
   augroup mikevim_prose
@@ -405,11 +418,15 @@ if g:vim_minimal == 0
     autocmd BufWritePost * let b:mikevim_last_save = localtime()
   augroup END
 
-  " vim-airline reads MikevimWriteStatusline() through a custom part;
+  " vim-airline reads these through custom parts — 'spell' is overridden
+  " (not added) so it replaces the built-in section_a indicator in place;
+  " this call must run before airline's own bootstrap defines 'spell' on
+  " VimEnter, which is why it lives here at source-time, not in an autocmd.
   " lualine (Neovim, wired in lua/plugin_config.lua) calls the same
   " Vimscript functions directly via vim.fn.
   if !has('nvim')
-    call airline#parts#define_function('mikevim_write', 'MikevimWriteStatusline')
+    call airline#parts#define_function('spell', 'MikevimSpellAutoCorrectStatus')
+    call airline#parts#define_function('mikevim_write', 'MikevimLastSaveStatus')
     let g:airline_section_y = airline#section#create_right(['ffenc', 'mikevim_write'])
   endif
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # doctor.sh — toolchain preflight. Prints one line per tool; exits 1 if a
 # REQUIRED tool is missing. Optional tools degrade gracefully.
-cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)"
-. scripts/lib.sh 2>/dev/null || true
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh" 2>/dev/null || true
+cd "$(proot 2>/dev/null || echo .)" || cd .
 fail=0
 chk() { # chk <req|opt> <cmd> <hint> [version-cmd]
   local kind=$1 cmd=$2 hint=$3 vc=${4:-}

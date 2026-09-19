@@ -9,18 +9,40 @@ is too big for one patch script; Claude Code executes it, interactively via
         create CLAUDE/orders/<date>-<slug>.md (goal from stdin if -g omitted and stdin is piped)
   list | summary | show <id>
   run [<id> | --all] [--dry-run] [--max-turns N]   unattended: claude -p, acceptEdits
-  done <id> | block <id> "reason" | reopen <id>
+  done <id> | block <id> "reason" | reopen <id> | rm <id>
 
 An order is front matter (status: pending|running|done|blocked|failed) plus
-markdown sections Goal / Constraints / Done when / Result. Orders are never
-deleted: done and blocked ones are the record. Logs of unattended runs go to
-CLAUDE/orders/log/ (gitignored).
+markdown sections Goal / Constraints / Done when / Result.
+
+CLAUDE/orders/ is a queue, not an archive. A finished order is deleted once its
+Result is committed — `git log` keeps the record, so the directory only ever
+holds live work. `done` prints the `rm` to run after the closing commit; `rm`
+refuses while the Result is still uncommitted, and refuses an order that is not
+done, so nothing is lost by following it. Keep a done order only when it earns
+its place as a document someone will come back to (a decision record, a
+convention it defines), and say so in its Result.
+
+Logs of unattended runs go to CLAUDE/orders/log/ (gitignored).
 """
 from __future__ import annotations
 import argparse, datetime as dt, json, os, re, shlex, shutil, subprocess, sys
 from pathlib import Path
 
-ROOT = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip())
+def _root() -> Path:
+    """Project root: the nearest ancestor holding CLAUDE/CLAUDE.md, else the git
+    top level, else the working directory. Asking for CLAUDE/ first keeps a
+    project whose root is not a repository (git.vcs = none) from resolving to an
+    enclosing one."""
+    d = Path.cwd()
+    for cand in (d, *d.parents):
+        if (cand / "CLAUDE" / "CLAUDE.md").is_file():
+            return cand
+    r = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                       capture_output=True, text=True).stdout.strip()
+    return Path(r) if r else d
+
+
+ROOT = _root()
 DIR, LOGDIR = ROOT / "CLAUDE" / "orders", ROOT / "CLAUDE" / "orders" / "log"
 TODAY = dt.date.today().isoformat()
 STATES = ("pending", "running", "done", "blocked", "failed")
@@ -97,7 +119,27 @@ def cmd_summary(a):
     if parts: print("ORDERS   " + " · ".join(parts) + "   (python3 scripts/order.py list; /orders in Claude Code)")
 
 def cmd_show(a): print(find(a.id).read_text(), end="")
-def cmd_done(a): p = find(a.id); set_status(p, "done", a.note or ""); print(f"done    {p.stem}")
+
+def cmd_done(a):
+    p = find(a.id); set_status(p, "done", a.note or "")
+    print(f"done    {p.stem}")
+    print(f"        commit the Result, then: python3 scripts/order.py rm {p.stem}")
+
+def cmd_rm(a):
+    """Delete a finished order. The Result must already be committed."""
+    p = find(a.id)
+    st = split(p)[0].get("status", "?")
+    if st != "done" and not a.force:
+        sys.exit(f"order.py: {p.stem} is {st}, not done — close it first, or --force")
+    tracked = subprocess.run(["git", "ls-files", "--error-unmatch", rel(p)],
+                             cwd=ROOT, capture_output=True).returncode == 0
+    dirty = subprocess.run(["git", "status", "--porcelain", "--", rel(p)],
+                           cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    if (not tracked or dirty) and not a.force:
+        sys.exit(f"order.py: {rel(p)} has uncommitted changes — commit the Result first "
+                 f"so git keeps the record, then re-run (or --force to delete anyway)")
+    p.unlink()
+    print(f"removed {rel(p)}  (the record is in git log)")
 def cmd_block(a): p = find(a.id); set_status(p, "blocked", a.reason); print(f"blocked {p.stem}: {a.reason}")
 def cmd_reopen(a): p = find(a.id); set_status(p, "pending"); print(f"pending {p.stem}")
 
@@ -108,6 +150,10 @@ When finished, append a "## Result" section to {rel} (what you did, what remains
 then run exactly one of:
   python3 scripts/order.py done {id}
   python3 scripts/order.py block {id} "<one-line reason>"
+After `done`, commit the Result and then delete the order with
+`python3 scripts/order.py rm {id}` — CLAUDE/orders/ holds live work only, and
+git log keeps the record. Keep it only if the order is a document worth
+returning to, and say why in the Result.
 
 --- ORDER {rel} ---
 {body}"""
@@ -154,6 +200,7 @@ def main():
     d = s.add_parser("done"); d.add_argument("id"); d.add_argument("note", nargs="?"); d.set_defaults(f=cmd_done)
     b = s.add_parser("block"); b.add_argument("id"); b.add_argument("reason"); b.set_defaults(f=cmd_block)
     o = s.add_parser("reopen"); o.add_argument("id"); o.set_defaults(f=cmd_reopen)
+    m = s.add_parser("rm"); m.add_argument("id"); m.add_argument("--force", action="store_true"); m.set_defaults(f=cmd_rm)
     a = ap.parse_args()
     try: a.f(a)
     except BrokenPipeError: pass

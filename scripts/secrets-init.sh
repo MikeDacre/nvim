@@ -4,7 +4,8 @@
 # CLI when signed in (op://... refs), otherwise prompt, then chmod 600.
 # Never echoes a value. Never writes outside priv/.
 set -euo pipefail
-cd "$(git rev-parse --show-toplevel)"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+cd "$(proot)" || exit 1
 mkdir -p priv
 
 OP=0

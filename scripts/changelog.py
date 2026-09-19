@@ -10,10 +10,17 @@
   changelog.py release <X.Y.Z> [YYYY-MM-DD]  roll [Unreleased] into a version
 
 "Unlogged" = commits after the `<!-- changelog-synced: SHA -->` marker that
-touch anything other than the changelog and whose conventional-commit type is
-user-visible (feat/fix/perf/refactor/revert/security, or any type with `!`).
+touch anything other than the changelog, whose conventional-commit type is
+user-visible (feat/fix/perf/refactor/revert/security, or any type with `!`),
+AND that are newer than the last commit which touched the changelog itself.
 If the marker is missing or is not an ancestor of HEAD (rebase, other branch)
 the baseline is the last tag, or the last 20 commits without one.
+
+That last condition is what keeps `from-git` from duplicating work `add`
+already described. `add` writes an entry before the commit that will carry it
+exists, so it cannot mark that commit as logged; the commit which lands the
+entry does it instead. Everything at or before that commit was reconciled when
+it was made, so from-git starts after it and says how many it skipped.
 
 Spec: https://keepachangelog.com/en/1.1.0/
 """
@@ -35,8 +42,27 @@ MARK = "<!-- changelog-synced: "
 
 
 def root() -> str:
-    return subprocess.run(["git", "rev-parse", "--show-toplevel"],
-                          capture_output=True, text=True).stdout.strip() or "."
+    """Project root: the nearest ancestor holding CLAUDE/CLAUDE.md, else the git
+    top level, else the working directory. CLAUDE/ is asked first on purpose —
+    `git rev-parse --show-toplevel` answers with an ANCESTOR repository when the
+    project root is not one itself (git.vcs = none), which would point this
+    script at somebody else's tree."""
+    d = os.getcwd()
+    while True:
+        if os.path.isfile(os.path.join(d, "CLAUDE", "CLAUDE.md")):
+            return d
+        parent = os.path.dirname(d)
+        if parent == d:
+            break
+        d = parent
+    r = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                       capture_output=True, text=True).stdout.strip()
+    return r or os.getcwd()
+
+
+def has_git() -> bool:
+    """True when the project root is itself a repository (git.vcs = git)."""
+    return os.path.exists(os.path.join(root(), ".git"))
 
 
 def _changelog_name() -> str:
@@ -54,6 +80,10 @@ NAME = os.path.basename(PATH)
 
 
 def git(*a) -> str:
+    # No repository: return nothing rather than let git walk up into an
+    # enclosing one and report somebody else's commits as this project's.
+    if not has_git():
+        return ""
     return subprocess.run(["git", "-C", root(), *a],
                           capture_output=True, text=True).stdout
 
@@ -195,7 +225,7 @@ def _links(lines: list[str], version: str) -> list[str]:
     refs = [f"[Unreleased]: {url}/compare/v{version}...HEAD"]
     seen = []
     for ln in lines:
-        m = re.match(r"^## \[(\d+\.\d+\.\d+)\]", ln)
+        m = re.match(r"^## \[(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)\]", ln)
         if m:
             seen.append(m.group(1))
     for i, v in enumerate(seen):
@@ -238,8 +268,45 @@ def _parse(subject: str):
     return (cat, desc) if cat else None
 
 
-def unlogged() -> list[tuple[str, str, str]]:
-    """[(short-sha, category, description)] oldest last, newest first."""
+def _touches_entries(sha: str) -> bool:
+    """True when <sha> changed a real changelog line, not just the sync marker.
+
+    _sync() rewrites the marker in place, so an ordinary `git commit -a` can
+    sweep a marker-only change into a code commit. Treating that as "the
+    changelog was updated here" would hide the very commit it rode in on.
+    """
+    patch = git("show", "--format=", "--unified=0", sha, "--", NAME)
+    for ln in patch.splitlines():
+        if ln[:1] in "+-" and ln[:3] not in ("+++", "---") and MARK not in ln:
+            if ln[1:].strip():
+                return True
+    return False
+
+
+def _after_last_changelog_commit() -> set[str] | None:
+    """Short shas newer than the newest commit that wrote a changelog entry.
+
+    None when no such commit exists yet (a fresh scaffold), in which case there
+    is nothing to exclude.
+    """
+    for sha in git("log", "--format=%H", "-40", "--", NAME).split():
+        if _touches_entries(sha):
+            return set(git("log", "--format=%h", f"{sha}..HEAD").split())
+    return None
+
+
+def unlogged(with_skipped: bool = False):
+    """[(short-sha, category, description)] oldest last, newest first.
+
+    with_skipped also returns the user-visible commits that were dropped because
+    a changelog commit already accounts for them, so a caller can report them
+    rather than hiding the fact.
+
+    A project with no repository of its own (git.vcs = none) has no commits to
+    reconcile: return nothing rather than reach into an enclosing repo.
+    """
+    if not has_git():
+        return ([], []) if with_skipped else []
     out = git("log", "--no-merges", "--format=@@%h\t%s", "--name-only", _baseline())
     commits, cur = [], None
     for line in out.splitlines():
@@ -249,18 +316,27 @@ def unlogged() -> list[tuple[str, str, str]]:
             commits.append(cur)
         elif line.strip() and cur is not None:
             cur[2].append(line.strip())
-    keep = []
+    fresh = _after_last_changelog_commit()
+    keep, skipped = [], []
     for h, s, files in commits:
         if not (set(files) - {NAME, "CHANGELOG.txt", "CHANGELOG.md"}):
             continue                                  # changelog housekeeping only
         p = _parse(s)
-        if p:
+        if not p:
+            continue
+        if fresh is not None and h not in fresh:
+            skipped.append((h, p[0], p[1]))           # an entry already covers it
+        else:
             keep.append((h, p[0], p[1]))
-    return keep
+    return (keep, skipped) if with_skipped else keep
 
 
 def cmd_from_git(dry: bool = False) -> None:
-    items = unlogged()
+    items, skipped = unlogged(with_skipped=True)
+    if skipped:
+        print(f"{NAME}: {len(skipped)} commit(s) already covered by a changelog "
+              f"commit ({', '.join(h for h, _, _ in skipped[:6])}"
+              f"{' …' if len(skipped) > 6 else ''})")
     if not items:
         print(f"{NAME}: nothing to back-fill")
         if not dry and not synced_sha():      # first run only: plant the marker
@@ -314,7 +390,7 @@ def cmd_lint() -> int:
         m = re.match(r"^### (\w+)", ln)
         if m and m.group(1) not in CATS:
             bad.append(f"non-standard category: {m.group(1)}")
-        m = re.match(r"^## \[(\d+\.\d+\.\d+)\] - (\S+)", ln)
+        m = re.match(r"^## \[(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)\] - (\S+)", ln)
         if m:
             try:
                 dt.date.fromisoformat(m.group(2))
@@ -333,7 +409,8 @@ def cmd_lint() -> int:
     vf = os.path.join(root(), "VERSION")
     if os.path.exists(vf):
         v = open(vf).read().strip()
-        if v != "0.1.0" and not any(f"## [{v}]" in ln for ln in lines):
+        # 0.0.0 = scaffolded, never released: everything is still [Unreleased]
+        if v != "0.0.0" and not any(f"## [{v}]" in ln for ln in lines):
             bad.append(f"VERSION={v} has no changelog section")
     if bad:
         print(f"{NAME} lint:")

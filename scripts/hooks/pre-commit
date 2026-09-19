@@ -1,9 +1,22 @@
 #!/usr/bin/env bash
+# pre-commit — refuses commits to the release branch and staged priv/ leaks,
+# then runs CLAUDE/hooks/pre-commit.local (a project-owned extension point)
+# when it exists and is executable. Absent, that step is a silent no-op.
 set -e
 b=$(git rev-parse --abbrev-ref HEAD)
 rel=$(bash scripts/cfg.sh git.release_branch main 2>/dev/null || echo main)
-[ "$b" = "$rel" ] && { echo "refusing: commit to $rel. Use dev/feat and scripts/release.sh"; exit 1; }
+dev=$(bash scripts/cfg.sh git.dev_branch dev 2>/dev/null || echo dev)
+# Single-trunk projects set dev_branch == release_branch: there is nowhere else
+# to commit, so the release branch is also the working branch and the guard
+# must stand down. Refusing there blocks every commit, release.sh included.
+if [ "$b" = "$rel" ] && [ "$rel" != "$dev" ]; then
+  echo "refusing: commit to $rel. Use $dev/feat and scripts/release.sh"
+  exit 1
+fi
 leaked=$(git diff --cached --name-only | grep '^priv/' \
   | grep -vE '^priv/(README\.md|\.gitkeep|.*\.(example|template))$' || true)
 [ -n "$leaked" ] && { echo "refusing: staged secret file(s):"; echo "$leaked"; exit 1; }
+if [ -x CLAUDE/hooks/pre-commit.local ]; then
+  CLAUDE/hooks/pre-commit.local || exit $?
+fi
 exit 0

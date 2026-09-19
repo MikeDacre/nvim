@@ -27,6 +27,19 @@ DATE = r"\d{4}-\d{2}-\d{2}"
 
 
 def root() -> str:
+    """Project root: the nearest ancestor holding CLAUDE/CLAUDE.md, else the git
+    top level, else the working directory. CLAUDE/ is asked first on purpose —
+    `git rev-parse --show-toplevel` answers with an ANCESTOR repository when the
+    project root is not one itself (git.vcs = none), which would point this
+    script at somebody else's tree."""
+    d = os.getcwd()
+    while True:
+        if os.path.isfile(os.path.join(d, "CLAUDE", "CLAUDE.md")):
+            return d
+        parent = os.path.dirname(d)
+        if parent == d:
+            break
+        d = parent
     r = subprocess.run(["git", "rev-parse", "--show-toplevel"],
                        capture_output=True, text=True).stdout.strip()
     return r or os.getcwd()

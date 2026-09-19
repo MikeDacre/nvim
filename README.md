@@ -131,9 +131,12 @@ soft wrap via vim-pencil, spellcheck on (`spelllang=en_us`), and vim-litecorrect
 autocorrecting the usual typos.
 
 While write mode is active the statusbar (vim-airline in Vim, lualine in
-Neovim) shows spellcheck, autocorrect and time since last save as
-`✓sp ✓ac ↻2m` (✗ for off, `↻unsaved` before the first write, a trailing `*`
-for unsaved changes); it disappears outside write mode.
+Neovim) shows spellcheck and autocorrect as Nerd Font glyphs — book/pencil
+followed by a check or a cross, separated by `/` — plus a save icon and time
+since last save (a trailing `*` for unsaved changes, `unsaved` before the
+first write). In Vim this replaces the built-in `SPELL` indicator rather than
+sitting next to it. It disappears outside write mode. Needs a Nerd Font
+(`install.sh normal`, the default, installs one).
 
 | Mapping | Does |
 |---|---|
