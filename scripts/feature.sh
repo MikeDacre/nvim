@@ -2,7 +2,9 @@
 # feature.sh status|new <slug>|finish [slug]|list
 # Enforces the one-feature-per-branch rule and the "ask before switching" guard.
 set -uo pipefail
-cd "$(git rev-parse --show-toplevel)"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
+cd "$(proot)" || exit 1
+have_git || { echo "no repository at the project root (git.vcs=none) — there are no branches here."; exit 0; }
 
 cfg() { # cfg <dotted.key> <default>  — reads CLAUDE/project.json, no eval
   python3 -c 'import json,sys

@@ -23,6 +23,16 @@ For each order:
        python3 scripts/order.py done <id>
        python3 scripts/order.py block <id> "<one-line reason>"
 
-Never edit another order while executing one, and never delete an order —
-`done`/`blocked` ones are the record. Unattended alternative (no session open):
+4. For a `done` order: commit the Result, then delete the order and commit that
+   too. `CLAUDE/orders/` is a queue, not an archive — `git log` keeps the record.
+
+       python3 scripts/order.py rm <id>
+
+   `rm` refuses while the Result is uncommitted, so following this order of
+   operations cannot lose anything. Keep a finished order only when it earns its
+   place as a document someone will come back to — a decision record, or a
+   convention it defines — and say why in the Result.
+
+A `blocked` order stays: it is live work waiting on an answer. Never edit
+another order while executing one. Unattended alternative (no session open):
 `python3 scripts/order.py run <id>` runs it through `claude -p`.

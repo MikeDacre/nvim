@@ -39,8 +39,34 @@ review and research. If the Project's shell is hung and the work is
 shell-heavy, say so and recommend moving to Claude Code rather than stalling.
 
 `scripts/` is a verbatim copy of the kit's scripts. Never rewrite one per
-project: if it does not fit, use it as-is and note the gap in the kit's TODO
-(`bash <kit>/scripts/adopt.sh --update` refreshes them from a newer kit).
+project: if it does not fit, use it as-is and note the gap in the kit's TODO.
+`bash <kit>/scripts/adopt.sh --update` refreshes them from a newer kit and
+runs any schema migrations; `--dry-run` shows what it would change first.
+
+## 0c. Modes
+`type` in `CLAUDE/project.json` is this project's **mode**, chosen at
+initialisation and rarely changed. `subtype` records the shape within it
+(`modular`, `dotfiles`, `obsidian`, `hugo`, ...).
+
+| mode | what it is |
+|---|---|
+| `code` | software: built, tested, released like software |
+| `config` | machine and service configuration; the tree mirrors a live system |
+| `writing` | the user's prose is the product; edits need naming and a backup |
+| `other` | a loosely-governed working folder, connector-heavy |
+
+`CLAUDE/MODE.md` is that mode's rulebook — kit-owned, shipped verbatim like
+this file, refreshed by `adopt.sh --update`. Its `## Always` block prints in
+every session digest; read the whole file once per session before touching
+content. A mode may relax §4, §5 and §6 and may add rules of its own; it can
+never relax §3 (approval gates), §8 (secrets) or §10 (stop and report). On
+anything else, `CLAUDE/MODE.md` wins — it is the more specific statement.
+
+Not every project root is a git repository: `git.vcs` is `git` or `none`.
+Under `none` (a synced vault, a folder inside someone else's tree) the digest,
+`check.sh`, `todo.py` and `backup.sh` still run, while `feature.sh`,
+`sync.sh` and `release.sh` say there is nothing for them to do. `CLAUDE/` is
+a repo either way, so notes and rules are always versioned.
 
 ## 1. Facts
 `CLAUDE/project.json` is the single source of truth for: name, type, language,
@@ -198,7 +224,8 @@ after minutes. Do not retry blindly and do not spend the session waiting.
 
 ## 13. Verify
 `bash scripts/check.sh` — placeholders, script and JSON syntax, changelog and
-VERSION agreement, symlink and skills layout, priv/ ignore rules, submodules,
+VERSION agreement, symlink and skills layout, mode agreement (`type` vs
+`CLAUDE/MODE.md`), priv/ ignore rules, submodules,
 generated-file staleness (git-based), then `scripts/check.local.sh` if the
 project has one — that file is project-owned and is where domain checks live
 (an editor config loads its own init file, a site builds). It gates

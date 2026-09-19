@@ -11,3 +11,5 @@ priv/
 CLAUDE.local.md
 tree-sitter-*.tar.gz
 nvimdata
+.backups/
+.claude/worktrees/
