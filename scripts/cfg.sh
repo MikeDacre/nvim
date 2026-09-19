@@ -10,4 +10,4 @@ v=c
 for k in sys.argv[1].split("."):
     v = v.get(k) if isinstance(v,dict) else None
     if v is None: print(sys.argv[2] if len(sys.argv)>2 else ""); raise SystemExit
-print(" ".join(map(str,v)) if isinstance(v,list) else v)' "$1" "${2:-}" 2>/dev/null
+print(" ".join(map(str,v)) if isinstance(v,list) else (str(v).lower() if isinstance(v,bool) else v))' "$1" "${2:-}" 2>/dev/null

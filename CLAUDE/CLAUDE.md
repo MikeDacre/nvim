@@ -20,6 +20,15 @@ If the digest reports UNLOGGED commits, the user changed things outside Claude:
 `python3 scripts/changelog.py from-git` writes the entries; review the diff it
 made. Don't ask.
 
+When `git.session_worktrees` is true (`CLAUDE/project.json`), `start` also
+reports whether the current branch is a feature/fix/hotfix branch. If it is
+not, this is a brand-new chat: ask the user what to work on, then run
+`bash scripts/feature.sh new <slug>`. It creates the branch AND its own git
+worktree — a directory the rest of the repo never touches — and prints the
+path. Treat that path as this chat's project root for the rest of the
+session: `cd` there before any further shell command, and read/write/edit
+under it, not the original checkout.
+
 ## 0b. Two surfaces, one rulebook
 - **Claude Project (chat)** — scoping, research, review, anything needing the
   web or connectors. Its settings box holds `CLAUDE/project-instructions.txt`.
@@ -96,6 +105,16 @@ Before a new feature: `bash scripts/feature.sh status`.
   feature -> **stop and ask**: continue here, or branch anew? The script blocks
   you; do not use `--force` without an answer.
 - Merge with `--no-ff`, always. `feature.sh finish` merges to dev.
+
+With `git.session_worktrees` true, `feature.sh new <slug>` creates the
+worktree described in §0 instead of switching the current checkout, so
+concurrent chats never collide over one directory. `finish` still merges to
+dev and must run from the main checkout, not from inside a session's own
+worktree — it refuses and says so otherwise. After a successful merge, ask
+before removing the worktree (`git worktree remove <path>`), same as asking
+before deleting the branch. `feature.sh status` (in every digest) also flags
+when `dev` has advanced past the current branch; ask the user, then
+`feature.sh merge-dev` catches it up — still `--no-ff`, never rebase.
 
 Commits are automatic — no approval needed, commit at each coherent unit.
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/):

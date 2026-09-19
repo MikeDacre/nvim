@@ -75,8 +75,24 @@ def _changelog_name() -> str:
         return "CHANGELOG.txt"
 
 
+def _version_path() -> str:
+    """release.version_file — VERSION at the root by default, CLAUDE/VERSION
+    for a compact-layout project (paths.style=compact)."""
+    try:
+        import json
+        cfg = json.load(open(os.path.join(root(), "CLAUDE", "project.json")))
+        return os.path.join(root(), cfg.get("release", {}).get("version_file") or "VERSION")
+    except Exception:
+        return os.path.join(root(), "VERSION")
+
+
 PATH = os.path.join(root(), _changelog_name())
 NAME = os.path.basename(PATH)
+# repo-root-relative path (e.g. "CLAUDE/CHANGELOG.txt" in a compact-layout
+# project) — git pathspecs and `git log --name-only` file lists are relative
+# to the repo root, not the basename; NAME alone stopped matching the moment
+# the changelog left the root.
+RELPATH = _changelog_name()
 
 
 def git(*a) -> str:
@@ -274,9 +290,24 @@ def _touches_entries(sha: str) -> bool:
     _sync() rewrites the marker in place, so an ordinary `git commit -a` can
     sweep a marker-only change into a code commit. Treating that as "the
     changelog was updated here" would hide the very commit it rode in on.
+
+    -M (rename detection) needs the FULL diff, not one restricted with
+    `-- RELPATH`: restricting to a single path filters out the old path's
+    deletion before git can pair it with the new path's addition, so a pure
+    move (e.g. adopt.sh --update --layout compact) would show as every line
+    deleted-then-added — "the whole changelog was rewritten here" — and wrongly
+    hide every real commit after it. Diffing everything and then picking out
+    just this file's section is what lets a pure rename show as a rename
+    (no content lines) instead.
     """
-    patch = git("show", "--format=", "--unified=0", sha, "--", NAME)
+    patch = git("show", "--format=", "--unified=0", "-M", sha)
+    in_file = False
     for ln in patch.splitlines():
+        if ln.startswith("diff --git "):
+            in_file = ln.rstrip().endswith(f" b/{RELPATH}")
+            continue
+        if not in_file:
+            continue
         if ln[:1] in "+-" and ln[:3] not in ("+++", "---") and MARK not in ln:
             if ln[1:].strip():
                 return True
@@ -289,7 +320,7 @@ def _after_last_changelog_commit() -> set[str] | None:
     None when no such commit exists yet (a fresh scaffold), in which case there
     is nothing to exclude.
     """
-    for sha in git("log", "--format=%H", "-40", "--", NAME).split():
+    for sha in git("log", "--format=%H", "-40", "--", RELPATH).split():
         if _touches_entries(sha):
             return set(git("log", "--format=%h", f"{sha}..HEAD").split())
     return None
@@ -319,7 +350,7 @@ def unlogged(with_skipped: bool = False):
     fresh = _after_last_changelog_commit()
     keep, skipped = [], []
     for h, s, files in commits:
-        if not (set(files) - {NAME, "CHANGELOG.txt", "CHANGELOG.md"}):
+        if not (set(files) - {RELPATH, "CHANGELOG.txt", "CHANGELOG.md"}):
             continue                                  # changelog housekeeping only
         p = _parse(s)
         if not p:
@@ -406,12 +437,12 @@ def cmd_lint() -> int:
             seen[m.group(1)] = seen.get(m.group(1), 0) + 1
             if seen[m.group(1)] == 2:
                 bad.append(f"duplicate section '{m.group(1)}' under {cur}")
-    vf = os.path.join(root(), "VERSION")
+    vf = _version_path()
     if os.path.exists(vf):
         v = open(vf).read().strip()
         # 0.0.0 = scaffolded, never released: everything is still [Unreleased]
         if v != "0.0.0" and not any(f"## [{v}]" in ln for ln in lines):
-            bad.append(f"VERSION={v} has no changelog section")
+            bad.append(f"{os.path.basename(vf)}={v} has no changelog section")
     if bad:
         print(f"{NAME} lint:")
         for b in bad:

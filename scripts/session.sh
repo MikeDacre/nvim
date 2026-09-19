@@ -17,6 +17,7 @@ export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o ConnectTimeout=5 -o BatchMode=
 cfg() { bash scripts/cfg.sh "$1" "${2:-}" 2>/dev/null || echo "${2:-}"; }
 SYNC=$(cfg sync synced); DEVB=$(cfg git.dev_branch dev); MAINB=$(cfg git.release_branch main)
 FEATP=$(cfg git.feature_prefix feat/); FIXP=$(cfg git.fix_prefix fix/); HOTP=$(cfg git.hotfix_prefix hotfix/)
+VERF=$(cfg release.version_file VERSION); RMF=$(cfg paths.roadmap ROADMAP.md)
 # git.vcs = none: no repository at the project root (a synced vault, a folder
 # inside somebody else's tree). Everything git-shaped stands down; the digest,
 # the todos, the changelog file and CLAUDE/ still work.
@@ -87,22 +88,22 @@ if dr: print(f"  refs   {len(dr)} reference URLs: bash scripts/session.sh refs")
 PY
 }
 
-# The mode rulebook's non-negotiables, printed every session. The full file is
-# CLAUDE/MODE.md; this block is what must be in force before the first edit.
-modeblock() {
-  [[ -f CLAUDE/MODE.md ]] || return
+# The type rulebook's non-negotiables, printed every session. The full file is
+# CLAUDE/TYPE.md; this block is what must be in force before the first edit.
+typeblock() {
+  [[ -f CLAUDE/TYPE.md ]] || return
   local hdr always
-  hdr=$(sed -n '1s/^# MODE: *//p' CLAUDE/MODE.md)
-  echo "  MODE   ${hdr:-unknown}"
-  always=$(awk '/^## Always/{f=1;next} /^## /{f=0} f' CLAUDE/MODE.md | grep -E '^- ' | head -10)
+  hdr=$(sed -n '1s/^# TYPE: *//p' CLAUDE/TYPE.md)
+  echo "  TYPE   ${hdr:-unknown}"
+  always=$(awk '/^## Always/{f=1;next} /^## /{f=0} f' CLAUDE/TYPE.md | grep -E '^- ' | head -10)
   [[ -n "$always" ]] && printf '%s\n' "$always" | sed 's/^/         /'
-  echo "         full rulebook: CLAUDE/MODE.md (read once per session)"
+  echo "         full rulebook: CLAUDE/TYPE.md (read once per session)"
 }
 
 roadmap() {
-  [[ -f ROADMAP.md ]] || return
+  [[ -f "$RMF" ]] || return
   local now
-  now=$(awk '/^## (Now|In progress)/{f=1;next} /^## /{f=0} f' ROADMAP.md \
+  now=$(awk '/^## (Now|In progress)/{f=1;next} /^## /{f=0} f' "$RMF" \
         | grep -E '^\s*-' | head -6)
   [[ -n "$now" ]] && { echo "ROADMAP (now)"; echo "$now" | sed 's/^/  /'; }
 }
@@ -119,7 +120,7 @@ unreleased() {
 
 gitstate() {
   if [[ $GIT -eq 0 ]]; then
-    echo "GIT      none — no repository at the project root (git.vcs=none) · v$(cat VERSION 2>/dev/null || echo '?')"
+    echo "GIT      none — no repository at the project root (git.vcs=none) · v$(cat "$VERF" 2>/dev/null || echo '?')"
     if [[ -d CLAUDE/.git ]]; then
       local cd_; cd_=$(cd CLAUDE && git status --porcelain 2>/dev/null)
       echo "  CLAUDE $(cd CLAUDE && git log --oneline -1 2>/dev/null)"
@@ -129,7 +130,7 @@ gitstate() {
     fi
     return
   fi
-  echo "GIT      $BR @ $(git rev-parse --short HEAD) (release=$MAINB dev=$DEVB) · v$(cat VERSION 2>/dev/null || echo '?')"
+  echo "GIT      $BR @ $(git rev-parse --short HEAD) (release=$MAINB dev=$DEVB) · v$(cat "$VERF" 2>/dev/null || echo '?')"
   local dirty; dirty=$(git status --porcelain)
   [[ -n "$dirty" ]] && { echo "  dirty  $(echo "$dirty" | wc -l | tr -d ' ') file(s):"; echo "$dirty" | head -8 | sed 's/^/         /'; }
   git log --oneline --no-merges -3 2>/dev/null | sed 's/^/         /'
@@ -164,10 +165,10 @@ drift() {
   { [[ -L CLAUDE.md && -e CLAUDE.md ]]; } || w "CLAUDE.md is not a working symlink"
   [[ -f .claude/settings.json ]] || w ".claude/settings.json missing (Claude Code hook + permissions)"
   local mt; mt=$(cfg type "")
-  if [[ ! -f CLAUDE/MODE.md ]]; then
-    w "CLAUDE/MODE.md missing — the mode rulebook is not installed (bash <kit>/scripts/adopt.sh --update)"
-  elif [[ -n "$mt" ]] && ! head -1 CLAUDE/MODE.md | grep -q "MODE: $mt"; then
-    w "CLAUDE/MODE.md is not the rulebook for type=$mt (bash <kit>/scripts/adopt.sh --update)"
+  if [[ ! -f CLAUDE/TYPE.md ]]; then
+    w "CLAUDE/TYPE.md missing — the type rulebook is not installed (bash <kit>/scripts/adopt.sh --update)"
+  elif [[ -n "$mt" ]] && ! head -1 CLAUDE/TYPE.md | grep -q "TYPE: $mt"; then
+    w "CLAUDE/TYPE.md is not the rulebook for type=$mt (bash <kit>/scripts/adopt.sh --update)"
   fi
   [[ -d CLAUDE/legacy ]] && w "CLAUDE/legacy/ still present — adoption merge not finished (adopt.md Phase 3)"
   while IFS=$'\t' read -r src art; do
@@ -183,12 +184,12 @@ digest() {
     echo "This digest was injected by the Claude Code SessionStart hook; scripts/session.sh"
     echo "start has already run for this session. /ctx or 'bash scripts/session.sh ctx' refreshes it."
   fi
-  facts; modeblock; echo
+  facts; typeblock; echo
   gitstate; drift; echo
   [[ -f TODO.txt ]] && { python3 scripts/todo.py summary 2>/dev/null; echo; }
   [[ -d CLAUDE/orders ]] && { python3 scripts/order.py summary 2>/dev/null; }
   roadmap; unreleased
-  bash scripts/feature.sh status 2>/dev/null | sed -n '2,6p'
+  bash scripts/feature.sh status 2>/dev/null | sed -n '2,7p'
   hr
   echo "This digest replaces reading project.json / ROADMAP.md / TODO.txt / CHANGELOG.txt;"
   echo "those files are opened only to edit them. Rules: CLAUDE.md (loaded automatically in Claude Code)."
@@ -256,7 +257,21 @@ case "${1:-start}" in
   start)
     [[ $GIT -eq 1 ]] && git remote get-url origin >/dev/null 2>&1 && \
       { T 25 git fetch --all --prune -q 2>/dev/null || echo "(offline — remote unreachable, digest from local state)"; }
-    digest;;
+    # project.yaml's periodic kit-release check: real network cost, so it
+    # belongs here and not in the shared digest() ctx also calls (no-network).
+    [[ -f scripts/kit-check.sh ]] && bash scripts/kit-check.sh 2>/dev/null
+    digest
+    if [[ $GIT -eq 1 ]] && [[ "$(cfg git.session_worktrees false)" == "true" ]]; then
+      case "$BR" in
+        "$FEATP"*|"$FIXP"*|chore/*|"$HOTP"*) : ;;
+        *)
+          echo
+          echo "NEW SESSION — not on a feature branch ($BR)."
+          echo "Ask the user what to work on, then: bash scripts/feature.sh new <slug>"
+          echo "This creates an isolated git worktree for this chat; treat its path as the"
+          echo "project root for the rest of the session (cd there, absolute paths for edits).";;
+      esac
+    fi;;
   ctx)  digest;;
   end)  shift; end "${1:-}";;
   refs) refs;;
