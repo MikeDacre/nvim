@@ -2,8 +2,8 @@
   "name": "nvim",
   "purpose": "Mike Dacre's Vim-first configuration, shared with NeoVim, deployed from one git repo to every machine",
   "type": "config",
-  "subtype": "editor-runtime",
-  "mode_doc": "CLAUDE/MODE.md",
+  "subtype": "environment",
+  "type_doc": "CLAUDE/TYPE.md",
   "lang": "vimscript+lua",
   "runtime": {
     "primary": "Vim 9 — MacVim (GUI) and terminal vim, on many machines",
@@ -31,7 +31,10 @@
     "fix_prefix": "fix/",
     "merge": "--no-ff",
     "commit_style": "conventional-commits-1.0.0",
-    "push_branches": "all"
+    "push_branches": "all",
+    "session_worktrees": true,
+    "session_worktrees_note": "true = feature.sh new creates a git worktree per branch (CLAUDE.md §0/§2), so each chat gets its own directory; false = plain checkout in place, as before.",
+    "worktree_dir": ".claude/worktrees"
   },
   "machines": [
     "rincewind"
@@ -228,7 +231,7 @@
     "permissions": "allow scripts/, git status/diff/log/add/commit, make, vim/nvim headless; deny force-push, history rewrite, PlugClean, edits to priv/, generated doc/, CLAUDE.md"
   },
   "schema": 2,
-  "version": "0.1.0",
+  "version": "0.3.0",
   "claude_repo": {
     "mode": "tracked",
     "path": "CLAUDE",
@@ -243,7 +246,7 @@
     "format": "todo.txt (http://todotxt.org/)",
     "comment_marker": "#"
   },
-  "kit_version": "1.10.0",
+  "kit_version": "1.11.0",
   "content": {
     "note": "writing mode (and any mode holding user-authored documents). Everything under dirs is the user's until they say otherwise — see CLAUDE/MODE.md.",
     "dirs": [],

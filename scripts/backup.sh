@@ -7,7 +7,7 @@
 #                                        version is snapshotted first)
 #   backup.sh --prune --keep <n>         delete all but the n newest snapshots
 #
-# Mandatory before any content write in `writing` mode (CLAUDE/MODE.md), and
+# Mandatory before any content write in `writing` mode (CLAUDE/TYPE.md), and
 # the right move in any mode before overwriting a file the user authored.
 # Works with or without git — in a project with `git.vcs: none` it is the only
 # undo there is. Never writes outside the project root.

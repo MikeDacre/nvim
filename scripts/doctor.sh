@@ -24,6 +24,13 @@ chk opt gh      "brew install gh (releases)"             "gh --version | head -1
 chk opt pandoc  "brew install pandoc (man pages)"        "pandoc -v | head -1 | cut -d' ' -f2"
 chk opt op      "brew install 1password-cli (secrets)"   "op --version"
 chk opt make    "xcode-select --install"                 "make -v | head -1 | cut -d' ' -f3"
+if python3 -c 'import yaml' >/dev/null 2>&1; then
+  printf "  ok    %-10s%s\n" "pyyaml" " $(python3 -c 'import yaml; print(yaml.__version__)' 2>/dev/null)"
+elif [[ -f project.yaml ]]; then
+  printf "  MISS  %-10srequired — this project has project.yaml: pip install pyyaml\n" "pyyaml"; fail=1
+else
+  printf "  --    %-10soptional — pip install pyyaml (needed once this project gets a project.yaml)\n" "pyyaml"
+fi
 if command -v timeout >/dev/null 2>&1 || command -v gtimeout >/dev/null 2>&1; then
   printf "  ok    %-10s\n" "timeout"
 else

@@ -135,7 +135,8 @@
       "Edit(templates/CLAUDE.md)",
       "Bash(git checkout main*)",
       "Bash(git switch main*)",
-      "Bash(git push*origin main*)"
+      "Bash(git push*origin main*)",
+      "Bash(git worktree remove*)"
     ]
   }
 }

@@ -51,6 +51,7 @@ DEVB=$(cfg git.dev_branch dev)
 MAINB=$(cfg git.release_branch main)
 ASSETS=$(cfg release.assets "dist/*")
 CHLOG=$(cfg release.changelog CHANGELOG.txt)
+VERF=$(cfg release.version_file VERSION)
 
 BR=$(git rev-parse --abbrev-ref HEAD)
 [[ "$BR" == "$DEVB" ]] || { echo "must be on $DEVB (on $BR)"; exit 1; }
@@ -60,9 +61,9 @@ BR=$(git rev-parse --abbrev-ref HEAD)
 [[ -z "$(git status --porcelain --untracked-files=no)" ]] || { echo "working tree dirty"; exit 1; }
 [[ $DRY -eq 1 ]] || bash scripts/check.sh || { echo "check.sh FAILED — fix before releasing"; exit 1; }
 
-CUR=$(cat VERSION 2>/dev/null || echo 0.0.0)
+CUR=$(cat "$VERF" 2>/dev/null || echo 0.0.0)
 SEMVER_RE='^([0-9]+)\.([0-9]+)\.([0-9]+)(-(alpha|beta|rc)\.([0-9]+))?$'
-[[ "$CUR" =~ $SEMVER_RE ]] || { echo "VERSION '$CUR' is not X.Y.Z or X.Y.Z-alpha|beta|rc.N"; exit 1; }
+[[ "$CUR" =~ $SEMVER_RE ]] || { echo "$VERF '$CUR' is not X.Y.Z or X.Y.Z-alpha|beta|rc.N"; exit 1; }
 MA=${BASH_REMATCH[1]}; MI=${BASH_REMATCH[2]}; PA=${BASH_REMATCH[3]}
 CURSTAGE=${BASH_REMATCH[5]:-}; CURNUM=${BASH_REMATCH[6]:-0}
 
@@ -123,7 +124,7 @@ if [[ "$LEVEL" == "pre" || "$FINALIZE" -eq 1 ]]; then
   fi
 fi
 run "python3 scripts/changelog.py release '$NEW'"
-run "echo '$NEW' > VERSION"
+run "echo '$NEW' > '$VERF'"
 # CLAUDE/project.json carries the version the session digest prints. Left
 # unbumped it silently drifts from VERSION and every digest reports the old one.
 if [[ -f CLAUDE/project.json ]]; then
@@ -152,7 +153,7 @@ done
 # stage the version files by name — a release commit holds the version roll and
 # nothing else, and `git add -A` here would sweep up untracked-by-design content
 STAGEFILES=""
-for f in VERSION "$CHLOG" CLAUDE/project.json pyproject.toml package.json Cargo.toml; do
+for f in "$VERF" "$CHLOG" CLAUDE/project.json pyproject.toml package.json Cargo.toml; do
   [[ -f "$f" ]] && STAGEFILES="$STAGEFILES '$f'"
 done
 run "git add$STAGEFILES"
@@ -215,7 +216,10 @@ else
   echo
   echo "Ready to publish GitHub release $TAG$SUFFIX with assets: $ASSETS"
   if [[ $YES -eq 0 ]]; then
-    read -r -p "Publish publicly now? [y/N] " ans
+    # `read` returns non-zero on EOF (no interactive stdin — a non-interactive
+    # agent session, cron, CI) — under `set -e` that would abort the whole
+    # script right here instead of reaching the graceful skip below.
+    read -r -p "Publish publicly now? [y/N] " ans || ans=n
     [[ "${ans:-n}" =~ ^[Yy]$ ]] || { echo "skipped (tag is pushed; run 'gh release create $TAG ...' later)"; exit 0; }
   fi
   if [[ -f Makefile ]] && grep -qE '^dist:' Makefile; then

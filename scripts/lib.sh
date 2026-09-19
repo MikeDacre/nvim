@@ -69,6 +69,30 @@ stale() {
   return 0
 }
 
+# kit_root — locate the claude_init kit this project was built from, for the
+# "resource library" lookups and the periodic release check (project.yaml).
+# Git-locked, not path-locked (project-instructions.txt): never a committed
+# path, so the order is
+#   1. $CLAUDE_INIT_KIT env var
+#   2. CLAUDE/.kit-path — a gitignored, one-line local override
+#   3. a short list of conventional locations
+# Prints the path and returns 0 when found; prints nothing and returns 1
+# otherwise — callers decide whether that is fatal.
+kit_root() {
+  local c p
+  if [ -n "${CLAUDE_INIT_KIT:-}" ] && [ -f "$CLAUDE_INIT_KIT/scripts/bootstrap.sh" ]; then
+    printf '%s\n' "$CLAUDE_INIT_KIT"; return 0
+  fi
+  if [ -f CLAUDE/.kit-path ]; then
+    p=$(tr -d ' \n' < CLAUDE/.kit-path 2>/dev/null)
+    [ -n "$p" ] && [ -f "$p/scripts/bootstrap.sh" ] && { printf '%s\n' "$p"; return 0; }
+  fi
+  for c in "$HOME/code/my_code/claude_init" "$HOME/.claude_init" "$HOME/code/claude_init"; do
+    [ -f "$c/scripts/bootstrap.sh" ] && { printf '%s\n' "$c"; return 0; }
+  done
+  return 1
+}
+
 # generated_pairs — print "source<TAB>artifact" for every project.json
 # build.generated entry, plus README -> man page when build.man is set.
 generated_pairs() {
@@ -86,3 +110,8 @@ if b.get("man"):
     print(f"README.md\t{b['man']}")
 PY
 }
+
+# in_worktree — true when the current directory is a LINKED worktree, not the
+# main checkout. A linked worktree's .git is a file pointing elsewhere, so
+# --git-dir and --git-common-dir diverge; in the main checkout they match.
+in_worktree() { [ "$(git rev-parse --git-dir 2>/dev/null)" != "$(git rev-parse --git-common-dir 2>/dev/null)" ]; }

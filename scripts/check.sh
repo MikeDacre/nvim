@@ -37,12 +37,12 @@ echo "CHECK $(basename "$PWD")$( [ $KIT -eq 1 ] && echo ' (kit + project)' )$( [
 # Prose that discusses placeholders must therefore use an example token outside
 # the vocabulary ({{PLACEHOLDER}}, {{UPPER_SNAKE}}), or spell the name out
 # without braces.
-PH_VOCAB='CLAUDE_MODE|CLAUDE_REMOTE|CLONE_URL|COMPARE_URL|CONNECTOR|DATE|DEP|DESCRIPTION|ENTRYPOINT|EXAMPLES|FIELD|FIRST_GOAL|ITEM|KEY|KIT_VERSION|LANG|LICENSE|MANIFEST|ONE_LINE_PURPOSE|OPTIONS|PARAGRAPH_DESCRIPTION|PROJECT_NAME|PUSH_BRANCHES|REMOTE|REQUIREMENTS|ROTATION|RUNTIME|SECOND_GOAL|SEE_ALSO|SKILL|SLUG|SOURCE_URL|SRC|SUBTYPE|SYNC|TOOL|TYPE|USAGE_EXAMPLE|USER|VCS|VERSION|VISIBILITY'
-SCOPE="CLAUDE .claude README.md ROADMAP.md TODO.txt CHANGELOG.txt CHANGELOG.md Makefile Makefile.kit priv/README.md VERSION"
+PH_VOCAB='CLAUDE_MODE|CLAUDE_REMOTE|CLONE_URL|COMPARE_URL|CONNECTOR|DATE|DEP|DESCRIPTION|ENTRYPOINT|EXAMPLES|FIELD|FIRST_GOAL|ITEM|KEY|KIT_VERSION|LANG|LICENSE|MANIFEST|ONE_LINE_PURPOSE|OPTIONS|PARAGRAPH_DESCRIPTION|PLATFORM|PROJECT_NAME|PUSH_BRANCHES|REMOTE|REQUIREMENTS|ROTATION|RUNTIME|SECOND_GOAL|SEE_ALSO|SKILL|SLUG|SOURCE_URL|SRC|SUBTYPE|SYNC|TOOL|TYPE|USAGE_EXAMPLE|USER|VCS|VERSION|VISIBILITY'
+SCOPE="CLAUDE .claude README.md ROADMAP.md TODO.txt CHANGELOG.txt CHANGELOG.md Makefile Makefile.kit priv/README.md VERSION project.yaml"
 ph=""
 for p in $SCOPE; do
   [ -e "$p" ] || continue
-  ph="$ph $(grep -rlE "\{\{($PH_VOCAB)\}\}" --exclude-dir=legacy "$p" 2>/dev/null | tr '\n' ' ')"
+  ph="$ph $(grep -rlE "\{\{($PH_VOCAB)\}\}" --exclude-dir=legacy --exclude-dir=patches "$p" 2>/dev/null | tr '\n' ' ')"
 done
 ph=$(echo "$ph" | tr -s ' ')
 [ -z "${ph// /}" ] && pass "no unfilled {{PLACEHOLDERS}}" || bad "unfilled placeholders in:$ph"
@@ -58,26 +58,52 @@ rm -rf scripts/__pycache__
 
 # 3. VERSION agrees with CHANGELOG; changelog well-formed
 CHLOG=$(cfg release.changelog CHANGELOG.txt)
-if [ -f VERSION ] && [ -f "$CHLOG" ]; then
-  v=$(tr -d ' \n' < VERSION)
+VERF=$(cfg release.version_file VERSION)
+if [ -f "$VERF" ] && [ -f "$CHLOG" ]; then
+  v=$(tr -d ' \n' < "$VERF")
   # 0.0.0 = scaffolded, never released: there is no section for it yet
   if [ "$v" = "0.0.0" ] || grep -q "^## \[$v\]" "$CHLOG"; then
-    pass "VERSION $v present in $CHLOG"
+    pass "$VERF $v present in $CHLOG"
   else
-    bad "VERSION $v has no section in $CHLOG"
+    bad "$VERF $v has no section in $CHLOG"
   fi
   python3 scripts/changelog.py lint >/dev/null 2>&1 && pass "changelog format" \
     || bad "changelog format (run: python3 scripts/changelog.py lint)"
 fi
 
+# 3d. paths.style is standard|compact — everything else in the kit that reads
+# it (bootstrap.sh, adopt.sh, session.sh, release.sh, check.sh) assumes so
+style=$(cfg paths.style standard)
+case "$style" in
+  standard|compact) pass "paths.style=$style";;
+  *) bad "paths.style='$style' must be standard|compact";;
+esac
+
 # 3b. project.json version agrees with VERSION — the digest prints project.json,
 # so drift here means every session reports a version the repo no longer has.
-if [ -f VERSION ] && [ -f CLAUDE/project.json ]; then
+if [ -f "$VERF" ] && [ -f CLAUDE/project.json ]; then
   pv=$(cfg version "")
-  v=$(tr -d ' \n' < VERSION)
+  v=$(tr -d ' \n' < "$VERF")
   if [ -z "$pv" ]; then :
-  elif [ "$pv" = "$v" ]; then pass "CLAUDE/project.json version matches VERSION ($v)"
-  else warn "CLAUDE/project.json version=$pv but VERSION=$v (release.sh syncs it; fix by hand for older drift)"
+  elif [ "$pv" = "$v" ]; then pass "CLAUDE/project.json version matches $VERF ($v)"
+  else warn "CLAUDE/project.json version=$pv but $VERF=$v (release.sh syncs it; fix by hand for older drift)"
+  fi
+fi
+
+# 3c. project.yaml: valid YAML, kit_version present (v2 increment 2). PyYAML
+# missing degrades to a WARN, not a FAIL — the project itself is fine, only
+# this one check can't run without the dependency doctor.sh already flags.
+if [ -f project.yaml ]; then
+  if ! python3 -c 'import yaml' >/dev/null 2>&1; then
+    warn "project.yaml present but PyYAML is not installed — can't validate it (pip install pyyaml)"
+  else
+    yerr=$(python3 -c 'import yaml,sys
+try: c = yaml.safe_load(open("project.yaml")) or {}
+except Exception as e: print(e); sys.exit(1)
+sys.exit(0 if c.get("kit_version") else 1)' 2>&1)
+    if [ $? -eq 0 ]; then pass "project.yaml valid, kit_version present"
+    else bad "project.yaml invalid or missing kit_version (${yerr:-no kit_version})"
+    fi
   fi
 fi
 
@@ -85,8 +111,8 @@ fi
 t=""
 [ $GIT -eq 1 ] && t=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 if [ -n "$t" ]; then
-  [ "v$(tr -d ' \n' < VERSION 2>/dev/null)" = "$t" ] && pass "latest tag $t matches VERSION" \
-    || warn "latest tag $t != v$(cat VERSION 2>/dev/null) (expected mid-cycle)"
+  [ "v$(tr -d ' \n' < "$VERF" 2>/dev/null)" = "$t" ] && pass "latest tag $t matches $VERF" \
+    || warn "latest tag $t != v$(cat "$VERF" 2>/dev/null) (expected mid-cycle)"
 fi
 
 # 5a. kit checks (claude_init itself): templates valid, this repo's installed
@@ -103,21 +129,21 @@ if [ $KIT -eq 1 ]; then
     || bad "templates/ uses placeholders missing from check.sh PH_VOCAB: $unknown"
   python3 -c 'import json; json.load(open("templates/claude-settings.json"))' 2>/dev/null \
     && pass "templates/claude-settings.json valid" || bad "templates/claude-settings.json missing or invalid"
-  # every mode named in CLAUDE.md §0c needs a rulebook, and each rulebook needs
+  # every type named in CLAUDE.md §0c needs a rulebook, and each rulebook needs
   # the ## Always block the session digest prints
   modes_ok=1
-  for m in code config writing other; do
+  for m in code writing website config other administrative knowledge-base workspace; do
     if [ ! -f "templates/modes/$m.md" ]; then bad "templates/modes/$m.md missing"; modes_ok=0; continue; fi
-    head -1 "templates/modes/$m.md" | grep -q "^# MODE: $m" \
-      || { bad "templates/modes/$m.md must start '# MODE: $m'"; modes_ok=0; }
+    head -1 "templates/modes/$m.md" | grep -q "^# TYPE: $m" \
+      || { bad "templates/modes/$m.md must start '# TYPE: $m'"; modes_ok=0; }
     grep -q '^## Always' "templates/modes/$m.md" \
       || { bad "templates/modes/$m.md has no '## Always' block (the digest prints it)"; modes_ok=0; }
   done
-  [ $modes_ok -eq 1 ] && pass "mode rulebooks present (code, config, writing, other)"
+  [ $modes_ok -eq 1 ] && pass "type rulebooks present (code, writing, website, config, other, administrative, knowledge-base, workspace)"
   drift=0
   cmp -s templates/claude-settings.json .claude/settings.json || { bad ".claude/settings.json differs from templates/claude-settings.json (make sync-self)"; drift=1; }
   cmp -s templates/CLAUDE.md CLAUDE/CLAUDE.md || { bad "CLAUDE/CLAUDE.md differs from templates/CLAUDE.md (make sync-self)"; drift=1; }
-  cmp -s templates/modes/code.md CLAUDE/MODE.md || { bad "CLAUDE/MODE.md differs from templates/modes/code.md (make sync-self)"; drift=1; }
+  cmp -s templates/modes/code.md CLAUDE/TYPE.md || { bad "CLAUDE/TYPE.md differs from templates/modes/code.md (make sync-self)"; drift=1; }
   for d in templates/skills/*/; do
     n=$(basename "$d")
     cmp -s "$d/SKILL.md" ".claude/skills/$n/SKILL.md" 2>/dev/null || { bad ".claude/skills/$n/SKILL.md differs from templates/skills/$n (make sync-self)"; drift=1; }
@@ -176,15 +202,40 @@ fi
 mode=$(cfg type "")
 if [ -n "$mode" ]; then
   case "$mode" in
-    code|config|writing|other) :;;
-    *) bad "project.json type=$mode is not a mode (code|config|writing|other) — run adopt.sh --update to migrate";;
+    code|writing|website|config|other|administrative|knowledge-base|workspace) :;;
+    *) bad "project.json type=$mode is not a recognised type (code|writing|website|config|other|administrative|knowledge-base|workspace) — run adopt.sh --update to migrate";;
   esac
-  if [ ! -f CLAUDE/MODE.md ]; then
-    bad "CLAUDE/MODE.md missing — the $mode rulebook is not installed (bash <kit>/scripts/adopt.sh --update)"
-  elif head -1 CLAUDE/MODE.md | grep -q "^# MODE: $mode"; then
-    pass "mode $mode — CLAUDE/MODE.md agrees with project.json"
+  # closed subtype vocabularies (ROADMAP.md "Type system v2") — only types
+  # with a settled vocabulary are checked; website/knowledge-base/
+  # administrative/workspace are separate, later work
+  sub=$(cfg subtype "")
+  # "adopted" is adopt.sh's default when --subtype is not given — a documented
+  # placeholder (m_type_is_mode), not a real choice. Treat it like empty: not
+  # yet classified, not wrong.
+  if [ -n "$sub" ] && [ "$sub" != adopted ]; then
+    case "$mode" in
+      code)           vocab="library pipeline script service tool";;
+      writing)        vocab="docs manuscript notes";;
+      config)         vocab="environment host provisioning service";;
+      administrative) vocab="business finance legal personal";;
+      *)              vocab="";;
+    esac
+    if [ -n "$vocab" ]; then
+      match=0
+      for v in $vocab; do [ "$sub" = "$v" ] && match=1; done
+      if [ $match -eq 1 ]; then
+        pass "subtype '$sub' is in the closed vocabulary for type $mode"
+      else
+        bad "subtype '$sub' is not in the closed vocabulary for type $mode (${vocab// /, }) — bash <kit>/scripts/adopt.sh --update may auto-rename it, or set it by hand in CLAUDE/project.json"
+      fi
+    fi
+  fi
+  if [ ! -f CLAUDE/TYPE.md ]; then
+    bad "CLAUDE/TYPE.md missing — the $mode rulebook is not installed (bash <kit>/scripts/adopt.sh --update)"
+  elif head -1 CLAUDE/TYPE.md | grep -q "^# TYPE: $mode"; then
+    pass "type $mode — CLAUDE/TYPE.md agrees with project.json"
   else
-    bad "CLAUDE/MODE.md is '$(head -1 CLAUDE/MODE.md)' but project.json says type=$mode"
+    bad "CLAUDE/TYPE.md is '$(head -1 CLAUDE/TYPE.md)' but project.json says type=$mode"
   fi
   case "$mode" in
     config)
@@ -202,6 +253,9 @@ if [ -n "$mode" ]; then
       fi
       [ -n "$(cfg content.dirs '')" ] && pass "content.dirs recorded" \
         || warn "content.dirs is empty — nothing marks which files are the user's writing";;
+    website)
+      [ -n "$(cfg platform '')" ] && pass "platform recorded" \
+        || warn "platform is empty — nothing says what this site is built with (TYPE.md)";;
   esac
 fi
 
@@ -283,7 +337,7 @@ else
   owned=$(cfg paths.owned "")
   [ -n "$owned" ] || owned="CLAUDE .claude scripts src bin tests docs man templates
                             README.md ROADMAP.md TODO.txt CHANGELOG.txt CHANGELOG.md
-                            Makefile Makefile.kit VERSION
+                            Makefile Makefile.kit VERSION project.yaml requirements.txt
                             pyproject.toml package.json Cargo.toml go.mod"
   sel=""
   for p in $owned; do [ -e "$p" ] && sel="$sel $p"; done

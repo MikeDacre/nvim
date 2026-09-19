@@ -1,4 +1,4 @@
-# MODE: config — machine and service configuration under version control
+# TYPE: config — machine and service configuration under version control
 
 Configuration is code: same branches, same commits, same changelog, same
 review. What differs is that this tree is a **mirror of a live system**. A
@@ -15,8 +15,10 @@ or locks you out of the host.
 - No key, password, certificate, or host-specific credential in a tracked file. It lives in `priv/` and the config references it (§8).
 
 ## Layout
-`subtype` records the scope: `dotfiles` (a user's own environment), `host`
-(one machine), `server` (services on a fleet), `service` (one daemon).
+`subtype` records the scope: `environment` (a user's own machine setup —
+dotfiles, shell, personal tooling), `host` (one specific machine), `provisioning`
+(shared config across many hosts — no project needs this yet; see ROADMAP.md),
+`service` (one daemon).
 
 The tree is the target's tree. A file's path in the repo is its path on the
 machine, minus the mirror root:
