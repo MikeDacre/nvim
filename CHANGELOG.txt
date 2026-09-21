@@ -14,6 +14,7 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ### Added
 - Statusbar shows spellcheck/autocorrect state and time since last save while write mode is active (vim-airline in Vim, lualine in Neovim).
+- add rainbow_csv for CSV viewing/editing (f6dd04a).
 
 ### Changed
 - Write-mode statusbar indicators are now compact icons (✓sp ✓ac ↻2m) instead of full words.
@@ -95,4 +96,4 @@ February 2018 and was adopted as a managed project in September 2026.
 [0.2.0]: https://github.com/MikeDacre/nvim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MikeDacre/nvim/releases/tag/v0.1.0
 
-<!-- changelog-synced: d5017f6 -->
+<!-- changelog-synced: f6dd04a -->
