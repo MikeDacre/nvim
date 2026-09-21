@@ -12,6 +12,7 @@ if !has('nvim')
   Plug 'tpope/vim-sensible'  " nvim's own defaults already cover most of this
 endif
 Plug 'jlanzarotta/bufexplorer', { 'on': 'BufExplorer' }
+Plug 'mechatroner/rainbow_csv', { 'for': 'csv' }
 
 Plug 'MikeDacre/tmux-zsh-vim-titles'
 

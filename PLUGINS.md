@@ -31,6 +31,7 @@ accept all above recommendations
  | `tpope/vim-sensible`                      | sane defaults        | Neovim defaults already match most of it; guard to vim-only                                                                     | P3  |
  | `xolox/vim-misc`                          | library              | Dependency of vim-session/vim-easytags, **neither installed** — likely orphaned; verify then drop                               | P2  |
  | `jlanzarotta/bufexplorer`                 | buffer list          | Overlaps telescope/fzf buffer pickers on nvim                                                                                   | P3  |
+ | `mechatroner/rainbow_csv`                 | CSV viewing/editing  | **Added 2026-09-20** at Mike's request — column highlighting + `RainbowQuery`, dual, `for: csv`                                | —   |
  | `MikeDacre/tmux-zsh-vim-titles`           | terminal titles      | Yours; keep                                                                                                                     | —   |
  | `preservim/nerdtree`                      | file tree            | **Loads on nvim too, alongside `nvim-tree.lua`** — with Vim primary, keep nerdtree as the single dual answer and drop nvim-tree | P1  |
  | `preservim/nerdcommenter`                 | commenting           | Neovim 0.10+ has built-in `gc` commenting → guard to vim-only                                                                   | P2  |
