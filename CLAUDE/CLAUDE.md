@@ -47,29 +47,39 @@ in the Project, hand off to Claude Code to build, return to the Project for
 review and research. If the Project's shell is hung and the work is
 shell-heavy, say so and recommend moving to Claude Code rather than stalling.
 
-`scripts/` is a verbatim copy of the kit's scripts. Never rewrite one per
-project: if it does not fit, use it as-is and note the gap in the kit's TODO.
-`bash <kit>/scripts/adopt.sh --update` refreshes them from a newer kit and
-runs any schema migrations; `--dry-run` shows what it would change first.
+Kit machinery lives in `.claude/`: `.claude/scripts` (a verbatim copy of the
+kit's scripts; the root `scripts` is a symlink to it, so every command in this
+file works unchanged) and `.claude/Makefile` (root `Makefile` symlink).
+Never rewrite a kit script per project: if it does not fit, use it as-is and
+note the gap in the kit's TODO. `bash <kit>/scripts/adopt.sh --update`
+refreshes them from a newer kit and runs any schema migrations; `--dry-run`
+shows what it would change first. `project.yaml` (§8) carries the kit's
+upgrade policy, and `start` reports a newer kit release when one is out.
+`CLAUDE/data/` and `CLAUDE/reports/` are where anything you generate lands —
+never the user's own tree.
 
-## 0c. Modes
-`type` in `CLAUDE/project.json` is this project's **mode**, chosen at
+## 0c. Types
+`type` in `CLAUDE/project.json` is this project's **type**, chosen at
 initialisation and rarely changed. `subtype` records the shape within it
-(`modular`, `dotfiles`, `obsidian`, `hugo`, ...).
+(`tool`, `environment`, `notes`, ...); some types have none.
 
-| mode | what it is |
+| type | what it is |
 |---|---|
 | `code` | software: built, tested, released like software |
-| `config` | machine and service configuration; the tree mirrors a live system |
 | `writing` | the user's prose is the product; edits need naming and a backup |
+| `website` | content, layout code and deploy config in one tree |
+| `config` | machine and service configuration; the tree mirrors a live system |
+| `administrative` | running a life or a business: finance, legal, planning |
+| `knowledge-base` | a research corpus of papers, notes and manuscripts |
+| `workspace` | a super-repo organising other projects |
 | `other` | a loosely-governed working folder, connector-heavy |
 
-`CLAUDE/MODE.md` is that mode's rulebook — kit-owned, shipped verbatim like
+`CLAUDE/TYPE.md` is that type's rulebook — kit-owned, shipped verbatim like
 this file, refreshed by `adopt.sh --update`. Its `## Always` block prints in
 every session digest; read the whole file once per session before touching
-content. A mode may relax §4, §5 and §6 and may add rules of its own; it can
+content. A type may relax §4, §5 and §6 and may add rules of its own; it can
 never relax §3 (approval gates), §8 (secrets) or §10 (stop and report). On
-anything else, `CLAUDE/MODE.md` wins — it is the more specific statement.
+anything else, `CLAUDE/TYPE.md` wins — it is the more specific statement.
 
 Not every project root is a git repository: `git.vcs` is `git` or `none`.
 Under `none` (a synced vault, a folder inside someone else's tree) the digest,
@@ -116,6 +126,15 @@ before deleting the branch. `feature.sh status` (in every digest) also flags
 when `dev` has advanced past the current branch; ask the user, then
 `feature.sh merge-dev` catches it up — still `--no-ff`, never rebase.
 
+With `git.session_worktrees` true, a single persistent `ideas` branch exists
+per project for notes and cross-cutting ideas that do not belong to any one
+feature. `feature.sh ideas` creates or re-attaches its worktree the same way
+`new` does, but with no slug and no prefix. Commit to it freely and merge it
+into `dev` often with `feature.sh ideas-merge` (still `--no-ff`, run from the
+main checkout) — unlike `finish`, the branch and worktree are never deleted,
+so the next chat that runs `feature.sh ideas` picks up where the last one
+left off.
+
 Commits are automatic — no approval needed, commit at each coherent unit.
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/):
 `feat|fix|docs|style|refactor|perf|test|build|ci|chore(scope): imperative`.
@@ -132,10 +151,10 @@ Free: read, branch, commit, push to feature/dev, create files, run tests, docs.
 (`reset --hard`, force push, history rewrite, deleting unmerged branches,
 removing submodules) - merging to the release branch or cutting a release -
 **publishing anything public** (`gh release create`, public repo, deploy,
-package push) - adding a runtime dependency - touching `priv/` contents -
+package push) - adding a runtime dependency - editing `project.yaml` -
 writing outside the repo root. Approval for one action never covers the next.
-The Claude Code deny list enforces the destructive-git and `priv/` gates
-mechanically; the rest are yours to keep.
+The Claude Code deny list enforces the destructive-git and `project.yaml`
+gates mechanically; the rest are yours to keep.
 
 ## 4. Release
 [SemVer 2.0.0](https://semver.org/spec/v2.0.0.html); `VERSION` is authoritative.
@@ -174,11 +193,15 @@ with its licence and *why*. Submodule URLs are https, never SSH: a public
 repo must clone on a machine with no GitHub key.
 
 ## 8. Secrets
-Everything secret lives in `priv/`; only `README.md` and `*.example` are
-tracked. Never print a secret value into chat, a log, a commit, or the
-changelog — key names only. New secret => add it to `priv/README.md` and the
-`.example` in the same commit as the code using it. `make secrets` provisions a
-fresh clone. A committed secret is a stop-and-report: rotate first.
+Everything secret lives in `project.yaml` at the repo root — this machine's
+copy, gitignored, the user's to edit. `project.yaml.example` is tracked and is
+the contract: every key present, every value blank. A value is literal, or
+`1pw <reference>` resolved from 1Password at read time; read one with
+`bash scripts/ycfg.sh keys.<NAME>`. Never print a secret value into chat, a
+log, a commit, or the changelog — key names only. New secret => add its NAME
+to `project.yaml.example` in the same commit as the code reading it; the value
+goes in `project.yaml` only. `make secrets` provisions a fresh clone. A
+committed secret is a stop-and-report: rotate first.
 
 ## 9. Every session ends with documentation current
 `session.sh end "msg"` commits, back-fills the changelog, regenerates the man
@@ -243,8 +266,8 @@ after minutes. Do not retry blindly and do not spend the session waiting.
 
 ## 13. Verify
 `bash scripts/check.sh` — placeholders, script and JSON syntax, changelog and
-VERSION agreement, symlink and skills layout, mode agreement (`type` vs
-`CLAUDE/MODE.md`), priv/ ignore rules, submodules,
+VERSION agreement, symlink and skills layout, type agreement (`type` vs
+`CLAUDE/TYPE.md`), secrets (`project.yaml` ignored, no value in the example), submodules,
 generated-file staleness (git-based), then `scripts/check.local.sh` if the
 project has one — that file is project-owned and is where domain checks live
 (an editor config loads its own init file, a site builds). It gates

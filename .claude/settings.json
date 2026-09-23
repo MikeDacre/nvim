@@ -96,7 +96,6 @@
       "Bash(git tag -d*)",
       "Bash(git clean *)",
       "Bash(*PlugClean*)",
-      "Edit(priv/**)",
       "Edit(doc/mikevim.txt)",
       "Write(doc/mikevim.txt)",
       "Edit(doc/tags)",
@@ -106,7 +105,9 @@
       "Edit(plugged/**)",
       "Write(plugged/**)",
       "Bash(python3 scripts/todo.py rm *)",
-      "Edit(man/**)"
+      "Edit(man/**)",
+      "Edit(project.yaml)",
+      "Write(project.yaml)"
     ],
     "defaultMode": "acceptEdits",
     "ask": [

@@ -12,7 +12,7 @@ or locks you out of the host.
 - A change that can lock you out — sshd, firewall, PAM, sudoers, network, boot — is stop-and-ask, and it is applied only with a second live session already open on that host.
 - `CLAUDE/` is tracked in the main repo, never a subrepo: a config repo is private already and a second remote is one more thing to forget.
 - The remote stays **private** unless project.json records `visibility: public`. Making one public is an approval gate every time (CLAUDE.md §3).
-- No key, password, certificate, or host-specific credential in a tracked file. It lives in `priv/` and the config references it (§8).
+- No key, password, certificate, or host-specific credential in a tracked file. It lives in `project.yaml` and the config references it (§8).
 
 ## Layout
 `subtype` records the scope: `environment` (a user's own machine setup —

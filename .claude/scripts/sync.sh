@@ -13,7 +13,7 @@ set -uo pipefail
 cd "$(proot)" || exit 1
 export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o ConnectTimeout=5 -o BatchMode=yes}"
 
-cfg() { bash scripts/cfg.sh "$1" "${2:-}" 2>/dev/null || echo "${2:-}"; }
+cfg_init
 
 MODE=$(cfg sync synced)
 DEVB=$(cfg git.dev_branch dev)
@@ -45,14 +45,19 @@ pull() {
     if [[ "$(git rev-list --count "$b..origin/$b")" -gt 0 ]]; then
       if [[ "$(git rev-list --count "origin/$b..$b")" -gt 0 ]]; then
         echo "sync: !! $b has DIVERGED from origin — resolve manually, no force push."
+      elif [[ "$b" != "$BR" ]] && [[ -n "$(git worktree list --porcelain | awk -v want="refs/heads/$b" '/^branch /{if ($2==want) print}')" ]]; then
+        # checked out in another worktree: git refuses to move it from here
+        # (and a checkout would steal it). Its own session fast-forwards it.
+        echo "sync: $b is behind origin but checked out in another worktree — left for that session"
+      elif [[ "$b" == "$BR" ]]; then
+        git merge -q --ff-only "origin/$b" && echo "sync: fast-forwarded $b" \
+          || echo "sync: !! could not fast-forward $b (dirty tree?)"
       else
-        git branch -f "$b" "origin/$b" 2>/dev/null \
-          || { git checkout -q "$b" && git merge -q --ff-only "origin/$b"; }
-        echo "sync: fast-forwarded $b"
+        git branch -f "$b" "origin/$b" 2>/dev/null && echo "sync: fast-forwarded $b" \
+          || echo "sync: !! could not fast-forward $b"
       fi
     fi
   done
-  git checkout -q "$BR"
 }
 
 push() {

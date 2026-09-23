@@ -45,7 +45,7 @@ DRY=0; YES=0
 for a in "$@"; do [[ "$a" == "--dry-run" ]] && DRY=1; [[ "$a" == "--yes" ]] && YES=1; done
 run() { if [[ $DRY -eq 1 ]]; then echo "DRY: $*"; else eval "$@"; fi; }
 
-cfg() { bash scripts/cfg.sh "$1" "${2:-}" 2>/dev/null || echo "${2:-}"; }
+cfg_init
 
 DEVB=$(cfg git.dev_branch dev)
 MAINB=$(cfg git.release_branch main)
@@ -131,9 +131,12 @@ if [[ -f CLAUDE/project.json ]]; then
   if [[ $DRY -eq 1 ]]; then
     echo "DRY: bump version to $NEW in CLAUDE/project.json"
   else
-    python3 -c 'import json,sys
+    python3 -c 'import json,sys,os
 p = "CLAUDE/project.json"; c = json.load(open(p))
 c["version"] = sys.argv[1]
+# the kit dogfoods its own conventions: its kit_version IS its version
+if os.path.isdir("templates") and os.path.isfile("project-init.md"):
+    c["kit_version"] = sys.argv[1]
 json.dump(c, open(p, "w"), indent=2, ensure_ascii=False); open(p, "a").write("\n")' "$NEW"
   fi
 fi
@@ -220,8 +223,9 @@ else
     # agent session, cron, CI) — under `set -e` that would abort the whole
     # script right here instead of reaching the graceful skip below.
     read -r -p "Publish publicly now? [y/N] " ans || ans=n
-    [[ "${ans:-n}" =~ ^[Yy]$ ]] || { echo "skipped (tag is pushed; run 'gh release create $TAG ...' later)"; exit 0; }
+    [[ "${ans:-n}" =~ ^[Yy]$ ]] && GH_GO=1 || { echo "skipped (tag is pushed; run 'gh release create $TAG ...' later)"; GH_GO=0; }
   fi
+  [[ "${GH_GO:-1}" -eq 1 ]] && {
   if [[ -f Makefile ]] && grep -qE '^dist:' Makefile; then
     make dist || echo "make dist failed — releasing without assets"
   else
@@ -239,6 +243,7 @@ else
     gh release create "$TAG" "${GHFLAGS[@]}"
   fi
   echo "published: $(gh release view "$TAG" --json url -q .url 2>/dev/null || echo "$TAG")"
+  }
 fi
 
 rm -f "$NOTES"

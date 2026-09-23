@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # kit-check.sh — the periodic "is a new stable claude_init release out?" check
-# project.yaml declares (release_check.cadence, upgrade.policy). Called from
+# project.yaml declares (kit.release_check, kit.upgrade). Called from
 # `session.sh start` only (never `ctx` — ctx is documented no-network); a
 # timestamp file makes every other call an instant, silent no-op. Prints
 # nothing unless there is something to report.
@@ -8,13 +8,13 @@
 cd "$(proot 2>/dev/null || echo .)" || cd .
 ycfg() { bash scripts/ycfg.sh "$1" "${2:-}" 2>/dev/null || echo "${2:-}"; }
 
-[[ -f project.yaml ]] || exit 0
+[[ -f project.yaml || -f project.yaml.example ]] || exit 0
 have_git || exit 0   # no repository at the root: no stamp to anchor, nothing to update into
 
-POLICY=$(ycfg upgrade.policy prompt)
+POLICY=$(ycfg kit.upgrade prompt)
 [[ "$POLICY" == never ]] && exit 0
 
-CADENCE=$(ycfg release_check.cadence weekly)
+CADENCE=$(ycfg kit.release_check weekly)
 case "$CADENCE" in
   daily)   SECS=86400;;
   monthly) SECS=2592000;;
@@ -37,7 +37,7 @@ LATEST=$(git -C "$KIT_ROOT" tag -l 'v*' 2>/dev/null | grep -Ev -- '-(alpha|beta|
          | sed 's/^v//' | sort -V | tail -1)
 [[ -n "$LATEST" ]] || exit 0
 
-CURRENT=$(ycfg kit_version "0.0.0")
+CURRENT=$(bash scripts/cfg.sh kit_version "0.0.0" 2>/dev/null); CURRENT="${CURRENT:-0.0.0}"
 [[ "$LATEST" == "$CURRENT" ]] && exit 0
 # sort -V: CURRENT is newer or equal unless LATEST sorts strictly after it
 NEWER=$(printf '%s\n%s\n' "$CURRENT" "$LATEST" | sort -V | tail -1)
@@ -51,7 +51,7 @@ if [[ "$POLICY" == auto ]]; then
   fi
   echo "  policy=auto — running adopt.sh --update:"
   bash "$KIT_ROOT/scripts/adopt.sh" --kit "$KIT_ROOT" --update 2>&1 | sed 's/^/  /'
-  ON_AUTO=$(ycfg upgrade.on_auto notify)
+  ON_AUTO=$(ycfg kit.on_auto notify)
   # adopt.sh --update leaves the current branch staged (never a new branch —
   # kit-update-<stamp> is just a pointer at the pre-update commit, for revert).
   if [[ "$ON_AUTO" == commit && -n "$(git status --porcelain)" ]]; then

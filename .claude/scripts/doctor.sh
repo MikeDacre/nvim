@@ -26,10 +26,10 @@ chk opt op      "brew install 1password-cli (secrets)"   "op --version"
 chk opt make    "xcode-select --install"                 "make -v | head -1 | cut -d' ' -f3"
 if python3 -c 'import yaml' >/dev/null 2>&1; then
   printf "  ok    %-10s%s\n" "pyyaml" " $(python3 -c 'import yaml; print(yaml.__version__)' 2>/dev/null)"
-elif [[ -f project.yaml ]]; then
-  printf "  MISS  %-10srequired — this project has project.yaml: pip install pyyaml\n" "pyyaml"; fail=1
+elif [[ -f project.yaml || -f project.yaml.example ]]; then
+  printf "  MISS  %-10srequired — project.yaml needs it: pip install pyyaml\n" "pyyaml"; fail=1
 else
-  printf "  --    %-10soptional — pip install pyyaml (needed once this project gets a project.yaml)\n" "pyyaml"
+  printf "  --    %-10soptional — pip install pyyaml (needed once this project has a project.yaml)\n" "pyyaml"
 fi
 if command -v timeout >/dev/null 2>&1 || command -v gtimeout >/dev/null 2>&1; then
   printf "  ok    %-10s\n" "timeout"
@@ -45,13 +45,19 @@ else
 fi
 
 echo "AUTH"
+# every probe is bounded: `op` in particular waits on a sign-in prompt when
+# run headless, and hung doctor.sh indefinitely on a Mac mini over SSH
 if command -v gh >/dev/null 2>&1; then
-  gh auth status >/dev/null 2>&1 && echo "  ok    gh         authenticated" \
+  T 10 gh auth status >/dev/null 2>&1 </dev/null && echo "  ok    gh         authenticated" \
     || echo "  --    gh         not authenticated — gh auth login (releases will be skipped)"
 fi
 if command -v op >/dev/null 2>&1; then
-  op account list >/dev/null 2>&1 && echo "  ok    op         signed in" \
-    || echo "  --    op         not signed in — secrets-init will prompt instead"
+  if grep -qE '^\s*[A-Za-z_]+:\s*(1pw |"?"?$)' project.yaml.example 2>/dev/null && grep -q '1pw ' project.yaml project.yaml.example 2>/dev/null; then
+    T 10 op account list >/dev/null 2>&1 </dev/null && echo "  ok    op         signed in" \
+      || echo "  --    op         not signed in — 1pw references in project.yaml will not resolve"
+  else
+    echo "  --    op         not probed — no 1pw references in project.yaml"
+  fi
 fi
 
 echo "REPO"
@@ -59,6 +65,8 @@ git rev-parse --git-dir >/dev/null 2>&1 && echo "  ok    git repo   $(git rev-pa
   || { echo "  MISS  git repo   not a git repository"; fail=1; }
 [[ -f CLAUDE/project.json ]] && echo "  ok    project.json present" \
   || echo "  --    project.json missing — scripts fall back to defaults"
+[[ -f project.yaml ]] && echo "  ok    project.yaml present (this machine's keys and policies)" \
+  || { [[ -f project.yaml.example ]] && echo "  --    project.yaml missing — make secrets creates it from project.yaml.example"; }
 [[ -f .claude/settings.json ]] && echo "  ok    .claude/settings.json (Claude Code hook + permissions)" \
   || echo "  --    .claude/settings.json missing — Claude Code gets no digest hook"
 if git remote get-url origin >/dev/null 2>&1; then

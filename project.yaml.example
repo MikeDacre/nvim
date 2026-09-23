@@ -1,0 +1,42 @@
+# project.yaml — the user's contract with this project: keys, paths, policies.
+# The real file is GITIGNORED and exists only on this machine. This .example
+# is tracked: every key present, every secret blank. `make secrets`
+# (scripts/secrets-init.sh) creates project.yaml from it; hand-edit it after.
+#
+# VALUE POLICY — a value is used literally, UNLESS it is
+#     1pw <reference>        e.g.  1pw op://Private/OpenAI/credential
+# which is resolved from the 1Password CLI (`op read`) every time it is read
+# and is never written here in clear. Both forms can share one file.
+# Read any value:  bash scripts/ycfg.sh keys.OPENAI_API_KEY
+
+kit:
+  # Local checkout of claude_init. Blank = $CLAUDE_INIT_KIT, then the usual
+  # places (scripts/lib.sh kit_root). Never a path committed anywhere.
+  path: ""
+  # auto   — when a newer STABLE kit release is out, run adopt.sh --update
+  # prompt — report it; you run the update yourself (default)
+  # never  — do not check
+  upgrade: prompt
+  # upgrade=auto only: commit the staged update, or leave it staged (notify)
+  on_auto: notify
+  # How often to look for a release: daily | weekly | monthly
+  release_check: weekly
+
+git:
+  # Hosts a remote may point at, e.g. [github.com, baboona.local].
+  # Empty = any host. An isolated project lists only machines it trusts.
+  allowed_remote_hosts: []
+
+backup:
+  # How this project leaves this machine: none | restic | rsync |
+  # time-machine | <anything>. target = the restic repo, rsync destination
+  # or path the method needs. README.md documents the restore.
+  method: none
+  target: ""
+
+# API keys and credentials this project's scripts read. Add the key NAME
+# here (blank) in the same commit as the code that reads it; the VALUE goes
+# in project.yaml only, never here, never in chat, a log or a commit.
+keys: {}
+#  OPENAI_API_KEY: ""
+#  RESEND_API_KEY: 1pw op://Private/Resend/credential

@@ -24,6 +24,7 @@ signal.signal(signal.SIGPIPE, signal.SIG_DFL)  # quiet exit when piped into head
 
 COMMENTS = ("\u2021", "#")   # ‡ is the kit legend marker; # is tolerated for hand-made files
 DATE = r"\d{4}-\d{2}-\d{2}"
+SUMMARY_WIDTH = 160          # chars per task line in `summary` (the session digest)
 
 
 def root() -> str:
@@ -200,8 +201,11 @@ def cmd_open_summary() -> None:
     print(f"TODO.txt: {len(rows)} open"
           f"{f', {len(urgent)} urgent/overdue' if urgent else ''}"
           " — full list: python3 scripts/todo.py list")
+    # The digest is paid for every session and the SessionStart hook caps it
+    # at 10000 chars, so a long task shows its head here and the whole line
+    # only in `list`. Display only — the file is never touched.
     for n, ln in (urgent or top)[:6]:
-        print(f"    {n:>3}  {ln}")
+        print(f"    {n:>3}  {ln if len(ln) <= SUMMARY_WIDTH else ln[:SUMMARY_WIDTH - 1] + '…'}")
 
 
 if __name__ == "__main__":

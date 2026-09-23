@@ -2,13 +2,15 @@
 # check.sh — one-shot repo health gate. Replaces a handful of manual greps.
 # Exit 0 = all pass. Exit 1 = at least one FAIL. WARNs never fail the run.
 # session.sh end and release.sh refuse to push on a FAIL.
-. "$(cd "$(dirname "$0")" && pwd)/lib.sh" 2>/dev/null || true
-cd "$(proot 2>/dev/null || git rev-parse --show-toplevel)" || exit 1
+# lib.sh is required: sourcing it with `|| true` let a failed source set
+# GIT=0 below and every git check pass by omission.
+. "$(cd "$(dirname "$0")" && pwd)/lib.sh" || { echo "check: cannot source scripts/lib.sh"; exit 1; }
+cd "$(proot)" || exit 1
+cfg_init
 fail=0
 pass() { printf "  PASS  %s\n" "$1"; }
 warn() { printf "  WARN  %s\n" "$1"; }
 bad()  { printf "  FAIL  %s\n" "$1"; fail=$((fail+1)); }
-cfg()  { bash scripts/cfg.sh "$1" "${2:-}" 2>/dev/null || echo "${2:-}"; }
 
 # Kit mode: this repo IS claude_init. It is also a kit-managed project (it
 # dogfoods its own conventions), so the project checks run as usual and the
@@ -37,8 +39,8 @@ echo "CHECK $(basename "$PWD")$( [ $KIT -eq 1 ] && echo ' (kit + project)' )$( [
 # Prose that discusses placeholders must therefore use an example token outside
 # the vocabulary ({{PLACEHOLDER}}, {{UPPER_SNAKE}}), or spell the name out
 # without braces.
-PH_VOCAB='CLAUDE_MODE|CLAUDE_REMOTE|CLONE_URL|COMPARE_URL|CONNECTOR|DATE|DEP|DESCRIPTION|ENTRYPOINT|EXAMPLES|FIELD|FIRST_GOAL|ITEM|KEY|KIT_VERSION|LANG|LICENSE|MANIFEST|ONE_LINE_PURPOSE|OPTIONS|PARAGRAPH_DESCRIPTION|PLATFORM|PROJECT_NAME|PUSH_BRANCHES|REMOTE|REQUIREMENTS|ROTATION|RUNTIME|SECOND_GOAL|SEE_ALSO|SKILL|SLUG|SOURCE_URL|SRC|SUBTYPE|SYNC|TOOL|TYPE|USAGE_EXAMPLE|USER|VCS|VERSION|VISIBILITY'
-SCOPE="CLAUDE .claude README.md ROADMAP.md TODO.txt CHANGELOG.txt CHANGELOG.md Makefile Makefile.kit priv/README.md VERSION project.yaml"
+PH_VOCAB='CLAUDE_MODE|CLAUDE_REMOTE|CLONE_URL|COMPARE_URL|CONNECTOR|DATE|DEP|DESCRIPTION|ENTRYPOINT|EXAMPLES|FIELD|FIRST_GOAL|ITEM|KEY|KIT_VERSION|LANG|LICENSE|MANIFEST|ONE_LINE_PURPOSE|OPTIONS|PARAGRAPH_DESCRIPTION|PLATFORM|PROJECT_NAME|PUSH_BRANCHES|REMOTE|REPO_LINE|REQUIREMENTS|ROTATION|RUNTIME|SECOND_GOAL|SEE_ALSO|SKILL|SLUG|SOURCE_URL|SRC|SUBTYPE|SYNC|TOOL|TYPE|USAGE_EXAMPLE|USER|VCS|VERSION|VISIBILITY'
+SCOPE="CLAUDE .claude README.md ROADMAP.md TODO.txt CHANGELOG.txt CHANGELOG.md Makefile Makefile.kit priv/README.md VERSION project.yaml.example"
 ph=""
 for p in $SCOPE; do
   [ -e "$p" ] || continue
@@ -90,22 +92,28 @@ if [ -f "$VERF" ] && [ -f CLAUDE/project.json ]; then
   fi
 fi
 
-# 3c. project.yaml: valid YAML, kit_version present (v2 increment 2). PyYAML
-# missing degrades to a WARN, not a FAIL — the project itself is fine, only
-# this one check can't run without the dependency doctor.sh already flags.
-if [ -f project.yaml ]; then
+# 3c. project.yaml(.example): valid YAML; the tracked example carries no
+# secret value (blank or a 1pw reference only). PyYAML missing degrades to a
+# WARN — the project itself is fine, only this check can't run.
+for yf in project.yaml.example project.yaml; do
+  [ -f "$yf" ] || continue
   if ! python3 -c 'import yaml' >/dev/null 2>&1; then
-    warn "project.yaml present but PyYAML is not installed — can't validate it (pip install pyyaml)"
-  else
-    yerr=$(python3 -c 'import yaml,sys
-try: c = yaml.safe_load(open("project.yaml")) or {}
-except Exception as e: print(e); sys.exit(1)
-sys.exit(0 if c.get("kit_version") else 1)' 2>&1)
-    if [ $? -eq 0 ]; then pass "project.yaml valid, kit_version present"
-    else bad "project.yaml invalid or missing kit_version (${yerr:-no kit_version})"
-    fi
+    warn "$yf present but PyYAML is not installed — can't validate it (pip install pyyaml)"; break
   fi
-fi
+  yerr=$(python3 - "$yf" <<'PY' 2>&1
+import sys, yaml
+f = sys.argv[1]
+try: c = yaml.safe_load(open(f)) or {}
+except Exception as e: print(f"not valid YAML: {e}"); sys.exit(1)
+if f.endswith(".example"):
+    bad = [k for k, v in (c.get("keys") or {}).items()
+           if v not in (None, "") and not str(v).startswith("1pw ")]
+    if bad: print("secret VALUE in the tracked example for: " + ", ".join(bad)); sys.exit(1)
+PY
+)
+  if [ $? -eq 0 ]; then pass "$yf valid$( [ "$yf" = project.yaml.example ] && echo ', no secret values' )"
+  else bad "$yf: $yerr"; fi
+done
 
 # 4. tag agrees with VERSION
 t=""
@@ -141,8 +149,28 @@ if [ $KIT -eq 1 ]; then
   done
   [ $modes_ok -eq 1 ] && pass "type rulebooks present (code, writing, website, config, other, administrative, knowledge-base, workspace)"
   drift=0
-  cmp -s templates/claude-settings.json .claude/settings.json || { bad ".claude/settings.json differs from templates/claude-settings.json (make sync-self)"; drift=1; }
+  # This repo's .claude/settings.json is the template MINUS the deny rules named
+  # in project.json:kit_settings_exempt_deny — here CLAUDE.md is the template's
+  # SOURCE, not an installed copy, so the guard that stops a spawned project's
+  # model rewriting its own rulebook would stop the kit maintaining it. Every
+  # other difference is still drift. `make sync-self` applies the same list.
+  if python3 - <<'PY'
+import json, sys
+t = json.load(open("templates/claude-settings.json"))
+s = json.load(open(".claude/settings.json"))
+try:    exempt = set(json.load(open("CLAUDE/project.json")).get("kit_settings_exempt_deny", []))
+except Exception: exempt = set()
+p = t.get("permissions", {})
+p["deny"] = [r for r in p.get("deny", []) if r not in exempt]
+sys.exit(0 if t == s else 1)
+PY
+  then :; else bad ".claude/settings.json differs from templates/claude-settings.json beyond kit_settings_exempt_deny (make sync-self)"; drift=1; fi
   cmp -s templates/CLAUDE.md CLAUDE/CLAUDE.md || { bad "CLAUDE/CLAUDE.md differs from templates/CLAUDE.md (make sync-self)"; drift=1; }
+  # the invariant rulebook must name the files the scripts actually install
+  # (WARN, not FAIL: templates/CLAUDE.md is an approval-gated edit — see
+  # CLAUDE/patches/2026-09-21-templates-CLAUDE.new.md)
+  grep -lq 'CLAUDE/MODE\.md' templates/CLAUDE.md templates/project-instructions.txt templates/modes/*.md 2>/dev/null \
+    && warn "a template still names CLAUDE/MODE.md — the installed file is CLAUDE/TYPE.md: $(grep -l 'CLAUDE/MODE\.md' templates/CLAUDE.md templates/project-instructions.txt templates/modes/*.md 2>/dev/null | tr '\n' ' ')" || true
   cmp -s templates/modes/code.md CLAUDE/TYPE.md || { bad "CLAUDE/TYPE.md differs from templates/modes/code.md (make sync-self)"; drift=1; }
   for d in templates/skills/*/; do
     n=$(basename "$d")
@@ -198,6 +226,24 @@ else
   bad "CLAUDE/CLAUDE.md missing"
 fi
 
+# 5b. layout v2: the kit scripts live in .claude/scripts and the root `scripts`
+# is a symlink to them (the kit itself keeps scripts/ as the source)
+if [ $KIT -eq 0 ]; then
+  sdir=$(cfg paths.scripts scripts)
+  if [ "$sdir" = ".claude/scripts" ]; then
+    if [ -L scripts ] && [ "$(readlink scripts)" = ".claude/scripts" ] && [ -d .claude/scripts ]; then
+      pass "scripts -> .claude/scripts"
+    else
+      bad "paths.scripts=.claude/scripts but the root scripts symlink is missing or wrong (ln -s .claude/scripts scripts)"
+    fi
+  else
+    warn "paths.scripts=$sdir — the kit keeps scripts in .claude/scripts since 1.12.0 (bash <kit>/scripts/adopt.sh --update moves them)"
+  fi
+  if [ "$(cfg paths.style standard)" = standard ] && [ -f .claude/Makefile ] && [ ! -e Makefile ]; then
+    warn "no root Makefile — ln -s .claude/Makefile Makefile (or include it from yours)"
+  fi
+fi
+
 # 5c. mode: the rulebook installed matches the mode recorded (CLAUDE.md §0c)
 mode=$(cfg type "")
 if [ -n "$mode" ]; then
@@ -241,9 +287,9 @@ if [ -n "$mode" ]; then
     config)
       [ "$cmode" = tracked ] || bad "config mode keeps CLAUDE/ in the main repo, but claude_repo.mode=$cmode"
       [ "$(cfg visibility private)" = public ] \
-        && warn "config mode with a PUBLIC remote — confirm that is deliberate (MODE.md)" || true
+        && warn "config type with a PUBLIC remote — confirm that is deliberate (TYPE.md)" || true
       [ -n "$(cfg layout.mirrors '')" ] && pass "layout.mirrors recorded" \
-        || warn "layout.mirrors is empty — nothing says where these files install (MODE.md)";;
+        || warn "layout.mirrors is empty — nothing says where these files install (TYPE.md)";;
     writing)
       [ -f CLAUDE/STYLE.md ] && pass "CLAUDE/STYLE.md present" \
         || warn "CLAUDE/STYLE.md missing — writing mode measures every draft against it"
@@ -259,7 +305,19 @@ if [ -n "$mode" ]; then
   esac
 fi
 
-# 6. priv/ ignore rules actually work
+# 6. secrets stay out of git: project.yaml is ignored and never tracked;
+# a legacy priv/ (pre-1.12) is still checked while it exists
+if [ $GIT -eq 1 ]; then
+  if [ -f project.yaml.example ]; then
+    if [ -e project.yaml ]; then
+      git check-ignore -q project.yaml && pass "project.yaml is gitignored" || bad "project.yaml is NOT gitignored (add /project.yaml to .gitignore)"
+    fi
+    git ls-files --error-unmatch project.yaml >/dev/null 2>&1 && bad "project.yaml is TRACKED in git — git rm --cached it and rotate every key" || true
+  elif [ ! -d priv ]; then
+    warn "no project.yaml.example — the secrets contract (bash <kit>/scripts/adopt.sh --update seeds it)"
+  fi
+  [ -d priv ] && warn "priv/ is the pre-1.12 secrets directory — move its keys into project.yaml, then git rm -r priv/"
+fi
 if [ -d priv ] && [ $GIT -eq 1 ]; then
   leak=0
   for f in priv/*; do
@@ -289,6 +347,20 @@ if command -v generated_pairs >/dev/null 2>&1; then
     elif stale "$src" "$art"; then bad "$art stale vs $src (make docs)"
     else pass "$art current vs $src"; fi
   done < <(generated_pairs)
+fi
+
+# 8b. the session digest fits the SessionStart hook. Over 10000 chars Claude
+# Code writes it to a file and injects only the path, so the model starts
+# with no facts and no sign anything is missing. Measured, not estimated.
+if [ -f scripts/session.sh ]; then
+  dn=$(bash scripts/session.sh ctx 2>/dev/null | wc -c | tr -d ' ')
+  if [ "${dn:-0}" -gt 10000 ]; then
+    bad "session digest is $dn chars — over the 10000-char hook cap (shorten rules/hazards, release the changelog)"
+  elif [ "${dn:-0}" -gt 8500 ]; then
+    warn "session digest is $dn chars — close to the 10000-char hook cap"
+  else
+    pass "session digest fits the hook cap ($dn chars)"
+  fi
 fi
 
 # 9. project-specific checks (project-owned, never touched by --update)
@@ -337,7 +409,7 @@ else
   owned=$(cfg paths.owned "")
   [ -n "$owned" ] || owned="CLAUDE .claude scripts src bin tests docs man templates
                             README.md ROADMAP.md TODO.txt CHANGELOG.txt CHANGELOG.md
-                            Makefile Makefile.kit VERSION project.yaml requirements.txt
+                            Makefile Makefile.kit VERSION project.yaml.example requirements.txt
                             pyproject.toml package.json Cargo.toml go.mod"
   sel=""
   for p in $owned; do [ -e "$p" ] && sel="$sel $p"; done

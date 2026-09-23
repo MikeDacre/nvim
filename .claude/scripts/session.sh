@@ -14,7 +14,7 @@ set -uo pipefail
 cd "$(proot)" || exit 1
 export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o ConnectTimeout=5 -o BatchMode=yes}"
 
-cfg() { bash scripts/cfg.sh "$1" "${2:-}" 2>/dev/null || echo "${2:-}"; }
+cfg_init
 SYNC=$(cfg sync synced); DEVB=$(cfg git.dev_branch dev); MAINB=$(cfg git.release_branch main)
 FEATP=$(cfg git.feature_prefix feat/); FIXP=$(cfg git.fix_prefix fix/); HOTP=$(cfg git.hotfix_prefix hotfix/)
 VERF=$(cfg release.version_file VERSION); RMF=$(cfg paths.roadmap ROADMAP.md)
@@ -66,18 +66,24 @@ if deps: print("  deps   " + ", ".join(f"{x['name']}({x.get('kind','pkg')})" for
 con = [x for x in d('connectors', default=[]) if x.get('name') and not x['name'].startswith('{{')]
 if con: print("  conn   " + ", ".join(x['name'] for x in con))
 # Truncation is never silent: a rule that does not print is a rule that is
-# not in force, and the old caps dropped the tail without saying so.
-def listing(items, cap, title, where):
+# not in force, and the old caps dropped the tail without saying so. Items
+# print whole (a rule cut mid-sentence is worse than one deferred), but the
+# section stops at a character budget: the whole digest must stay under the
+# 10000-char SessionStart hook cap or none of it reaches the model.
+def listing(items, cap, budget, title, where):
     if not items: return
     print(title)
-    for x in items[:cap]: print(f"         - {x}")
-    if len(items) > cap:
-        print(f"         ... and {len(items) - cap} more — read them: {where}")
+    used = 0; shown = 0
+    for x in items[:cap]:
+        if shown and used + len(x) > budget: break
+        print(f"         - {x}"); used += len(x); shown += 1
+    if len(items) > shown:
+        print(f"         ... and {len(items) - shown} more — read them: {where}")
 
-listing(d('rules', default=[]), 12,
+listing(d('rules', default=[]), 12, 3000,
         "  RULES  project-specific, in force every session:",
         "python3 -c \"import json;[print(r) for r in json.load(open('CLAUDE/project.json'))['rules']]\"")
-listing(d('hazards', default=[]), 10, "  HAZARDS",
+listing(d('hazards', default=[]), 10, 1200, "  HAZARDS",
         "python3 -c \"import json;[print(r) for r in json.load(open('CLAUDE/project.json'))['hazards']]\"")
 cm = d('claude_repo','mode', default='tracked')
 if cm == 'subrepo': print("  claude CLAUDE/ is a separate repo — needs its own push")
@@ -100,11 +106,18 @@ typeblock() {
   echo "         full rulebook: CLAUDE/TYPE.md (read once per session)"
 }
 
+# clip — one line per item, at most N chars: the digest is a summary, the
+# file is the read. Byte-safe for UTF-8 (python, not ${x:0:n}).
+clip() { python3 -c 'import sys
+n=int(sys.argv[1])
+for ln in sys.stdin.read().splitlines():
+    print(ln if len(ln)<=n else ln[:n-1]+"…")' "$1"; }
+
 roadmap() {
   [[ -f "$RMF" ]] || return
   local now
   now=$(awk '/^## (Now|In progress)/{f=1;next} /^## /{f=0} f' "$RMF" \
-        | grep -E '^\s*-' | head -6)
+        | grep -E '^\s*-' | head -6 | clip 160)
   [[ -n "$now" ]] && { echo "ROADMAP (now)"; echo "$now" | sed 's/^/  /'; }
 }
 
@@ -114,7 +127,7 @@ unreleased() {
   local u
   u=$(awk '/^## \[Unreleased\]/{f=1;next}/^## \[/{f=0}f' "$cl" \
       | grep -E '^(- |### )' | grep -v 'Nothing yet' \
-      | awk '/^### /{h=$0;next} {if(h){print h;h=""} print}' | head -8)
+      | awk '/^### /{h=$0;next} {if(h){print h;h=""} print}' | head -8 | clip 160)
   [[ -n "$u" ]] && { echo "CHANGELOG [Unreleased]"; echo "$u" | sed 's/^/  /'; }
 }
 
@@ -178,8 +191,12 @@ drift() {
   [[ $n -eq 0 ]] && echo "  ok"
 }
 
-digest() {
-  hr; echo "SESSION $(date '+%F %H:%M') host=$(hostname -s)"; hr
+# The SessionStart hook drops output over 10000 chars into a file the model
+# has to go and read — silently, from the model's side. Everything above is
+# budgeted so that cannot happen; this is the backstop that says so if it
+# does anyway (check.sh measures the same number).
+DIGEST_CAP=10000
+digest_body() {
   if [[ $HOOK -eq 1 ]]; then
     echo "This digest was injected by the Claude Code SessionStart hook; scripts/session.sh"
     echo "start has already run for this session. /ctx or 'bash scripts/session.sh ctx' refreshes it."
@@ -194,6 +211,17 @@ digest() {
   echo "This digest replaces reading project.json / ROADMAP.md / TODO.txt / CHANGELOG.txt;"
   echo "those files are opened only to edit them. Rules: CLAUDE.md (loaded automatically in Claude Code)."
 }
+digest() {
+  hr; echo "SESSION $(date '+%F %H:%M') host=$(hostname -s)"; hr
+  local body; body=$(digest_body)
+  printf '%s\n' "$body"
+  local n=$(( ${#body} + 160 ))   # + the header lines above
+  if [[ $n -gt $DIGEST_CAP ]]; then
+    echo "!! digest is ~$n chars, over the $DIGEST_CAP-char SessionStart hook cap — the hook"
+    echo "   will hand the model a file path instead. Shorten project.json rules/hazards or"
+    echo "   the [Unreleased] changelog (release it); check.sh reports the size."
+  fi
+}
 
 refs() {
   python3 - <<'PY'
@@ -201,6 +229,49 @@ import json
 for r in json.load(open("CLAUDE/project.json")).get("docs_refs", []):
     print(f"{r.get('what') or r.get('name')}\n    {r.get('url')}")
 PY
+}
+
+# Staging for `end`. `git add -A` had two failure modes: in a repo that holds
+# other checkouts (a workspace, a project with .worktrees/) it embeds each one
+# as a gitlink, and where status.showUntrackedFiles=no it neither saw nor
+# staged the untracked files check.sh then FAILs on. So: when project.json
+# names paths.owned, stage and test exactly those (the same pathspec check.sh
+# scans); otherwise stage everything but refuse any nested repository that is
+# not a declared submodule.
+owned_paths() {
+  local o; o=$(cfg paths.owned "")
+  local sel="" p
+  for p in $o; do [[ -e "$p" ]] && sel="$sel $p"; done
+  printf '%s' "$sel"
+}
+dirty() {
+  local sel; sel=$(owned_paths)
+  if [[ -n "$sel" ]]; then
+    # shellcheck disable=SC2086
+    git status --porcelain --untracked-files=all -- $sel
+  else
+    git status --porcelain --untracked-files=all
+  fi
+}
+stage_all() {
+  local sel; sel=$(owned_paths)
+  if [[ -n "$sel" ]]; then
+    # shellcheck disable=SC2086
+    git add -A -- $sel
+  else
+    git add -A
+  fi
+  # a nested repository staged as a gitlink (mode 160000) that .gitmodules
+  # does not declare is a mistake — a child checkout, a session worktree
+  local gl
+  gl=$(git diff --cached --raw | awk '$2=="160000"{print $NF}' | while read -r p; do
+         git config -f .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | grep -qx ".* $p" || echo "$p"; done)
+  if [[ -n "$gl" ]]; then
+    for p in $gl; do git reset -q -- "$p"; done
+    echo "!! not staging nested repositories (they are their own projects): $gl"
+    echo "   add each to .gitignore, or declare it as a submodule"
+  fi
+  return 0
 }
 
 end() {
@@ -214,9 +285,9 @@ end() {
   if [[ $GIT -eq 0 ]]; then
     echo "-> no repository at the project root (git.vcs=none) — nothing to commit here"
     [[ -n "$msg" ]] && echo "   the message is recorded in the CLAUDE/ sub-repo commit below"
-  elif [[ -n "$(git status --porcelain)" ]]; then
+  elif [[ -n "$(dirty)" ]]; then
     if [[ -n "$msg" ]]; then
-      git add -A
+      stage_all
       if git commit -q -m "$msg"; then echo "-> committed: $msg"
       else
         echo "!! COMMIT REFUSED (see hook output above). Nothing was committed."
@@ -224,15 +295,15 @@ end() {
       fi
     else
       echo "-> uncommitted changes left as-is (session.sh end \"msg\" commits them):"
-      git status --short | head -8 | sed 's/^/   /'
+      dirty | head -8 | sed 's/^/   /'
     fi
   else echo "-> nothing to commit"; fi
   if [[ $GIT -eq 1 ]]; then
     echo "-> changelog"; python3 scripts/changelog.py from-git
   fi
   echo "-> docs";      make docs >/dev/null 2>&1 || echo "   (make docs unavailable — regenerate manually)"
-  if [[ $GIT -eq 1 && -n "$(git status --porcelain)" ]]; then
-    git add -A && git commit -q -m "docs: back-fill changelog, regenerate docs" && echo "-> committed docs/changelog"
+  if [[ $GIT -eq 1 && -n "$(dirty)" ]]; then
+    stage_all && git commit -q -m "docs: back-fill changelog, regenerate docs" && echo "-> committed docs/changelog"
   fi
   if [[ -d CLAUDE/.git ]] && [[ -n "$(cd CLAUDE && git status --porcelain)" ]]; then
     # With no repo at the root the CLAUDE/ commit is the session's only record,
@@ -261,7 +332,8 @@ case "${1:-start}" in
     # belongs here and not in the shared digest() ctx also calls (no-network).
     [[ -f scripts/kit-check.sh ]] && bash scripts/kit-check.sh 2>/dev/null
     digest
-    if [[ $GIT -eq 1 ]] && [[ "$(cfg git.session_worktrees false)" == "true" ]]; then
+    # worktrees are a code-type feature (feature.sh applies the same rule)
+    if [[ $GIT -eq 1 ]] && [[ "$(cfg git.session_worktrees false)" == "true" ]] && [[ "$(cfg type code)" == code ]]; then
       case "$BR" in
         "$FEATP"*|"$FIXP"*|chore/*|"$HOTP"*) : ;;
         *)

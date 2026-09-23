@@ -17,7 +17,8 @@ SDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$(proot)" || exit 1
 ROOT="$PWD"
 
-DEST=$(bash scripts/cfg.sh content.backup_dir .backups 2>/dev/null || echo .backups)
+cfg_init
+DEST=$(cfg content.backup_dir .backups)
 [ -n "$DEST" ] || DEST=.backups
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 
