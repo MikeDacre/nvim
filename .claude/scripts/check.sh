@@ -239,8 +239,8 @@ if [ $KIT -eq 0 ]; then
   else
     warn "paths.scripts=$sdir — the kit keeps scripts in .claude/scripts since 1.12.0 (bash <kit>/scripts/adopt.sh --update moves them)"
   fi
-  if [ "$(cfg paths.style standard)" = standard ] && [ -f .claude/Makefile ] && [ ! -e Makefile ]; then
-    warn "no root Makefile — ln -s .claude/Makefile Makefile (or include it from yours)"
+  if [ -L Makefile ] && [ "$(readlink Makefile)" = ".claude/Makefile" ]; then
+    warn "root Makefile symlink is a 1.12.0 leftover — the kit Makefile is run as make -f .claude/Makefile (adopt.sh --update removes it)"
   fi
 fi
 

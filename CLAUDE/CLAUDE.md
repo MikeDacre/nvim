@@ -49,7 +49,8 @@ shell-heavy, say so and recommend moving to Claude Code rather than stalling.
 
 Kit machinery lives in `.claude/`: `.claude/scripts` (a verbatim copy of the
 kit's scripts; the root `scripts` is a symlink to it, so every command in this
-file works unchanged) and `.claude/Makefile` (root `Makefile` symlink).
+file works unchanged) and `.claude/Makefile` (no root Makefile — run it as
+`make -f .claude/Makefile <target>`; each target wraps a script).
 Never rewrite a kit script per project: if it does not fit, use it as-is and
 note the gap in the kit's TODO. `bash <kit>/scripts/adopt.sh --update`
 refreshes them from a newer kit and runs any schema migrations; `--dry-run`
@@ -200,12 +201,13 @@ the contract: every key present, every value blank. A value is literal, or
 `bash scripts/ycfg.sh keys.<NAME>`. Never print a secret value into chat, a
 log, a commit, or the changelog — key names only. New secret => add its NAME
 to `project.yaml.example` in the same commit as the code reading it; the value
-goes in `project.yaml` only. `make secrets` provisions a fresh clone. A
+goes in `project.yaml` only. `bash scripts/secrets-init.sh` provisions a fresh clone. A
 committed secret is a stop-and-report: rotate first.
 
 ## 9. Every session ends with documentation current
 `session.sh end "msg"` commits, back-fills the changelog, regenerates the man
-page and any `build.generated` artefact, gates on `check.sh`, and pushes. Never
+page (if `build.man` is set) and any `build.generated` artefact, gates on
+`check.sh`, and pushes. Never
 hand-edit a generated artefact: edit its source and regenerate. If a rule, path,
 tool, dependency, or connector changed, update `CLAUDE/project.json` too. Docs
 drift is a bug, fixed in the session it appears.

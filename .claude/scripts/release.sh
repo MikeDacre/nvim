@@ -226,8 +226,9 @@ else
     [[ "${ans:-n}" =~ ^[Yy]$ ]] && GH_GO=1 || { echo "skipped (tag is pushed; run 'gh release create $TAG ...' later)"; GH_GO=0; }
   fi
   [[ "${GH_GO:-1}" -eq 1 ]] && {
-  if [[ -f Makefile ]] && grep -qE '^dist:' Makefile; then
-    make dist || echo "make dist failed — releasing without assets"
+  MK=""; [[ -f Makefile ]] && MK=Makefile; [[ -z "$MK" && -f .claude/Makefile ]] && MK=.claude/Makefile
+  if [[ -n "$MK" ]] && grep -qE '^dist:' "$MK"; then
+    make -f "$MK" dist || echo "make dist failed — releasing without assets"
   else
     echo "no dist target — releasing without assets"
   fi

@@ -186,7 +186,7 @@ drift() {
   [[ -d CLAUDE/legacy ]] && w "CLAUDE/legacy/ still present — adoption merge not finished (adopt.md Phase 3)"
   while IFS=$'\t' read -r src art; do
     [[ -n "$src" ]] || continue
-    stale "$src" "$art" && w "$art is older than $src (regenerate: make docs)"
+    stale "$src" "$art" && w "$art is older than $src (regenerate: make -f .claude/Makefile docs)"
   done < <(generated_pairs)
   [[ $n -eq 0 ]] && echo "  ok"
 }
@@ -301,7 +301,10 @@ end() {
   if [[ $GIT -eq 1 ]]; then
     echo "-> changelog"; python3 scripts/changelog.py from-git
   fi
-  echo "-> docs";      make docs >/dev/null 2>&1 || echo "   (make docs unavailable — regenerate manually)"
+  echo "-> docs"
+  if [[ -f Makefile ]]; then make docs >/dev/null 2>&1 || echo "   (make docs failed — regenerate manually)"
+  elif [[ -f .claude/Makefile ]]; then make -f .claude/Makefile docs >/dev/null 2>&1 || echo "   (make docs failed — regenerate manually)"
+  else python3 scripts/changelog.py lint >/dev/null 2>&1 || true; fi
   if [[ $GIT -eq 1 && -n "$(dirty)" ]]; then
     stage_all && git commit -q -m "docs: back-fill changelog, regenerate docs" && echo "-> committed docs/changelog"
   fi
