@@ -6,7 +6,7 @@
 # nothing unless there is something to report.
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh" 2>/dev/null
 cd "$(proot 2>/dev/null || echo .)" || cd .
-ycfg() { bash scripts/ycfg.sh "$1" "${2:-}" 2>/dev/null || echo "${2:-}"; }
+ycfg() { bash "$SDIR/ycfg.sh" "$1" "${2:-}" 2>/dev/null || echo "${2:-}"; }
 
 [[ -f project.yaml || -f project.yaml.example ]] || exit 0
 have_git || exit 0   # no repository at the root: no stamp to anchor, nothing to update into
@@ -37,7 +37,7 @@ LATEST=$(git -C "$KIT_ROOT" tag -l 'v*' 2>/dev/null | grep -Ev -- '-(alpha|beta|
          | sed 's/^v//' | sort -V | tail -1)
 [[ -n "$LATEST" ]] || exit 0
 
-CURRENT=$(bash scripts/cfg.sh kit_version "0.0.0" 2>/dev/null); CURRENT="${CURRENT:-0.0.0}"
+CURRENT=$(bash "$SDIR/cfg.sh" kit_version "0.0.0" 2>/dev/null); CURRENT="${CURRENT:-0.0.0}"
 [[ "$LATEST" == "$CURRENT" ]] && exit 0
 # sort -V: CURRENT is newer or equal unless LATEST sorts strictly after it
 NEWER=$(printf '%s\n%s\n' "$CURRENT" "$LATEST" | sort -V | tail -1)

@@ -26,10 +26,10 @@ chk opt op      "brew install 1password-cli (secrets)"   "op --version"
 chk opt make    "xcode-select --install"                 "make -v | head -1 | cut -d' ' -f3"
 if python3 -c 'import yaml' >/dev/null 2>&1; then
   printf "  ok    %-10s%s\n" "pyyaml" " $(python3 -c 'import yaml; print(yaml.__version__)' 2>/dev/null)"
-elif [[ -f project.yaml || -f project.yaml.example ]]; then
-  printf "  MISS  %-10srequired — project.yaml needs it: pip install pyyaml\n" "pyyaml"; fail=1
+elif [[ -f project.yaml ]]; then
+  printf "  MISS  %-10srequired — project.yaml is read through it: pip install pyyaml\n" "pyyaml"; fail=1
 else
-  printf "  --    %-10soptional — pip install pyyaml (needed once this project has a project.yaml)\n" "pyyaml"
+  printf "  --    %-10soptional — pip install pyyaml (needed once project.yaml exists; policies fall back to defaults without it)\n" "pyyaml"
 fi
 if command -v timeout >/dev/null 2>&1 || command -v gtimeout >/dev/null 2>&1; then
   printf "  ok    %-10s\n" "timeout"

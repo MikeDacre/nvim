@@ -5,8 +5,8 @@ description: Execute work orders queued in CLAUDE/orders/ (tasks handed over by 
 
 # Work orders
 
-    python3 scripts/order.py list          # pending / blocked / running
-    python3 scripts/order.py show <id>     # goal, constraints, done-when
+    python3 .claude/scripts/order.py list          # pending / blocked / running
+    python3 .claude/scripts/order.py show <id>     # goal, constraints, done-when
 
 If `$ARGUMENTS` names an id, execute that order; otherwise execute every
 `pending` order in turn, oldest first, one at a time.
@@ -20,13 +20,13 @@ For each order:
 3. Append a `## Result` section to the order file: what was done, what remains,
    what Mike should verify. Then exactly one of:
 
-       python3 scripts/order.py done <id>
-       python3 scripts/order.py block <id> "<one-line reason>"
+       python3 .claude/scripts/order.py done <id>
+       python3 .claude/scripts/order.py block <id> "<one-line reason>"
 
 4. For a `done` order: commit the Result, then delete the order and commit that
    too. `CLAUDE/orders/` is a queue, not an archive — `git log` keeps the record.
 
-       python3 scripts/order.py rm <id>
+       python3 .claude/scripts/order.py rm <id>
 
    `rm` refuses while the Result is uncommitted, so following this order of
    operations cannot lose anything. Keep a finished order only when it earns its
@@ -35,4 +35,4 @@ For each order:
 
 A `blocked` order stays: it is live work waiting on an answer. Never edit
 another order while executing one. Unattended alternative (no session open):
-`python3 scripts/order.py run <id>` runs it through `claude -p`.
+`python3 .claude/scripts/order.py run <id>` runs it through `claude -p`.

@@ -10,7 +10,7 @@
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh" 2>/dev/null
 cd "$(proot 2>/dev/null || echo .)" || cd .
 if ! python3 -c 'import yaml' >/dev/null 2>&1; then
-  echo "ycfg.sh: PyYAML not installed — pip install pyyaml (bash scripts/doctor.sh)" >&2
+  echo "ycfg.sh: PyYAML not installed — pip install pyyaml (doctor.sh)" >&2
   echo "${2:-}"
   exit 0
 fi

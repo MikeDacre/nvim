@@ -200,7 +200,7 @@ def cmd_open_summary() -> None:
               or priority(r[1]) == "A"]
     print(f"TODO.txt: {len(rows)} open"
           f"{f', {len(urgent)} urgent/overdue' if urgent else ''}"
-          " — full list: python3 scripts/todo.py list")
+          " — full list: python3 .claude/scripts/todo.py list")
     # The digest is paid for every session and the SessionStart hook caps it
     # at 10000 chars, so a long task shows its head here and the whole line
     # only in `list`. Display only — the file is never touched.

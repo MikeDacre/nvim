@@ -7,7 +7,7 @@ description: Close the working session — commit outstanding work with the mess
 
 Run from the repo root:
 
-    bash scripts/session.sh end "$ARGUMENTS"
+    bash .claude/scripts/session.sh end "$ARGUMENTS"
 
 - If `$ARGUMENTS` is empty and `git status --porcelain` is non-empty, ask for a
   one-line conventional-commit message first; do not invent one.

@@ -59,7 +59,7 @@ BR=$(git rev-parse --abbrev-ref HEAD)
 # super-project over other checkouts). Untracked files cannot end up in the
 # release commit either — step 1 stages the version files by name, not -A.
 [[ -z "$(git status --porcelain --untracked-files=no)" ]] || { echo "working tree dirty"; exit 1; }
-[[ $DRY -eq 1 ]] || bash scripts/check.sh || { echo "check.sh FAILED — fix before releasing"; exit 1; }
+[[ $DRY -eq 1 ]] || bash "$SDIR/check.sh" || { echo "check.sh FAILED — fix before releasing"; exit 1; }
 
 CUR=$(cat "$VERF" 2>/dev/null || echo 0.0.0)
 SEMVER_RE='^([0-9]+)\.([0-9]+)\.([0-9]+)(-(alpha|beta|rc)\.([0-9]+))?$'
@@ -108,22 +108,22 @@ echo "release: $CUR -> $NEW ($LEVEL${STAGE:+ $STAGE})"
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && { echo "tag $TAG exists"; exit 1; }
 
 # 1. changelog + version -------------------------------------------------------
-run "python3 scripts/changelog.py from-git"
+run "python3 '$SDIR/changelog.py' from-git"
 # Promoting a pre-release to its next stage, or finalizing one, can land here
 # with nothing new since the last tag (e.g. "ship this exact alpha.2 as
 # beta.1"). changelog.py release refuses an empty [Unreleased], which would
 # otherwise abort an honest same-code retag over a formatting rule.
 if [[ "$LEVEL" == "pre" || "$FINALIZE" -eq 1 ]]; then
-  UNRELEASED=$(python3 scripts/changelog.py show unreleased 2>/dev/null | tr -d '[:space:]')
+  UNRELEASED=$(python3 "$SDIR/changelog.py" show unreleased 2>/dev/null | tr -d '[:space:]')
   if [[ -z "$UNRELEASED" ]]; then
     if [[ "$FINALIZE" -eq 1 ]]; then
-      run "python3 scripts/changelog.py add Changed 'Promote $CUR to final release'"
+      run "python3 '$SDIR/changelog.py' add Changed 'Promote $CUR to final release'"
     else
-      run "python3 scripts/changelog.py add Changed 'Tag $NEW — no changes since $CUR'"
+      run "python3 '$SDIR/changelog.py' add Changed 'Tag $NEW — no changes since $CUR'"
     fi
   fi
 fi
-run "python3 scripts/changelog.py release '$NEW'"
+run "python3 '$SDIR/changelog.py' release '$NEW'"
 run "echo '$NEW' > '$VERF'"
 # CLAUDE/project.json carries the version the session digest prints. Left
 # unbumped it silently drifts from VERSION and every digest reports the old one.
@@ -175,7 +175,7 @@ else
   run "git checkout -q $MAINB"
   run "git merge --no-ff -q $DEVB -m 'release: $TAG'"
 fi
-NOTES=$(mktemp); python3 scripts/changelog.py show "$NEW" > "$NOTES" 2>/dev/null || echo "$TAG" > "$NOTES"
+NOTES=$(mktemp); python3 "$SDIR/changelog.py" show "$NEW" > "$NOTES" 2>/dev/null || echo "$TAG" > "$NOTES"
 run "git tag -a '$TAG' --cleanup=whitespace -F '$NOTES'"
 
 # 3. push ----------------------------------------------------------------------

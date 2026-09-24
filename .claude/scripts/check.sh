@@ -50,13 +50,13 @@ ph=$(echo "$ph" | tr -s ' ')
 [ -z "${ph// /}" ] && pass "no unfilled {{PLACEHOLDERS}}" || bad "unfilled placeholders in:$ph"
 
 # 2. shell + python + json syntax
-bs=0; for f in scripts/*.sh scripts/hooks/*; do [ -f "$f" ] && { bash -n "$f" 2>/dev/null || { bad "syntax: $f"; bs=1; }; }; done
-for f in scripts/*.py; do [ -f "$f" ] && { python3 -m py_compile "$f" 2>/dev/null || { bad "syntax: $f"; bs=1; }; }; done
+bs=0; for f in "$SDIR"/*.sh "$SDIR"/hooks/*; do [ -f "$f" ] && { bash -n "$f" 2>/dev/null || { bad "syntax: ${f#$PWD/}"; bs=1; }; }; done
+for f in "$SDIR"/*.py; do [ -f "$f" ] && { python3 -m py_compile "$f" 2>/dev/null || { bad "syntax: ${f#$PWD/}"; bs=1; }; }; done
 for f in CLAUDE/project.json .claude/settings.json .claude/settings.local.json; do
   [ -f "$f" ] && { python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f" 2>/dev/null || { bad "invalid JSON: $f"; bs=1; }; }
 done
 [ $bs -eq 0 ] && pass "scripts and JSON parse"
-rm -rf scripts/__pycache__
+rm -rf "$SDIR/__pycache__"
 
 # 3. VERSION agrees with CHANGELOG; changelog well-formed
 CHLOG=$(cfg release.changelog CHANGELOG.txt)
@@ -69,8 +69,8 @@ if [ -f "$VERF" ] && [ -f "$CHLOG" ]; then
   else
     bad "$VERF $v has no section in $CHLOG"
   fi
-  python3 scripts/changelog.py lint >/dev/null 2>&1 && pass "changelog format" \
-    || bad "changelog format (run: python3 scripts/changelog.py lint)"
+  python3 "$SDIR/changelog.py" lint >/dev/null 2>&1 && pass "changelog format" \
+    || bad "changelog format (run: python3 .claude/scripts/changelog.py lint)"
 fi
 
 # 3d. paths.style is standard|compact — everything else in the kit that reads
@@ -226,18 +226,18 @@ else
   bad "CLAUDE/CLAUDE.md missing"
 fi
 
-# 5b. layout v2: the kit scripts live in .claude/scripts and the root `scripts`
-# is a symlink to them (the kit itself keeps scripts/ as the source)
+# 5b. layout v2: the kit scripts live in .claude/scripts; a root `scripts`
+# symlink is a convenience, never a requirement (a project may own that name)
 if [ $KIT -eq 0 ]; then
   sdir=$(cfg paths.scripts scripts)
-  if [ "$sdir" = ".claude/scripts" ]; then
-    if [ -L scripts ] && [ "$(readlink scripts)" = ".claude/scripts" ] && [ -d .claude/scripts ]; then
-      pass "scripts -> .claude/scripts"
+  if [ "$sdir" = ".claude/scripts" ] && [ -f .claude/scripts/session.sh ]; then
+    if [ -L scripts ] && [ "$(readlink scripts)" != ".claude/scripts" ]; then
+      warn "root scripts symlink points at $(readlink scripts), not .claude/scripts"
     else
-      bad "paths.scripts=.claude/scripts but the root scripts symlink is missing or wrong (ln -s .claude/scripts scripts)"
+      pass "kit scripts in .claude/scripts$( [ -d scripts ] && [ ! -L scripts ] && echo ' (root scripts/ is the project'"'"'s own)' )"
     fi
   else
-    warn "paths.scripts=$sdir — the kit keeps scripts in .claude/scripts since 1.12.0 (bash <kit>/scripts/adopt.sh --update moves them)"
+    warn "paths.scripts=$sdir — the kit keeps scripts in .claude/scripts since 2.0 (bash <kit>/scripts/adopt.sh --update moves them)"
   fi
   if [ -L Makefile ] && [ "$(readlink Makefile)" = ".claude/Makefile" ]; then
     warn "root Makefile symlink is a 1.12.0 leftover — the kit Makefile is run as make -f .claude/Makefile (adopt.sh --update removes it)"
@@ -352,8 +352,8 @@ fi
 # 8b. the session digest fits the SessionStart hook. Over 10000 chars Claude
 # Code writes it to a file and injects only the path, so the model starts
 # with no facts and no sign anything is missing. Measured, not estimated.
-if [ -f scripts/session.sh ]; then
-  dn=$(bash scripts/session.sh ctx 2>/dev/null | wc -c | tr -d ' ')
+if [ -f "$SDIR/session.sh" ]; then
+  dn=$(bash "$SDIR/session.sh" ctx 2>/dev/null | wc -c | tr -d ' ')
   if [ "${dn:-0}" -gt 10000 ]; then
     bad "session digest is $dn chars — over the 10000-char hook cap (shorten rules/hazards, release the changelog)"
   elif [ "${dn:-0}" -gt 8500 ]; then
@@ -364,9 +364,9 @@ if [ -f scripts/session.sh ]; then
 fi
 
 # 9. project-specific checks (project-owned, never touched by --update)
-if [ -f scripts/check.local.sh ]; then
-  echo "  ---   scripts/check.local.sh"
-  if bash scripts/check.local.sh; then pass "project checks (check.local.sh)"; else bad "project checks failed (scripts/check.local.sh)"; fi
+if [ -f "$SDIR/check.local.sh" ]; then
+  echo "  ---   check.local.sh"
+  if bash "$SDIR/check.local.sh"; then pass "project checks (check.local.sh)"; else bad "project checks failed (check.local.sh)"; fi
 fi
 
 # 10. branch hygiene and worktree state (git only)
@@ -377,8 +377,8 @@ if [ $GIT -eq 0 ]; then
       || warn "CLAUDE/ sub-repo has uncommitted changes"
   fi
   bdir=$(cfg content.backup_dir .backups)
-  [ -d "$bdir" ] && pass "$bdir/ present — scripts/backup.sh is the only undo here" \
-    || warn "no $bdir/ yet — take a snapshot before the first content write (scripts/backup.sh)"
+  [ -d "$bdir" ] && pass "$bdir/ present — backup.sh is the only undo here" \
+    || warn "no $bdir/ yet — take a snapshot before the first content write (backup.sh)"
 else
   # 10. branch hygiene
   b=$(git rev-parse --abbrev-ref HEAD)

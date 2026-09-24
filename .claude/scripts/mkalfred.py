@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """mkalfred.py — build an .alfredworkflow from a small JSON spec.
 
-  python3 scripts/mkalfred.py CLAUDE/alfred.json dist/tool.alfredworkflow
+  python3 .claude/scripts/mkalfred.py CLAUDE/alfred.json dist/tool.alfredworkflow
 
 Spec (CLAUDE/alfred.json):
 {
@@ -13,7 +13,7 @@ Spec (CLAUDE/alfred.json):
   "readme": "optional",
   "commands": [
     {"keyword": "mt-sync", "title": "Sync repo", "subtitle": "push all branches",
-     "script": "cd /path/or/$repo && bash scripts/sync.sh auto",
+     "script": "cd /path/or/$repo && bash .claude/scripts/sync.sh auto",
      "with_arg": false, "notify": true}
   ]
 }

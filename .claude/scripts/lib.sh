@@ -2,6 +2,12 @@
 # lib.sh — shared helpers, sourced by the kit scripts before they cd anywhere.
 # No side effects, no dependencies beyond git. 3.2-safe.
 
+# SDIR — the directory the kit scripts live in (.claude/scripts in a project,
+# scripts/ in the kit). Every script reaches its siblings through it, so
+# nothing depends on a `scripts` symlink at the project root — a project may
+# own that name itself.
+SDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # proot — print the project root. The nearest ancestor holding CLAUDE/CLAUDE.md
 # wins; failing that the git top level; failing that $PWD.
 # CLAUDE/ is asked FIRST on purpose. `git rev-parse --show-toplevel` answers

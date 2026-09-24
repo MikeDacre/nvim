@@ -5,13 +5,14 @@
 # when it exists and is executable. Absent, that step is a silent no-op.
 set -e
 b=$(git rev-parse --abbrev-ref HEAD)
-rel=$(bash scripts/cfg.sh git.release_branch main 2>/dev/null || echo main)
-dev=$(bash scripts/cfg.sh git.dev_branch dev 2>/dev/null || echo dev)
+H="$(cd "$(dirname "$0")/.." && pwd)"   # the kit scripts directory this hook lives in
+rel=$(bash "$H/cfg.sh" git.release_branch main 2>/dev/null || echo main)
+dev=$(bash "$H/cfg.sh" git.dev_branch dev 2>/dev/null || echo dev)
 # Single-trunk projects set dev_branch == release_branch: there is nowhere else
 # to commit, so the release branch is also the working branch and the guard
 # must stand down. Refusing there blocks every commit, release.sh included.
 if [ "$b" = "$rel" ] && [ "$rel" != "$dev" ]; then
-  echo "refusing: commit to $rel. Use $dev/feat and scripts/release.sh"
+  echo "refusing: commit to $rel. Use $dev/feat and release.sh"
   exit 1
 fi
 leaked=$(git diff --cached --name-only | grep -E '^(project\.yaml|priv/)' \

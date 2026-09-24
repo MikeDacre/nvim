@@ -90,7 +90,7 @@ if cm == 'subrepo': print("  claude CLAUDE/ is a separate repo — needs its own
 sk = [x['name'] for x in d('skills', default=[]) if x.get('name') and not x['name'].startswith('{{')]
 if sk: print("  skills " + ", ".join(sk) + "  (.claude/skills/<name>; /<name> in Claude Code)")
 dr = d('docs_refs', default=[])
-if dr: print(f"  refs   {len(dr)} reference URLs: bash scripts/session.sh refs")
+if dr: print(f"  refs   {len(dr)} reference URLs: bash .claude/scripts/session.sh refs")
 PY
 }
 
@@ -139,7 +139,7 @@ gitstate() {
       echo "  CLAUDE $(cd CLAUDE && git log --oneline -1 2>/dev/null)"
       [[ -n "$cd_" ]] && echo "  CLAUDE/ sub-repo has uncommitted changes"
     else
-      echo "  !! no repository anywhere — nothing here is recoverable. scripts/backup.sh before every write."
+      echo "  !! no repository anywhere — nothing here is recoverable. backup.sh before every write."
     fi
     return
   fi
@@ -160,11 +160,11 @@ gitstate() {
     local cd_; cd_=$(cd CLAUDE && git status --porcelain 2>/dev/null)
     [[ -n "$cd_" ]] && echo "  CLAUDE/ sub-repo has uncommitted changes"
   fi
-  local n; n=$(python3 scripts/changelog.py pending 2>/dev/null || echo '?')
+  local n; n=$(python3 "$SDIR/changelog.py" pending 2>/dev/null || echo '?')
   if [[ "$n" != 0 ]]; then
     if is_trunk_branch "$BR"; then
       echo "  !! $n user-visible commit(s) not in CHANGELOG — the user edited outside Claude."
-      echo "     Back-fill without asking: python3 scripts/changelog.py from-git"
+      echo "     Back-fill without asking: python3 .claude/scripts/changelog.py from-git"
     else
       echo "  note   $n commit(s) not in CHANGELOG — CHANGELOG.txt is trunk-only; $BR does not back-fill here."
     fi
@@ -198,18 +198,17 @@ drift() {
 DIGEST_CAP=10000
 digest_body() {
   if [[ $HOOK -eq 1 ]]; then
-    echo "This digest was injected by the Claude Code SessionStart hook; scripts/session.sh"
-    echo "start has already run for this session. /ctx or 'bash scripts/session.sh ctx' refreshes it."
+    echo "Injected by the Claude Code SessionStart hook: session.sh start has already run; /ctx refreshes it."
   fi
   facts; typeblock; echo
   gitstate; drift; echo
-  [[ -f TODO.txt ]] && { python3 scripts/todo.py summary 2>/dev/null; echo; }
-  [[ -d CLAUDE/orders ]] && { python3 scripts/order.py summary 2>/dev/null; }
+  [[ -f TODO.txt ]] && { python3 "$SDIR/todo.py" summary 2>/dev/null; echo; }
+  [[ -d CLAUDE/orders ]] && { python3 "$SDIR/order.py" summary 2>/dev/null; }
   roadmap; unreleased
-  bash scripts/feature.sh status 2>/dev/null | sed -n '2,7p'
+  bash "$SDIR/feature.sh" status 2>/dev/null | sed -n '2,7p'
   hr
   echo "This digest replaces reading project.json / ROADMAP.md / TODO.txt / CHANGELOG.txt;"
-  echo "those files are opened only to edit them. Rules: CLAUDE.md (loaded automatically in Claude Code)."
+  echo "those files are opened only to edit them. Rules: CLAUDE.md + CLAUDE/TYPE.md."
 }
 digest() {
   hr; echo "SESSION $(date '+%F %H:%M') host=$(hostname -s)"; hr
@@ -299,12 +298,12 @@ end() {
     fi
   else echo "-> nothing to commit"; fi
   if [[ $GIT -eq 1 ]]; then
-    echo "-> changelog"; python3 scripts/changelog.py from-git
+    echo "-> changelog"; python3 "$SDIR/changelog.py" from-git
   fi
   echo "-> docs"
   if [[ -f Makefile ]]; then make docs >/dev/null 2>&1 || echo "   (make docs failed — regenerate manually)"
   elif [[ -f .claude/Makefile ]]; then make -f .claude/Makefile docs >/dev/null 2>&1 || echo "   (make docs failed — regenerate manually)"
-  else python3 scripts/changelog.py lint >/dev/null 2>&1 || true; fi
+  else python3 "$SDIR/changelog.py" lint >/dev/null 2>&1 || true; fi
   if [[ $GIT -eq 1 && -n "$(dirty)" ]]; then
     stage_all && git commit -q -m "docs: back-fill changelog, regenerate docs" && echo "-> committed docs/changelog"
   fi
@@ -315,13 +314,13 @@ end() {
     echo "-> CLAUDE/ committed"
   fi
   echo "-> check"
-  local out rc; out=$(bash scripts/check.sh 2>&1); rc=$?
+  local out rc; out=$(bash "$SDIR/check.sh" 2>&1); rc=$?
   echo "$out" | grep -E '^\s*(FAIL|check:)' | sed 's/^/   /'
   [[ $rc -eq 0 ]] || { echo "!! check.sh FAILED — fix before pushing. Nothing pushed."; exit 1; }
-  bash scripts/sync.sh auto
+  bash "$SDIR/sync.sh" auto
   hr
   if [[ $GIT -eq 1 ]]; then
-    echo "$(git rev-parse --abbrev-ref HEAD) @ $(git rev-parse --short HEAD) · unlogged=$(python3 scripts/changelog.py pending)"
+    echo "$(git rev-parse --abbrev-ref HEAD) @ $(git rev-parse --short HEAD) · unlogged=$(python3 "$SDIR/changelog.py" pending)"
   else
     echo "vcs=none · CLAUDE/ @ $( (cd CLAUDE && git rev-parse --short HEAD) 2>/dev/null || echo '-')"
   fi
@@ -333,7 +332,7 @@ case "${1:-start}" in
       { T 25 git fetch --all --prune -q 2>/dev/null || echo "(offline — remote unreachable, digest from local state)"; }
     # project.yaml's periodic kit-release check: real network cost, so it
     # belongs here and not in the shared digest() ctx also calls (no-network).
-    [[ -f scripts/kit-check.sh ]] && bash scripts/kit-check.sh 2>/dev/null
+    [[ -f "$SDIR/kit-check.sh" ]] && bash "$SDIR/kit-check.sh" 2>/dev/null
     digest
     # worktrees are a code-type feature (feature.sh applies the same rule)
     if [[ $GIT -eq 1 ]] && [[ "$(cfg git.session_worktrees false)" == "true" ]] && [[ "$(cfg type code)" == code ]]; then
@@ -342,7 +341,7 @@ case "${1:-start}" in
         *)
           echo
           echo "NEW SESSION — not on a feature branch ($BR)."
-          echo "Ask the user what to work on, then: bash scripts/feature.sh new <slug>"
+          echo "Ask the user what to work on, then: bash .claude/scripts/feature.sh new <slug>"
           echo "This creates an isolated git worktree for this chat; treat its path as the"
           echo "project root for the rest of the session (cd there, absolute paths for edits).";;
       esac

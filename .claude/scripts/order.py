@@ -94,14 +94,14 @@ def cmd_new(a):
     goal = a.goal if a.goal is not None else (sys.stdin.read().strip() if not sys.stdin.isatty() else "")
     if not goal: sys.exit("order.py: give a goal with -g or on stdin")
     cons = list(a.constraint or []) + ["Approval gates in CLAUDE.md §3 still apply: stop and report rather than cross one."]
-    done = list(a.done_when or []) + ["`bash scripts/check.sh` exits 0 and the work is committed on the current branch."]
+    done = list(a.done_when or []) + ["`bash .claude/scripts/check.sh` exits 0 and the work is committed on the current branch."]
     front = {"id": p.stem, "status": "pending", "created": TODAY,
              "from": os.environ.get("ORDER_FROM", "project-chat"), "branch": branch() or "?"}
     body = ("# Goal\n" + goal + "\n\n## Constraints\n" + "".join(f"- {c}\n" for c in cons)
             + "\n## Done when\n" + "".join(f"- {w}\n" for w in done))
     DIR.mkdir(parents=True, exist_ok=True)
     p.write_text(join(front, body))
-    print(f"created {rel(p)}  (execute: /orders in Claude Code, or python3 scripts/order.py run {p.stem})")
+    print(f"created {rel(p)}  (execute: /orders in Claude Code, or python3 .claude/scripts/order.py run {p.stem})")
 
 def cmd_list(a):
     rows = [(p.stem, split(p)[0]) for p in files()]
@@ -116,14 +116,14 @@ def cmd_summary(a):
         by.setdefault(split(p)[0].get("status", "?"), []).append(p.stem)
     parts = [f"{len(by[s])} {s}: " + ", ".join(by[s][:4]) + (" …" if len(by[s]) > 4 else "")
              for s in ("running", "pending", "blocked") if by.get(s)]
-    if parts: print("ORDERS   " + " · ".join(parts) + "   (python3 scripts/order.py list; /orders in Claude Code)")
+    if parts: print("ORDERS   " + " · ".join(parts) + "   (python3 .claude/scripts/order.py list; /orders in Claude Code)")
 
 def cmd_show(a): print(find(a.id).read_text(), end="")
 
 def cmd_done(a):
     p = find(a.id); set_status(p, "done", a.note or "")
     print(f"done    {p.stem}")
-    print(f"        commit the Result, then: python3 scripts/order.py rm {p.stem}")
+    print(f"        commit the Result, then: python3 .claude/scripts/order.py rm {p.stem}")
 
 def cmd_rm(a):
     """Delete a finished order. The Result must already be committed."""
@@ -148,10 +148,10 @@ Work on the current branch ({branch}); commit as you go with Conventional Commit
 Approval-gated actions (CLAUDE.md §3) are out of scope: if one is required, stop and record it.
 When finished, append a "## Result" section to {rel} (what you did, what remains, what to verify),
 then run exactly one of:
-  python3 scripts/order.py done {id}
-  python3 scripts/order.py block {id} "<one-line reason>"
+  python3 .claude/scripts/order.py done {id}
+  python3 .claude/scripts/order.py block {id} "<one-line reason>"
 After `done`, commit the Result and then delete the order with
-`python3 scripts/order.py rm {id}` — CLAUDE/orders/ holds live work only, and
+`python3 .claude/scripts/order.py rm {id}` — CLAUDE/orders/ holds live work only, and
 git log keeps the record. Keep it only if the order is a document worth
 returning to, and say why in the Result.
 

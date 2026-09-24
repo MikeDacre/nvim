@@ -5,7 +5,7 @@ description: Re-read the project digest (facts, git state, drift, rules, roadmap
 
 # Current project digest
 
-!`bash scripts/session.sh ctx`
+!`bash .claude/scripts/session.sh ctx`
 
 This replaces reading project.json / ROADMAP.md / TODO.txt / CHANGELOG.txt.
 Open those files only to edit them.

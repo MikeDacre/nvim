@@ -250,7 +250,7 @@
     "format": "todo.txt (http://todotxt.org/)",
     "comment_marker": "#"
   },
-  "kit_version": "2.0.0-alpha.1",
+  "kit_version": "2.0.0-alpha.2",
   "content": {
     "note": "writing mode (and any mode holding user-authored documents). Everything under dirs is the user's until they say otherwise — see CLAUDE/MODE.md.",
     "dirs": [],
