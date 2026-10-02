@@ -99,15 +99,76 @@ vnoremap > >gv
 :  call mkdir($HOME . "/.temp/backup", "")
 :  call mkdir($HOME . "/.temp/undo", "")
 :endif
+:if !isdirectory($HOME . "/.temp/autosave")
+:  call mkdir($HOME . "/.temp/autosave", "")
+:endif
 
-if !has('nvim')
-  set directory=$HOME/.temp/swap
-  set backupdir=$HOME/.temp/backup
-  set undodir=$HOME/.temp/undo
-  set undofile
-  set undoreload=50000
-  set undolevels=1000
-endif
+" Previously Vim-only (`if !has('nvim')`); Neovim gets the same shared
+" swap/backup/undo dirs and persistent undo now too — purely additive, Vim's
+" behaviour is unchanged.
+set directory=$HOME/.temp/swap
+set backupdir=$HOME/.temp/backup
+set undodir=$HOME/.temp/undo
+set undofile
+set undoreload=50000
+set undolevels=1000
+
+" Undo-safe autosave: on an idle pause, snapshot the buffer's text to a
+" sidecar file under ~/.temp/autosave, named after the full path so same-name
+" files in different directories don't collide. writefile() never touches the
+" buffer, 'modified', the undo tree, or runs BufWrite autocmds (formatters,
+" linters, file watchers), so it is invisible to :undo and to anything that
+" reacts to the real file changing. The sidecar is removed the moment the
+" file is actually written with :w — until then it survives a crash or an
+" accidental :q!, so it can be recovered with :MikevimAutosaveRestore.
+let g:mikevim_autosave_dir = $HOME . '/.temp/autosave'
+
+function! s:MikevimAutosavePath() abort
+  let l:path = expand('%:p')
+  if empty(l:path)
+    return ''
+  endif
+  return g:mikevim_autosave_dir . '/' . substitute(l:path, '[\\/:]', '%', 'g')
+endfunction
+
+function! s:MikevimAutosaveWrite() abort
+  if !&modified || !&modifiable || &readonly || &buftype !=# ''
+    return
+  endif
+  let l:path = s:MikevimAutosavePath()
+  if empty(l:path)
+    return
+  endif
+  call writefile(getline(1, '$'), l:path)
+  let b:mikevim_autosave_path = l:path
+endfunction
+
+function! s:MikevimAutosaveClear() abort
+  if exists('b:mikevim_autosave_path')
+    if filereadable(b:mikevim_autosave_path)
+      call delete(b:mikevim_autosave_path)
+    endif
+    unlet b:mikevim_autosave_path
+  endif
+endfunction
+
+function! s:MikevimAutosaveRestore() abort
+  let l:path = s:MikevimAutosavePath()
+  if empty(l:path) || !filereadable(l:path)
+    echo 'mikevim: no autosave file for this buffer'
+    return
+  endif
+  execute '%delete _'
+  call setline(1, readfile(l:path))
+  echo 'mikevim: restored from ' . l:path
+endfunction
+command! MikevimAutosaveRestore call s:MikevimAutosaveRestore()
+
+augroup mikevim_autosave
+  autocmd!
+  autocmd CursorHold,CursorHoldI * call s:MikevimAutosaveWrite()
+  autocmd BufWritePost * call s:MikevimAutosaveClear()
+augroup END
 
 " Remember last position
 autocmd BufReadPost * if @% !~# '\.git[\/\\]COMMIT_EDITMSG$' && line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
@@ -156,6 +217,10 @@ autocmd FileType vim setlocal et sw=2 ts=2 tw=79
 au BufRead,BufNewFile *.py set filetype=python
 au FileType python setlocal completeopt=menuone,longest
 au FileType python setlocal et sw=4 ts=4 tw=79
+
+" Todo.txt (freitass/todo.txt-vim ftdetect covers todo.txt/done.txt already;
+" this adds the *.todotxt extension on top of that)
+au BufNewFile,BufRead *.todotxt set filetype=todo
 
 " Snakemake
 au BufNewFile,BufRead Snakefile set syntax=snakemake
