@@ -293,7 +293,7 @@ if g:vim_minimal == 0
   endfunction
 
   function! s:ProseInit() abort
-    call pencil#init({'wrap': 'soft'})
+    call pencil#init({'wrap': 'off'})
     call litecorrect#init()
     let b:mikevim_autocorrect = 1
     setlocal spell spelllang=en_us
@@ -312,6 +312,20 @@ if g:vim_minimal == 0
   command! WriteOn  call s:WriteOn()
   command! WriteOff call s:WriteOff()
   command! Write    WriteOn
+
+  " Full markdown render in a pane: glow(1) in a :terminal split. Vim 9's
+  " :terminal takes the same split modifiers as Neovim's, so one command
+  " works on both editors. Static render, not live-synced — rerun to refresh.
+  function! s:MdPreview() abort
+    if !executable('glow')
+      echohl WarningMsg
+      echomsg '[mikevim] glow not found — brew install glow (see scripts/install.sh heavy)'
+      echohl None
+      return
+    endif
+    execute 'vertical botright terminal glow --style=auto ' . shellescape(expand('%:p'))
+  endfunction
+  command! MdPreview call s:MdPreview()
 
   function! s:SpellOn() abort
     setlocal spell spelllang=en_us
@@ -351,6 +365,7 @@ if g:vim_minimal == 0
     autocmd!
     autocmd FileType markdown,rst,text,mail call s:ProseInit()
     autocmd BufRead,BufNewFile *.md call s:VaultEnable()
+    autocmd FileType markdown nnoremap <buffer> <leader>mp :MdPreview<CR>
   augroup END
 
   " Zen mode — goyo drives limelight
@@ -479,6 +494,11 @@ if g:vim_minimal == 0
   " than faked.
   noremap <F6> :TagbarToggle<CR>
   let g:tagbar_autofocus = 0
+  " Left sidebar so it works as a clickable heading/symbol outline next to
+  " the file tree. universal-ctags' built-in Markdown parser (chapters/
+  " sections/subsections, document order) makes this a markdown heading
+  " list for free — no markdown-specific plugin needed.
+  let g:tagbar_position = 'left'
 
   " Toggle error window
   let g:toggle_list_no_mappings = 1

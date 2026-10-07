@@ -11,8 +11,8 @@
 #           Python venv (pynvim), and a Nerd Font for icons/glyphs — all
 #           user-space, no sudo, no system package manager touched.
 #   heavy   everything normal does, plus system packages via sudo: an
-#           up-to-date vim/neovim, ripgrep, fd, universal-ctags, pandoc and a
-#           C toolchain. The only mode that asks for a password.
+#           up-to-date vim/neovim, ripgrep, fd, universal-ctags, pandoc, glow
+#           and a C toolchain. The only mode that asks for a password.
 #
 # Idempotent — safe to re-run in any mode at any time; every step checks
 # current state before changing anything, and nothing pre-existing is ever
@@ -32,7 +32,7 @@ usage: install.sh [light|normal|heavy] [-y|--yes] [--no-font] [-h|--help]
 
   light   minimal plugin set, no venv, no fonts — remote boxes/containers
   normal  full plugin set + venv + fonts, no sudo (default)
-  heavy   normal, plus system packages (vim/nvim/ripgrep/fd/ctags/pandoc) via sudo
+  heavy   normal, plus system packages (vim/nvim/ripgrep/fd/ctags/pandoc/glow) via sudo
 
   -y, --yes   don't pause for confirmation before heavy mode's sudo installs
   --no-font   skip the Nerd Font install even in normal/heavy mode
@@ -213,7 +213,7 @@ step_heavy_packages() {
   fi
   if [ "$OS" = darwin ]; then
     ensure_brew
-    brew install vim neovim ripgrep fd universal-ctags pandoc || warn "some brew installs failed — check output above"
+    brew install vim neovim ripgrep fd universal-ctags pandoc glow || warn "some brew installs failed — check output above"
     brew install --cask macvim || warn "macvim cask failed (already installed, or no cask access)"
     return
   fi
@@ -227,6 +227,7 @@ step_heavy_packages() {
   pkg_install vim neovim ripgrep pandoc "${build_pkgs[@]}" || warn "core package install had failures"
   pkg_install "$fd_pkg" || warn "fd install failed (package name may differ on this distro)"
   pkg_install "$ctags_pkg" || pkg_install ctags || warn "ctags install failed (package name may differ on this distro)"
+  pkg_install glow || warn "glow install failed (package name may differ on, or be absent from, this distro's repos — see https://github.com/charmbracelet/glow)"
   if [ "$PKG" = apt ] && ! command -v fd >/dev/null 2>&1 && command -v fdfind >/dev/null 2>&1; then
     mkdir -p "$HOME/.local/bin"
     ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"

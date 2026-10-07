@@ -12,6 +12,13 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+### Added
+- Tagbar repositioned as a left sidebar; markdown files get a clickable, document-ordered heading outline for free via universal-ctags' built-in Markdown parser.
+- :MdPreview (\mp in markdown buffers) renders the current file with glow in a terminal split; glow added to heavy-mode installs.
+
+### Changed
+- Markdown prose buffers no longer soft-wrap by default on open; :WriteOn now opts in explicitly (:WriteOff/\ww unchanged).
+
 ## [0.3.0] - 2026-09-15
 
 ### Added

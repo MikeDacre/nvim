@@ -31,7 +31,7 @@ Three modes:
 |---|---|---|
 | `light` | Symlinks, data dir, minimal plugin set (`VIM_MINIMAL=true`). No venv, no fonts. | No |
 | `normal` (default) | Everything `light` does, plus the full plugin set, the Python venv (`pynvim`), and a Nerd Font for icons/glyphs. | No |
-| `heavy` | Everything `normal` does, plus system packages — vim, neovim, ripgrep, fd, universal-ctags, pandoc, a C toolchain — via Homebrew (macOS) or the system package manager (Linux). | Yes |
+| `heavy` | Everything `normal` does, plus system packages — vim, neovim, ripgrep, fd, universal-ctags, pandoc, glow, a C toolchain — via Homebrew (macOS) or the system package manager (Linux). | Yes |
 
 ```shell
 bash scripts/install.sh light             # remote boxes, containers
@@ -90,12 +90,12 @@ local leader is also `\`. Read `\dd` below as backslash, d, d.
 | Mapping | Does |
 |---|---|
 | `\be` | BufExplorer |
-| `\nt` / `\nf` | File tree toggle / focus (NvimTree on nvim, NERDTree on vim) |
+| `\nt` / `\nf` | File tree toggle / focus (NERDTree — the single dual-editor file tree, nvim-tree.lua was dropped) |
 | `\ns` | Reveal current file in the tree (vim) |
 | `\nnt` | Mirror and focus the tree (vim) |
 | `<F5>` | Open NERDTree (vim) |
 | `<C-n>` | Mirror and focus NERDTree (vim) |
-| `<F6>` | Toggle the tag list |
+| `<F6>` | Toggle the tag/outline list — left sidebar, document order. For markdown this is a clickable heading outline for free, via universal-ctags' built-in Markdown parser; no markdown-specific plugin needed. |
 | `\to` / `\ts` | Tag list session load / save |
 | `\ll` / `\lq` | Toggle the location list / quickfix list |
 | `<BS>` | Navigate tmux pane left |
@@ -127,16 +127,23 @@ editor and whether tmux is running (Iron on nvim, Vimux or raw tmux on vim).
 ### Prose and notes
 
 Markdown, reStructuredText, plain text and mail buffers open in prose mode:
-soft wrap via vim-pencil, spellcheck on (`spelllang=en_us`), and vim-litecorrect
-autocorrecting the usual typos.
+spellcheck on (`spelllang=en_us`) and vim-litecorrect autocorrecting the usual
+typos. Soft wrap (vim-pencil) is opt-in, not on by default — `:WriteOn` turns
+it on for the buffer, `:WriteOff` (or just opening a new prose buffer) leaves
+it off.
 
 | Mapping | Does |
 |---|---|
 | `\z` | Zen mode — Goyo, with Limelight dimming everything but the current paragraph |
 | `\ss` | Toggle spellcheck for this buffer |
 | `\sa` | Toggle autocorrect (litecorrect's abbreviations) for this buffer |
+| `\mp` | Render the current markdown file with `glow` in a terminal split (markdown buffers only). Static render, not live-synced — rerun to refresh. Needs `glow`: `scripts/install.sh heavy`. |
 | `\kw` | Open the wiki index (vault only) |
 | `\kk` | Open today's journal page (vault only) |
+
+`:WriteOn` / `:WriteOff` (alias `:Write` for `:WriteOn`) toggle soft wrap
+explicitly; `:SpellOn` / `:SpellOff` and `:AutoCorrectOn` / `:AutoCorrectOff`
+do the same for spellcheck and autocorrect independently of each other.
 
 `\k` is wiki.vim's whole mapping prefix — `:help wiki-mappings` lists the rest.
 `\w` is not used for it, because `\ww` is the wrap toggle.
