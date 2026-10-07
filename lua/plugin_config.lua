@@ -10,58 +10,76 @@ vim.opt.termguicolors = true
 -- nvim-mdlink dropped the same audit pass: wiki.vim (plugins.vim) owns
 -- markdown link handling now, in both editors.
 
--- Must run before .configs.setup{} below: ensure_installed installs
--- run synchronously inside setup(), using whatever prefer_git is at that
--- exact moment. Setting it after setup() (as this used to) means the
--- first run always takes the curl+tar download path instead of git
--- clone, and — if stdpath('data') ever points somewhere unexpected —
--- leaves tree-sitter-*.tar.gz sitting wherever that curl ran.
-require("nvim-treesitter.install").prefer_git = true
+-- nvim-treesitter only joins the runtimepath once :PlugInstall has run for
+-- nvim, so these requires must be guarded. Unguarded (as they were) a machine
+-- without the plugin — a fresh clone before :PlugInstall, a git worktree,
+-- which has no plugged/ at all — throws
+--   E5108: module 'nvim-treesitter.install' not found
+-- on every startup, and the error aborts the rest of this file. Absence is
+-- not an error worth shouting about at startup; check.local.sh already
+-- reports plugged/ drift as a WARN, which is where it belongs.
+local ok_install, ts_install = pcall(require, "nvim-treesitter.install")
+local ok_configs, ts_configs = pcall(require, "nvim-treesitter.configs")
 
-require'nvim-treesitter.configs'.setup {
-  -- A list of parser names, or "all" (the listed parsers MUST always be installed)
-  -- "latex" excluded: this frozen nvim-treesitter fork marks it as needing
-  -- generation from the grammar definition, which needs the tree-sitter CLI
-  -- (not installed) — errors on every startup otherwise.
-  ensure_installed = {"bash", "c", "cmake", "comment", "cpp", "css", "csv", "diff", "dockerfile", "editorconfig", "func", "git_config", "git_rebase", "gitattributes", "gitcommit", "gitignore", "go", "gpg", "html", "javascript", "jsdoc", "json", "json5", "llvm", "lua", "luadoc", "make", "markdown", "markdown_inline", "nginx", "objc", "objdump", "passwd", "perl", "php", "printf", "python", "query", "readline", "regex", "ruby", "sql", "ssh_config", "tmux", "todotxt", "typescript", "vim", "vimdoc", "xml", "yaml"},
+if ok_install and ok_configs then
+  -- prefer_git must be set before .setup{} below: ensure_installed installs
+  -- run synchronously inside setup(), using whatever prefer_git is at that
+  -- exact moment. Setting it after setup() (as this used to) means the
+  -- first run always takes the curl+tar download path instead of git
+  -- clone, and — if stdpath('data') ever points somewhere unexpected —
+  -- leaves tree-sitter-*.tar.gz sitting wherever that curl ran.
+  ts_install.prefer_git = true
 
-  -- Install parsers synchronously (only applied to `ensure_installed`)
-  sync_install = false,
+  ts_configs.setup {
+    -- A list of parser names, or "all" (the listed parsers MUST always be installed)
+    -- "latex" excluded: this frozen nvim-treesitter fork marks it as needing
+    -- generation from the grammar definition, which needs the tree-sitter CLI
+    -- (not installed) — errors on every startup otherwise.
+    ensure_installed = {"bash", "c", "cmake", "comment", "cpp", "css", "csv", "diff", "dockerfile", "editorconfig", "func", "git_config", "git_rebase", "gitattributes", "gitcommit", "gitignore", "go", "gpg", "html", "javascript", "jsdoc", "json", "json5", "llvm", "lua", "luadoc", "make", "markdown", "markdown_inline", "nginx", "objc", "objdump", "passwd", "perl", "php", "printf", "python", "query", "readline", "regex", "ruby", "sql", "ssh_config", "tmux", "todotxt", "typescript", "vim", "vimdoc", "xml", "yaml"},
 
-  -- Automatically install missing parsers when entering buffer
-  -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
-  auto_install = true,
+    -- Install parsers synchronously (only applied to `ensure_installed`)
+    sync_install = false,
 
-  -- List of parsers to ignore installing (or "all")
-  -- ignore_install = { "javascript" },
+    -- Automatically install missing parsers when entering buffer
+    -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
+    auto_install = true,
 
-  ---- If you need to change the installation directory of the parsers (see -> Advanced Setup)
-  -- parser_install_dir = "/some/path/to/store/parsers", -- Remember to run vim.opt.runtimepath:append("/some/path/to/store/parsers")!
+    -- List of parsers to ignore installing (or "all")
+    -- ignore_install = { "javascript" },
 
-  highlight = {
-    enable = true,
+    ---- If you need to change the installation directory of the parsers (see -> Advanced Setup)
+    -- parser_install_dir = "/some/path/to/store/parsers", -- Remember to run vim.opt.runtimepath:append("/some/path/to/store/parsers")!
 
-    -- NOTE: these are the names of the parsers and not the filetype. (for example if you want to
-    -- disable highlighting for the `tex` filetype, you need to include `latex` in this list as this is
-    -- the name of the parser)
-    -- list of language that will be disabled
-    disable = { "c", "rust" },
-    -- Or use a function for more flexibility, e.g. to disable slow treesitter highlight for large files
-    disable = function(lang, buf)
+    highlight = {
+      enable = true,
+
+      -- Exactly one `disable` key. This table used to carry two — upstream's
+      -- README example `disable = { "c", "rust" }` followed by the large-file
+      -- function — and Lua keeps only the LAST value for a repeated key, so the
+      -- c/rust list was dead code that never disabled anything. Dropped rather
+      -- than honoured: "c" is deliberately in ensure_installed above (and "rust"
+      -- is not), so disabling it was upstream boilerplate, not intent.
+      -- NOTE: if a language is ever added here it is the parser name, not the
+      -- filetype — "latex", not "tex".
+      --
+      -- Skip treesitter highlighting on large files; it is slow there and the
+      -- regex syntax fallback is good enough.
+      disable = function(lang, buf)
         local max_filesize = 100 * 1024 -- 100 KB
-        local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
-        if ok and stats and stats.size > max_filesize then
-            return true
-        end
-    end,
+        -- vim.loop is the deprecated alias; vim.uv is the name since 0.10.
+        local uv = vim.uv or vim.loop
+        local ok, stats = pcall(uv.fs_stat, vim.api.nvim_buf_get_name(buf))
+        return (ok and stats and stats.size > max_filesize) or false
+      end,
 
-    -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
-    -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
-    -- Using this option may slow down your editor, and you may see some duplicate highlights.
-    -- Instead of true it can also be a list of languages
-    additional_vim_regex_highlighting = false,
-  },
-}
+      -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
+      -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
+      -- Using this option may slow down your editor, and you may see some duplicate highlights.
+      -- Instead of true it can also be a list of languages
+      additional_vim_regex_highlighting = false,
+    },
+  }
+end
 
 -- Status bar. Vim uses vim-airline (wired in init.vim); this is lualine's
 -- first setup() call — it was Plug'd but unconfigured before, so Neovim was
@@ -69,14 +87,23 @@ require'nvim-treesitter.configs'.setup {
 -- (spell/autocorrect/last-save) are Vimscript functions defined in init.vim
 -- (MikevimWriteStatusline, MikevimWriteModeActive) so both editors read one
 -- definition of "in write mode" instead of one per statusline plugin.
-require('lualine').setup {
-  sections = {
-    lualine_x = {
-      {
-        function() return vim.fn.MikevimWriteStatusline() end,
-        cond = function() return vim.fn.MikevimWriteModeActive() == 1 end,
+--
+-- Guarded for the same reason as the treesitter requires above: before
+-- :PlugInstall has run for nvim there is no lualine on the runtimepath, and a
+-- bare require throws E5108 and aborts the rest of this file. Neovim then
+-- falls back to the built-in statusline, which is the pre-lualine behaviour.
+local ok_lualine, lualine = pcall(require, "lualine")
+
+if ok_lualine then
+  lualine.setup {
+    sections = {
+      lualine_x = {
+        {
+          function() return vim.fn.MikevimWriteStatusline() end,
+          cond = function() return vim.fn.MikevimWriteModeActive() == 1 end,
+        },
+        'encoding', 'fileformat', 'filetype',
       },
-      'encoding', 'fileformat', 'filetype',
     },
-  },
-}
+  }
+end
