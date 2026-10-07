@@ -12,6 +12,11 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+### Fixed
+- Guard the nvim-treesitter requires in lua/plugin_config.lua: unguarded, a machine without the plugin (fresh clone before :PlugInstall, or a git worktree, which has no plugged/) threw E5108 on every nvim startup and aborted the rest of the lua config, so treesitter never set up.
+- Drop the duplicate 'disable' key from nvim-treesitter's highlight config: upstream's README example disable = {"c", "rust"} was silently overwritten by the large-file function below it (Lua keeps only the last value for a repeated key), so it had never disabled anything. The large-file guard is now the single disable, returns a real boolean, and uses vim.uv instead of the deprecated vim.loop.
+- check.local.sh's nvim gate now prepends the repo root to the runtimepath. ~/.config/nvim symlinks to the main checkout and sits on nvim's default runtimepath, so 'require' resolved lua/ from there and the gate validated the main checkout from every git worktree — passing broken lua and failing on lua already fixed.
+
 ## [0.3.0] - 2026-09-15
 
 ### Added
