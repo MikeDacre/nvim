@@ -87,14 +87,23 @@ end
 -- (spell/autocorrect/last-save) are Vimscript functions defined in init.vim
 -- (MikevimWriteStatusline, MikevimWriteModeActive) so both editors read one
 -- definition of "in write mode" instead of one per statusline plugin.
-require('lualine').setup {
-  sections = {
-    lualine_x = {
-      {
-        function() return vim.fn.MikevimWriteStatusline() end,
-        cond = function() return vim.fn.MikevimWriteModeActive() == 1 end,
+--
+-- Guarded for the same reason as the treesitter requires above: before
+-- :PlugInstall has run for nvim there is no lualine on the runtimepath, and a
+-- bare require throws E5108 and aborts the rest of this file. Neovim then
+-- falls back to the built-in statusline, which is the pre-lualine behaviour.
+local ok_lualine, lualine = pcall(require, "lualine")
+
+if ok_lualine then
+  lualine.setup {
+    sections = {
+      lualine_x = {
+        {
+          function() return vim.fn.MikevimWriteStatusline() end,
+          cond = function() return vim.fn.MikevimWriteModeActive() == 1 end,
+        },
+        'encoding', 'fileformat', 'filetype',
       },
-      'encoding', 'fileformat', 'filetype',
     },
-  },
-}
+  }
+end
