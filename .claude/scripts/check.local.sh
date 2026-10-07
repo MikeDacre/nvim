@@ -26,7 +26,14 @@ e=$(tr -d '\n' < "$tmp" 2>/dev/null); rm -f "$tmp"
 
 if command -v nvim >/dev/null 2>&1; then
   err=$(mktemp)
-  e=$(T 90 nvim --headless -u init.vim -c 'lua io.stdout:write(vim.v.errmsg)' -c 'qa!' </dev/null 2>"$err")
+  # runtimepath^=$PWD is mandatory, not cosmetic: ~/.config/nvim symlinks to the
+  # MAIN checkout and sits on nvim's default runtimepath, so `require` inside
+  # init.vim's trailing `lua require('init')` resolves lua/ from there — not
+  # from the tree we were invoked in. Without this the nvim gate silently
+  # validates the main checkout from every git worktree, passing broken lua and
+  # failing on lua that was already fixed. Prepending is a no-op in the main
+  # checkout ($PWD is what the symlink points at) and corrective in a worktree.
+  e=$(T 90 nvim --headless --cmd "set runtimepath^=$PWD" -u init.vim -c 'lua io.stdout:write(vim.v.errmsg)' -c 'qa!' </dev/null 2>"$err")
   rc=$?
   if [ "$rc" -eq 0 ] && ! grep -qE '\bE[0-9]+:' "$err"; then ok "nvim loads init.vim"
   else bad "nvim init.vim errors: $(grep -E '\bE[0-9]+:' "$err" | head -2 | tr '\n' ' ')(exit $rc)"; fi
