@@ -12,6 +12,9 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+### Added
+- Note creation from Obsidian templates: :Note{TemplateName} {title} (e.g. :NoteSimple) generates one command per template file in g:mikevim_notes_template_dir (default ~/Ansetl/z99_Assets/Templates/Notes), fills in id/created/title and saves immediately. :NotesRescan picks up new templates mid-session. A BufWritePre hook keeps any markdown file's updated: frontmatter field current on every save.
+
 ## [0.3.0] - 2026-09-15
 
 ### Added

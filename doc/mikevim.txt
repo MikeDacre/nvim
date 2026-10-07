@@ -228,6 +228,20 @@ vim-litecorrect autocorrecting the usual typos.
 `\k` is wiki.vim’s whole mapping prefix — `:help wiki-mappings` lists the
 rest. `\w` is not used for it, because `\ww` is the wrap toggle.
 
+**Creating notes.** `:Note{TemplateName} {title}` creates a note from
+`{TemplateName}.md` and opens it, already saved — no save step needed before
+you start editing. A command is generated for every template file found at
+startup in `g:mikevim_notes_template_dir` (default:
+`~/Ansetl/z99_Assets/Templates/Notes`); run `:NotesRescan` after adding a
+template mid-session. Templates use the Obsidian Templater tokens
+`{{date:YYYYMMDDHHmm}}` (creation timestamp, for `id`/`created`/etc.) and
+`{{cursor}}` (where the cursor lands). The note is written to
+`g:mikevim_notes_dir` (default: cwd) as
+`{title_lowercased_with_underscores}-{id}.md`, with `title:` set to the given
+title in title case. `updated:` is kept current by a `BufWritePre` hook on
+every save of any markdown file that has that frontmatter key — not just
+notes created this way.
+
 **Obsidian.** `lervag/wiki.vim` loads only on Vim 9.1+ / Neovim 0.10+, and even
 then it activates only for files that sit inside an Obsidian vault — detected
 by searching upward from the file for a `.obsidian/` directory.

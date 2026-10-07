@@ -24,6 +24,37 @@ rc=$?
 e=$(tr -d '\n' < "$tmp" 2>/dev/null); rm -f "$tmp"
 [ -n "$e" ] && warn "vim v:errmsg after startup: $e"
 
+# :NoteSimple — :Note{Name} commands are generated at startup from whatever
+# *.md templates live in g:mikevim_notes_template_dir, so there is nothing to
+# exercise against the real ~/Ansetl vault, which doesn't exist on every
+# machine yet. Point the template/output dirs at a throwaway fixture instead.
+tmpl_dir=$(mktemp -d); note_dir=$(mktemp -d); note_err=$(mktemp)
+cat > "$tmpl_dir/Simple.md" <<'TPL'
+---
+title: ""
+id: {{date:YYYYMMDDHHmm}}
+created: {{date:YYYYMMDDHHmm}}
+updated: {{date:YYYYMMDDHHmm}}
+---
+#
+
+{{cursor}}
+TPL
+T 30 vim -es -N -u init.vim \
+  -c "let g:mikevim_notes_template_dir='$tmpl_dir'" \
+  -c "let g:mikevim_notes_dir='$note_dir'" \
+  -c 'NotesRescan' \
+  -c 'silent! NoteSimple this is a note' \
+  -c 'qa!' </dev/null >/dev/null 2>"$note_err"
+note_file=$(find "$note_dir" -maxdepth 1 -name 'this_is_a_note-*.md' 2>/dev/null | head -1)
+if [ -n "$note_file" ] && grep -q '^title: "This Is a Note"$' "$note_file" \
+    && grep -qE '^id: [0-9]{12}$' "$note_file"; then
+  ok ":NoteSimple creates a titled, timestamped note from its template"
+else
+  bad ":NoteSimple did not produce the expected note ($(tr '\n' ' ' < "$note_err"))"
+fi
+rm -rf "$tmpl_dir" "$note_dir" "$note_err"
+
 if command -v nvim >/dev/null 2>&1; then
   err=$(mktemp)
   e=$(T 90 nvim --headless -u init.vim -c 'lua io.stdout:write(vim.v.errmsg)' -c 'qa!' </dev/null 2>"$err")

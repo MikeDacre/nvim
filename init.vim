@@ -398,6 +398,9 @@ if g:vim_minimal == 0
   nnoremap <leader>ss :setlocal spell!<CR>:setlocal spell?<CR>
   nnoremap <leader>sa :AutoCorrectToggle<CR>
 
+  " Obsidian note creation from templates — :Note{TemplateName} {title}
+  exec "source " . g:vimdir_path . "/notes.vim"
+
   " Indent guides
   let g:indent_guides_enable_on_vim_startup = 1
   let g:indent_guides_auto_colors           = 0
