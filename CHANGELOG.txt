@@ -12,6 +12,9 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+### Fixed
+- detect 256-color terminals by capability, not TERM whitelist (f82b074).
+
 ## [0.3.0] - 2026-09-15
 
 ### Added
@@ -88,4 +91,4 @@ February 2018 and was adopted as a managed project in September 2026.
 [0.2.0]: https://github.com/MikeDacre/nvim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MikeDacre/nvim/releases/tag/v0.1.0
 
-<!-- changelog-synced: d5017f6 -->
+<!-- changelog-synced: f82b074 -->
