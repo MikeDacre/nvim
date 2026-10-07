@@ -15,6 +15,7 @@ February 2018 and was adopted as a managed project in September 2026.
 ### Added
 - Tagbar repositioned as a left sidebar; markdown files get a clickable, document-ordered heading outline for free via universal-ctags' built-in Markdown parser.
 - :MdPreview (\mp in markdown buffers) renders the current file with glow in a terminal split; glow added to heavy-mode installs.
+- nowrap markdown by default, tagbar outline, glow preview (2f16625).
 
 ### Changed
 - Markdown prose buffers no longer soft-wrap by default on open; :WriteOn now opts in explicitly (:WriteOff/\ww unchanged).
@@ -95,4 +96,4 @@ February 2018 and was adopted as a managed project in September 2026.
 [0.2.0]: https://github.com/MikeDacre/nvim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MikeDacre/nvim/releases/tag/v0.1.0
 
-<!-- changelog-synced: d5017f6 -->
+<!-- changelog-synced: 2f16625 -->
