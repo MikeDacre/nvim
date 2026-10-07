@@ -8,6 +8,15 @@
             "type": "command",
             "command": "bash",
             "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/scripts/link-worktree-shared.sh"
+            ],
+            "timeout": 15,
+            "statusMessage": "Linking shared plugins into the worktree"
+          },
+          {
+            "type": "command",
+            "command": "bash",
+            "args": [
               "${CLAUDE_PROJECT_DIR}/.claude/scripts/session.sh",
               "start",
               "--hook"
@@ -20,6 +29,15 @@
       {
         "matcher": "resume|clear|compact|fork",
         "hooks": [
+          {
+            "type": "command",
+            "command": "bash",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/scripts/link-worktree-shared.sh"
+            ],
+            "timeout": 15,
+            "statusMessage": "Linking shared plugins into the worktree"
+          },
           {
             "type": "command",
             "command": "bash",

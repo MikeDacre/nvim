@@ -1,5 +1,5 @@
 # nvim config maintenance targets. None of this is needed to *use* the config.
-.PHONY: init doc docs test check doctor ctx clean help
+.PHONY: init worktree-link doc docs test check doctor ctx clean help
 .DEFAULT_GOAL := help
 
 VIM  ?= vim
@@ -20,6 +20,9 @@ init:  ## install plugins in both editors (VIM_MINIMAL=true skips the venv, for 
 		.venv/bin/python3 -m pip install -q -U pip pynvim; \
 		echo ".venv ready: g:python3_host_prog -> .venv/bin/python3"; \
 	fi
+
+worktree-link:  ## symlink the main checkout's plugged/ and .venv/ into this worktree (no-op in the main checkout)
+	@bash scripts/link-worktree-shared.sh
 
 doc:  ## regenerate doc/mikevim.txt and doc/tags from README.md
 	@command -v pandoc >/dev/null || { echo "pandoc missing: brew install pandoc"; exit 1; }
