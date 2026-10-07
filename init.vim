@@ -38,7 +38,7 @@ if has('nvim')
 else
 	set ttymouse=xterm2
   set viminfo='100,\"1000,:200,%,n~/.temp/viminfo"'
-  if has("gui_running") || &term == "xterm-256color" || &term == "screen-256color"
+  if has("gui_running") || &t_Co >= 256 || $COLORTERM ==? 'truecolor' || $COLORTERM ==? '24bit'
     set t_Co=256
     set guifont=DejaVuSansMNFM:w12
     colo wombatmikemod
