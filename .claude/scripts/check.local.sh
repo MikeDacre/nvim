@@ -55,6 +55,25 @@ LUA
   while read -r st f; do [ -z "$f" ] && continue; [ "$st" = ok ] && ok "lua parses $f" || bad "lua syntax error $f"; done <<< "$out"
 else skip "no luajit or nvim: lua files not syntax-checked"; fi
 
+# Neovim's python3 provider runs out of .venv (g:python3_host_prog, init.vim).
+# Nothing about a dead one is loud: nvim still starts, still loads init.vim,
+# still passes the gate above. But UltiSnips disables itself and the
+# diagnostics buffer it opens takes the window vim-startify would have
+# painted, so the start screen silently disappears with it. That pair of
+# symptoms read as two unrelated bugs on 2026-10-07 and cost a session to
+# trace back to one dangling symlink — so assert the venv directly, and name
+# the dead base in the message, which is the clue that was missing.
+# No .venv at all is a legitimate light/VIM_MINIMAL install, not a failure.
+if [ ! -e .venv ] && [ ! -L .venv ]; then
+  skip "no .venv — python3 provider not installed (light/VIM_MINIMAL install)"
+elif [ ! -x .venv/bin/python3 ]; then
+  bad ".venv/bin/python3 missing or dangling (-> $(readlink .venv/bin/python3 2>/dev/null || echo absent)) — run: make venv"
+elif ! .venv/bin/python3 -c 'import pynvim' >/dev/null 2>&1; then
+  bad ".venv/bin/python3 runs but pynvim does not import — run: make venv"
+else
+  ok "python3 provider venv healthy ($(.venv/bin/python3 -V 2>&1))"
+fi
+
 # fzf.vim shells out to these; they're binaries, not vim plugins, so vim-plug
 # can't install them — brew install fd ripgrep
 declare -A bin_pkg=([fd]=fd [rg]=ripgrep)
