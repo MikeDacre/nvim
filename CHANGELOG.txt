@@ -28,6 +28,7 @@ February 2018 and was adopted as a managed project in September 2026.
 - Drop the duplicate 'disable' key from nvim-treesitter's highlight config: upstream's README example disable = {"c", "rust"} was silently overwritten by the large-file function below it (Lua keeps only the last value for a repeated key), so it had never disabled anything. The large-file guard is now the single disable, returns a real boolean, and uses vim.uv instead of the deprecated vim.loop.
 - .claude/scripts/check.local.sh's nvim gate now prepends the repo root to the runtimepath. ~/.config/nvim symlinks to the main checkout and sits on nvim's default runtimepath, so 'require' resolved lua/ from there and the gate validated the main checkout from every git worktree — passing broken lua and failing on lua already fixed.
 - Guard the lualine require in lua/plugin_config.lua the same way as nvim-treesitter's: before :PlugInstall has run for nvim a bare require threw E5108 and aborted the rest of the lua config. Neovim now falls back to the built-in statusline instead, which is the pre-lualine behaviour.
+- Vim theme: wombatmikemod now loads under any *-256color terminal (e.g. tmux-256color) instead of falling back to plain wombat.
 
 ## [0.3.0] - 2026-09-15
 
