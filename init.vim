@@ -219,8 +219,12 @@ au FileType python setlocal completeopt=menuone,longest
 au FileType python setlocal et sw=4 ts=4 tw=79
 
 " Todo.txt (freitass/todo.txt-vim ftdetect covers todo.txt/done.txt already;
-" this adds the *.todotxt extension on top of that)
-au BufNewFile,BufRead *.todotxt set filetype=todo
+" this adds the *.todotxt extension on top of that). Guarded the same way as
+" the plugin itself (plugins.vim) so minimal mode never sets a filetype the
+" plugin isn't there to render.
+if g:vim_minimal == 0
+  au BufNewFile,BufRead *.todotxt set filetype=todo
+endif
 
 " Snakemake
 au BufNewFile,BufRead Snakefile set syntax=snakemake
