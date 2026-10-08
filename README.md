@@ -48,6 +48,30 @@ PowerShell path.
 headlessly for both editors. Some plugins compile (`YouCompleteMe` on vim,
 `firenvim` on nvim) and will take a while.
 
+### The Python provider
+
+Neovim runs its python3 provider out of a dedicated `.venv/` in this checkout
+(`g:python3_host_prog`), so `pynvim` never has to be installed into whichever
+interpreter happens to be on `$PATH`. `make init` builds it; `make venv`
+builds or repairs it on its own:
+
+```shell
+make venv                                  # build or repair as needed
+bash scripts/venv.sh --force               # rebuild even if healthy
+PYTHON=/path/to/python3 bash scripts/venv.sh   # choose the base interpreter
+```
+
+Run it when UltiSnips reports "Python 3 is not available" at startup — which
+also costs you the start screen, because the diagnostics buffer UltiSnips
+opens lands in the window `vim-startify` would have drawn. The usual cause is
+that the venv's base interpreter was uninstalled or moved (a removed conda
+install, a `pyenv` version that went away), leaving `.venv/bin/python3` a
+dangling symlink. `scripts/venv.sh` rebuilds with `--clear`, which is what it
+takes: a plain `python3 -m venv .venv` over an existing directory leaves a
+dangling symlink exactly as it found it. It prefers a base interpreter whose
+prefix does not move, and declines conda prefixes and `pyenv` shims unless
+you name one explicitly with `PYTHON=`.
+
 ### Minimal mode
 
 Set `VIM_MINIMAL=true` in the environment to skip the heavy plugin set at

@@ -17,6 +17,8 @@ February 2018 and was adopted as a managed project in September 2026.
 - Undo-safe autosave: on an idle pause (CursorHold/CursorHoldI) the buffer is snapshotted to a sidecar file under `~/.temp/autosave`, named after its full path. It never writes the real file, flips `'modified'`, runs `BufWrite*` autocmds, or touches the undo tree — the sidecar is just a crash-recovery copy, removed the instant the file is actually saved with `:w`. `:MikevimAutosaveRestore` reloads a buffer from its sidecar if one still exists. Works identically in Vim and Neovim.
 - Worktrees can now run both editors: a SessionStart hook runs .claude/scripts/link-worktree-shared.sh, which symlinks the main checkout's gitignored plugged/ and .venv/ into the worktree (one shared 2.6GB plugin store, no second copy, no per-worktree :PlugInstall). No-op in the main checkout, never replaces a real directory or a symlink pointing elsewhere. 'make worktree-link' is the manual equivalent for a worktree made outside Claude Code.
 - gate *.todotxt detection behind VIM_MINIMAL (863f1bb).
+- scripts/venv.sh (and 'make venv') builds or repairs the Neovim python3 provider venv on any machine: it rebuilds with --clear, which is what a venv whose base interpreter was uninstalled actually needs, and it declines conda prefixes and pyenv shims as the base.
+- check.sh now gates the python3 provider venv: a dangling .venv/bin/python3 or a missing pynvim is a FAIL naming the dead interpreter, instead of surfacing later as a disabled UltiSnips and a vanished start screen. No .venv at all (light/VIM_MINIMAL install) is a SKIP.
 
 ### Changed
 - Write-mode statusbar indicators are now compact icons (✓sp ✓ac ↻2m) instead of full words.
@@ -28,6 +30,7 @@ February 2018 and was adopted as a managed project in September 2026.
 - Drop the duplicate 'disable' key from nvim-treesitter's highlight config: upstream's README example disable = {"c", "rust"} was silently overwritten by the large-file function below it (Lua keeps only the last value for a repeated key), so it had never disabled anything. The large-file guard is now the single disable, returns a real boolean, and uses vim.uv instead of the deprecated vim.loop.
 - .claude/scripts/check.local.sh's nvim gate now prepends the repo root to the runtimepath. ~/.config/nvim symlinks to the main checkout and sits on nvim's default runtimepath, so 'require' resolved lua/ from there and the gate validated the main checkout from every git worktree — passing broken lua and failing on lua already fixed.
 - Guard the lualine require in lua/plugin_config.lua the same way as nvim-treesitter's: before :PlugInstall has run for nvim a bare require threw E5108 and aborted the rest of the lua config. Neovim now falls back to the built-in statusline instead, which is the pre-lualine behaviour.
+- 'make init' could not repair a .venv whose base interpreter had been removed — a plain 'python3 -m venv .venv' rewrites pyvenv.cfg but leaves a dangling bin/python3 untouched, so the venv stayed dead and UltiSnips disabled itself at startup (which also suppressed the vim-startify start screen). It now delegates to scripts/venv.sh.
 
 ## [0.3.0] - 2026-09-15
 
