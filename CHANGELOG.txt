@@ -16,6 +16,7 @@ February 2018 and was adopted as a managed project in September 2026.
 - Statusbar shows spellcheck/autocorrect state and time since last save while write mode is active (vim-airline in Vim, lualine in Neovim).
 - Undo-safe autosave: on an idle pause (CursorHold/CursorHoldI) the buffer is snapshotted to a sidecar file under `~/.temp/autosave`, named after its full path. It never writes the real file, flips `'modified'`, runs `BufWrite*` autocmds, or touches the undo tree — the sidecar is just a crash-recovery copy, removed the instant the file is actually saved with `:w`. `:MikevimAutosaveRestore` reloads a buffer from its sidecar if one still exists. Works identically in Vim and Neovim.
 - Worktrees can now run both editors: a SessionStart hook runs .claude/scripts/link-worktree-shared.sh, which symlinks the main checkout's gitignored plugged/ and .venv/ into the worktree (one shared 2.6GB plugin store, no second copy, no per-worktree :PlugInstall). No-op in the main checkout, never replaces a real directory or a symlink pointing elsewhere. 'make worktree-link' is the manual equivalent for a worktree made outside Claude Code.
+- gate *.todotxt detection behind VIM_MINIMAL (863f1bb).
 
 ### Changed
 - Write-mode statusbar indicators are now compact icons (✓sp ✓ac ↻2m) instead of full words.
@@ -104,4 +105,4 @@ February 2018 and was adopted as a managed project in September 2026.
 [0.2.0]: https://github.com/MikeDacre/nvim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MikeDacre/nvim/releases/tag/v0.1.0
 
-<!-- changelog-synced: d5017f6 -->
+<!-- changelog-synced: 5aa6379 -->
