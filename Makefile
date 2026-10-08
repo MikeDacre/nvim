@@ -1,5 +1,5 @@
 # nvim config maintenance targets. None of this is needed to *use* the config.
-.PHONY: init worktree-link doc docs test check doctor ctx clean help
+.PHONY: init venv worktree-link doc docs test check doctor ctx clean help
 .DEFAULT_GOAL := help
 
 VIM  ?= vim
@@ -16,10 +16,11 @@ init:  ## install plugins in both editors (VIM_MINIMAL=true skips the venv, for 
 	@if [ "$$VIM_MINIMAL" = "true" ]; then \
 		echo "VIM_MINIMAL=true: skipping .venv/pynvim setup"; \
 	else \
-		test -x .venv/bin/python3 || python3 -m venv .venv; \
-		.venv/bin/python3 -m pip install -q -U pip pynvim; \
-		echo ".venv ready: g:python3_host_prog -> .venv/bin/python3"; \
+		bash scripts/venv.sh; \
 	fi
+
+venv:  ## build or repair .venv (the python3 provider); --force / PYTHON= via scripts/venv.sh
+	@bash scripts/venv.sh
 
 worktree-link:  ## symlink the main checkout's plugged/ and .venv/ into this worktree (no-op in the main checkout)
 	@bash scripts/link-worktree-shared.sh
