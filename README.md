@@ -31,7 +31,7 @@ Three modes:
 |---|---|---|
 | `light` | Symlinks, data dir, minimal plugin set (`VIM_MINIMAL=true`). No venv, no fonts. | No |
 | `normal` (default) | Everything `light` does, plus the full plugin set, the Python venv (`pynvim`), and a Nerd Font for icons/glyphs. | No |
-| `heavy` | Everything `normal` does, plus system packages — vim, neovim, ripgrep, fd, universal-ctags, pandoc, glow, a C toolchain — via MacPorts (Intel Macs), Homebrew (Apple Silicon), the distro package manager (Linux) or winget (Windows). vim is always a `+python3` build (UltiSnips needs it). | Yes (not on Windows) |
+| `heavy` | Everything `normal` does, plus system packages — vim, neovim, ripgrep, fd, universal-ctags, pandoc, glow, a C toolchain — via MacPorts (Intel Macs), Homebrew (Apple Silicon), the distro package manager (Linux) or winget (Windows). Only what is missing or insufficient is installed — vim must be Vim 9+ with working python3 (UltiSnips needs it); nothing missing means no sudo prompt. | Yes (not on Windows) |
 
 ```shell
 bash scripts/install.sh light             # remote boxes, containers

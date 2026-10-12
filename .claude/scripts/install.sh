@@ -197,26 +197,83 @@ step_fonts() {
 }
 
 # ---- heavy: system packages via sudo -----------------------------------------
-# generic name -> per-manager package name (falls back to the generic name)
+# Only what is missing or insufficient gets installed. "Sufficient" means:
+#   vim    Vim >= 9.0 that actually loads python3 (UltiSnips needs it)
+#   nvim   Neovim >= 0.9
+#   ctags  Universal Ctags (exuberant/BSD ctags don't count)
+#   build  a C compiler and make
+#   venv   python3 -m venv works (apt splits it into python3-venv)
+VIM_MIN=900
+NVIM_MIN=0.9
+GENERIC_TOOLS=(vim nvim rg fd ctags pandoc glow build venv)
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# does this vim binary meet VIM_MIN and actually load python3? (has() also
+# catches +python3/dyn builds whose DLL is missing, which `vim --version`
+# would report as fine)
+vim_has_python3() {
+  local bin="${1:-vim}"
+  have "$bin" || return 1
+  "$bin" -Nu NONE -es -c "if has('python3') && v:version >= $VIM_MIN | qall! | else | cquit! | endif" </dev/null >/dev/null 2>&1
+}
+
+tool_ok() {
+  case "$1" in
+    vim)    vim_has_python3 vim ;;
+    nvim)   have nvim && nvim --headless -u NONE -c "if has('nvim-$NVIM_MIN') | qall! | else | cquit! | endif" >/dev/null 2>&1 ;;
+    fd)     have fd || have fdfind ;;
+    ctags)  have ctags && ctags --version 2>/dev/null | grep -q 'Universal Ctags' ;;
+    build)  { have cc || have gcc || have clang; } && have make ;;
+    venv)   have python3 && python3 -c 'import venv, ensurepip' >/dev/null 2>&1 ;;
+    *)      have "$1" ;;
+  esac
+}
+
+# fills MISSING with the generic names that need installing, reports the rest
+find_missing() {
+  MISSING=()
+  local t
+  for t in "${GENERIC_TOOLS[@]}"; do
+    if tool_ok "$t"; then echo "   ok: $t"; else MISSING+=("$t"); fi
+  done
+  if [ "$OS" = darwin ] && [ ! -d /Applications/MacVim.app ] && [ ! -d "$HOME/Applications/MacVim.app" ]; then
+    MISSING+=(macvim)
+  fi
+}
+
+# generic name -> per-manager package name(s); empty means "nothing to install
+# here" (e.g. Xcode CLT supplies the toolchain on macOS)
 pkg_name() {
   local generic="$1"
   case "$PKG:$generic" in
+    *:nvim) [ "$PKG" = winget ] && echo "Neovim.Neovim" || echo "neovim" ;;
+    *:rg) [ "$PKG" = winget ] && echo "BurntSushi.ripgrep.MSVC" || echo "ripgrep" ;;
+    winget:vim) echo "vim.vim Python.Python.3.13" ;;  # vim.vim is +python3/dyn
+    winget:fd) echo "sharkdp.fd" ;;
+    winget:ctags) echo "UniversalCtags.Ctags" ;;
+    winget:pandoc) echo "JohnMacFarlane.Pandoc" ;;
+    winget:glow) echo "charmbracelet.glow" ;;
+    winget:build) echo "ezwinports.make" ;;
     apt:vim) echo "vim-nox" ;;  # plain `vim` on Debian/Ubuntu has no +python3
     dnf:vim|yum:vim) echo "vim-enhanced" ;;
     apt:fd) echo "fd-find" ;;
-    apt:ctags) echo "universal-ctags" ;;
+    apt:ctags|port:ctags|brew:ctags) echo "universal-ctags" ;;
     apt:build) echo "build-essential" ;;
-    dnf:build|yum:build) echo "gcc gcc-c++ make" ;;
+    dnf:build|yum:build|zypper:build) echo "gcc gcc-c++ make" ;;
     pacman:build) echo "base-devel" ;;
-    zypper:build) echo "gcc gcc-c++ make" ;;
     apk:build) echo "build-base" ;;
+    port:build|brew:build) ;;
     *:build) echo "gcc make" ;;
+    apt:venv) echo "python3-venv" ;;
+    *:venv) ;;  # bundled with python3 everywhere but Debian/Ubuntu
     *) echo "$generic" ;;
   esac
 }
 
 pkg_install() {
   local pkgs=("$@")
+  [ "${#pkgs[@]}" -gt 0 ] || return 0
   case "$PKG" in
     apt)    sudo apt-get update -qq && sudo apt-get install -y "${pkgs[@]}" ;;
     dnf)    sudo dnf install -y "${pkgs[@]}" ;;
@@ -224,6 +281,14 @@ pkg_install() {
     pacman) sudo pacman -Sy --noconfirm --needed "${pkgs[@]}" ;;
     zypper) sudo zypper --non-interactive install "${pkgs[@]}" ;;
     apk)    sudo apk add "${pkgs[@]}" ;;
+    port)   sudo port -N install "${pkgs[@]}" ;;
+    brew)   brew install "${pkgs[@]}" ;;
+    winget)
+      local id rc=0
+      for id in "${pkgs[@]}"; do
+        winget install --id "$id" -e --silent --accept-source-agreements --accept-package-agreements || rc=1
+      done
+      return $rc ;;
     *) warn "no known package manager — install manually: ${pkgs[*]}"; return 1 ;;
   esac
 }
@@ -254,94 +319,83 @@ port_python_variant() {
   port variants "$1" 2>/dev/null | grep -oE 'python3[0-9]+' | sed 's/^python//' | sort -un | tail -1 | sed 's/^/python/'
 }
 
-# does this vim binary actually load python3? (has() also catches +python3/dyn
-# builds whose DLL is missing, which `vim --version` would report as fine)
-vim_has_python3() {
-  local bin="${1:-vim}"
-  command -v "$bin" >/dev/null 2>&1 || return 1
-  "$bin" -Nu NONE -es -c 'if has("python3") | qall! | else | cquit! | endif' </dev/null >/dev/null 2>&1
-}
-
-heavy_port() {
-  ensure_port || return
-  local pyvar; pyvar="$(port_python_variant vim)"
-  [ -n "$pyvar" ] || { warn "could not read vim's python variants from MacPorts"; pyvar="python314"; }
+# MacPorts vim needs explicit variants; an installed vim without python is
+# rebuilt in place with --enforce-variants rather than reinstalled.
+port_vim() {
   if vim_has_python3 /opt/local/bin/vim; then
-    echo "   ok: MacPorts vim already has +python3"
-  else
-    sudo port -N install vim +huge +"$pyvar" || warn "MacPorts vim +huge+$pyvar install failed"
-  fi
-  sudo port -N install neovim ripgrep fd universal-ctags pandoc glow || warn "some MacPorts installs failed — check output above"
-  if [ -d /Applications/MacVim.app ] || [ -d "$HOME/Applications/MacVim.app" ]; then
-    echo "   ok: MacVim.app already present"
-  else
-    sudo port -N install macvim +"$(port_python_variant macvim)" || warn "MacPorts macvim install failed"
-  fi
-}
-
-heavy_brew() {
-  ensure_brew
-  brew install vim neovim ripgrep fd universal-ctags pandoc glow || warn "some brew installs failed — check output above"
-  brew install --cask macvim || warn "macvim cask failed (already installed, or no cask access)"
-}
-
-# winget ids; vim.vim is the vim-win32-installer build (+python3/dyn), which
-# needs a matching Python on PATH, hence Python.Python.3.
-heavy_winget() {
-  if [ "$PKG" != winget ]; then
-    warn "winget not found — install App Installer from the Microsoft Store, then re-run heavy mode"
+    warn "MacPorts vim is fine but isn't first on PATH — put /opt/local/bin ahead of $(dirname "$(command -v vim)")"
     return
   fi
-  local id
-  for id in vim.vim Neovim.Neovim Python.Python.3.13 BurntSushi.ripgrep.MSVC sharkdp.fd \
-            UniversalCtags.Ctags JohnMacFarlane.Pandoc charmbracelet.glow ezwinports.make; do
-    winget install --id "$id" -e --silent --accept-source-agreements --accept-package-agreements \
-      || warn "winget install $id failed (already installed counts as failure on some winget versions)"
-  done
-  warn "open a new shell so PATH picks up the winget installs before running vim"
+  local pyvar; pyvar="$(port_python_variant vim)"
+  [ -n "$pyvar" ] || { warn "could not read vim's python variants from MacPorts"; pyvar="python314"; }
+  if port -q installed vim 2>/dev/null | grep -q active; then
+    sudo port -N upgrade --enforce-variants vim +huge +"$pyvar"
+  else
+    sudo port -N install vim +huge +"$pyvar"
+  fi
+}
+
+ensure_pkg_manager() {
+  case "$PKG" in
+    port) ensure_port ;;
+    brew) ensure_brew ;;
+    winget) return 0 ;;
+    none)
+      if [ "$OS" = windows ]; then
+        warn "winget not found — install App Installer from the Microsoft Store, then re-run heavy mode"
+      else
+        warn "no recognised package manager — install manually: ${MISSING[*]}"
+      fi
+      return 1 ;;
+  esac
 }
 
 step_heavy_packages() {
-  log "heavy: system packages (sudo)"
+  log "heavy: system packages (only what's missing)"
+  find_missing
+  if [ "${#MISSING[@]}" -eq 0 ]; then
+    echo "   everything already installed and sufficient"
+    return
+  fi
+  echo "   missing or insufficient: ${MISSING[*]}"
   if [ "$ASSUME_YES" != 1 ]; then
-    printf 'heavy mode will use $PKG (sudo where needed) to install/update system packages. Continue? [y/N] '
+    printf 'install them with %s (sudo where needed)? [y/N] ' "$PKG"
     read -r reply
     case "$reply" in y|Y|yes|YES) ;; *) warn "heavy packages skipped"; return ;; esac
   fi
-  case "$PKG" in
-    port)   heavy_port;   check_vim_python; return ;;
-    brew)   heavy_brew;   check_vim_python; return ;;
-    winget) heavy_winget; return ;;
-  esac
-  if [ "$OS" = windows ]; then heavy_winget; return; fi
-  if [ "$PKG" = none ]; then
-    warn "no recognised package manager on this Linux — skipping system packages"
-    return
+  ensure_pkg_manager || return 0
+  local t pkgs=()
+  for t in "${MISSING[@]}"; do
+    case "$PKG:$t" in
+      port:vim) port_vim || warn "MacPorts vim rebuild failed" ;;
+      port:macvim) pkg_install macvim +"$(port_python_variant macvim)" || warn "MacPorts macvim install failed" ;;
+      brew:macvim) brew install --cask macvim || warn "macvim cask failed" ;;
+      *:macvim) ;;
+      *) local names; read -r -a names <<< "$(pkg_name "$t")"; pkgs+=("${names[@]}") ;;
+    esac
+  done
+  if [ "${#pkgs[@]}" -gt 0 ]; then
+    # one batch first; if it fails, retry one by one so a single bad name
+    # (packages differ across distros) doesn't block the rest
+    pkg_install "${pkgs[@]}" || for t in "${pkgs[@]}"; do
+      pkg_install "$t" || warn "$t install failed (name may differ on, or be absent from, this platform)"
+    done
   fi
-  local build_pkgs; read -r -a build_pkgs <<< "$(pkg_name build)"
-  local vim_pkg fd_pkg ctags_pkg
-  vim_pkg="$(pkg_name vim)"; fd_pkg="$(pkg_name fd)"; ctags_pkg="$(pkg_name ctags)"
-  pkg_install "$vim_pkg" neovim ripgrep pandoc "${build_pkgs[@]}" || warn "core package install had failures"
-  pkg_install "$fd_pkg" || warn "fd install failed (package name may differ on this distro)"
-  pkg_install "$ctags_pkg" || pkg_install ctags || warn "ctags install failed (package name may differ on this distro)"
-  pkg_install glow || warn "glow install failed (package name may differ on, or be absent from, this distro's repos — see https://github.com/charmbracelet/glow)"
-  if [ "$PKG" = apt ] && ! command -v fd >/dev/null 2>&1 && command -v fdfind >/dev/null 2>&1; then
+  if [ "$PKG" = apt ] && ! have fd && have fdfind; then
     mkdir -p "$HOME/.local/bin"
     ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
     echo "   linked ~/.local/bin/fd -> fdfind (make sure ~/.local/bin is on PATH)"
   fi
-  if [ "$PKG" = apt ]; then
-    pkg_install python3-venv || warn "python3-venv install failed"
-  fi
+  [ "$OS" = windows ] && warn "open a new shell so PATH picks up the winget installs before running vim"
   check_vim_python
 }
 
 check_vim_python() {
   hash -r 2>/dev/null || true
   if vim_has_python3 vim; then
-    echo "   ok: $(command -v vim) has +python3"
+    echo "   ok: $(command -v vim) is Vim 9+ with python3"
   else
-    warn "$(command -v vim || echo vim) has no working python3 — UltiSnips will be disabled in vim."
+    warn "$(command -v vim || echo vim) is older than Vim 9 or has no working python3 — UltiSnips will be disabled in vim."
     warn "  Check that the package manager's vim comes first on PATH (vim --version | grep python3)."
   fi
 }

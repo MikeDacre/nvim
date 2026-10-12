@@ -66,9 +66,14 @@ Three modes:
                           Silicon), the distro    
                           package manager (Linux) 
                           or winget (Windows).    
-                          vim is always a         
-                          +python3 build          
-                          (UltiSnips needs it).   
+                          Only what is missing or 
+                          insufficient is         
+                          installed — vim must be 
+                          Vim 9+ with working     
+                          python3 (UltiSnips      
+                          needs it); nothing      
+                          missing means no sudo   
+                          prompt.                 
   -----------------------------------------------------------------------
 >shell
     bash scripts/install.sh light             # remote boxes, containers
