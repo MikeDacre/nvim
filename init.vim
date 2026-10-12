@@ -627,6 +627,22 @@ if g:vim_minimal == 0
   " PLUGINS.md); vim-project plugin dropped too, so its ~100-line config block
   " that used to live here is gone along with it (vim-project-config/ subrepo
   " is unaffected — it was always just a private data store, not this plugin)
+  let g:NERDTreeSortHiddenFirst = 1
+  let g:NERDTreeMarkBookmarks = 1
+  let g:NERDTreeShowBookmarks = 1
+  let g:NERDTreeChDirMode = 3 " Chroot vim to root in nerdtree for whatever tab is open
+  let g:NERDTreeMinimalUI = 1
+
+  " Start NERDTree when Vim is started without file arguments.
+  autocmd StdinReadPre * let s:std_in=1
+  autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | wincmd p | endif
+
+  " Exit Vim if NERDTree is the only window remaining in the only tab.
+  autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
+
+  " Close the tab if NERDTree is the only window remaining in it.
+  autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
+
   noremap <F5> :NERDTree<CR>
 
   " Mirror the NERDTree before showing it. This makes it the same on all tabs.
@@ -641,16 +657,6 @@ if g:vim_minimal == 0
   nnoremap <leader>ns :NERDTreeFind<CR>
 
   let g:NERDTreeWinPos = "left"
-
-  " Start NERDTree when Vim is started without file arguments.
-  autocmd StdinReadPre * let s:std_in=1
-  autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | wincmd p | endif
-
-  " Exit Vim if NERDTree is the only window remaining in the only tab.
-  autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
-
-  " Close the tab if NERDTree is the only window remaining in it.
-  autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | call feedkeys(":quit\<CR>:\<BS>") | endif
 
   " Tagbar — replaces taglist.vim (see PLUGINS.md). No session-save/load
   " equivalent to taglist's :TlistSessionLoad/:TlistSessionSave; dropped rather
