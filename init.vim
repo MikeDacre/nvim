@@ -11,6 +11,22 @@ if has('nvim')
   let g:python3_host_prog = g:vimdir_path . '/.venv/bin/python3'
 endif
 
+" Vim's +python3/dyn builds (MacVim) hard-code the build machine's
+" pythonthreedll; if that file is missing here, use the newest Python
+" framework this Mac does have (MacPorts, Homebrew or python.org), so
+" UltiSnips & co. don't report Python 3 as unavailable.
+if !has('nvim') && has('mac') && exists('+pythonthreedll') && !filereadable(&pythonthreedll)
+  let s:pydlls = []
+  for s:root in ['/opt/local/Library/Frameworks', '/opt/homebrew/Frameworks', '/usr/local/Frameworks', '/Library/Frameworks']
+    let s:pydlls += glob(s:root . '/Python.framework/Versions/3.*/Python', 0, 1)
+  endfor
+  call sort(s:pydlls, {a, b -> str2nr(matchstr(a, '3\.\zs\d\+')) - str2nr(matchstr(b, '3\.\zs\d\+'))})
+  if !empty(s:pydlls)
+    let &pythonthreedll = s:pydlls[-1]
+  endif
+  unlet! s:pydlls s:root
+endif
+
 exec "source " . g:vimdir_path . "/plugins.vim"
 
 set encoding=UTF-8
