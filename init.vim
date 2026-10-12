@@ -422,7 +422,15 @@ if g:vim_minimal == 0
       echohl None
       return
     endif
-    execute 'vertical botright terminal glow --style=auto ' . shellescape(expand('%:p'))
+    " List form: no shell quoting, so paths with spaces stay one argument
+    " (Vim's :terminal does not understand shellescape()'s single quotes).
+    let l:cmd = ['glow', '--style=auto', expand('%:p')]
+    if has('nvim')
+      vertical botright new
+      call termopen(l:cmd)
+    else
+      call term_start(l:cmd, {'vertical': 1})
+    endif
   endfunction
   command! MdPreview call s:MdPreview()
 
