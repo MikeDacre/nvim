@@ -393,9 +393,6 @@ if g:vim_minimal == 0
 
   function! s:ProseInit() abort
     call pencil#init({'wrap': 'off'})
-    " Wrapping is opt-in (\ww or :WriteOn): pin it off whatever else ran
-    " on FileType, and keep auto-wrap-while-typing off.
-    setlocal nowrap nolinebreak textwidth=0 formatoptions-=t
     call litecorrect#init()
     let b:mikevim_autocorrect = 1
     setlocal spell spelllang=en_us
