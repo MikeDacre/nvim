@@ -19,6 +19,7 @@ February 2018 and was adopted as a managed project in September 2026.
 ### Fixed
 - MacVim finds a local Python 3 when its built-in pythonthreedll path is missing, so UltiSnips no longer reports Python 3 unavailable.
 - :MdPreview no longer fails with 'accepts at most 1 arg(s)' on file paths containing spaces; glow is launched with a argument list instead of a quoted string.
+- Trailing-whitespace highlighting is skipped in terminal buffers, so :MdPreview (glow) no longer shows red padding.
 
 ## [0.4.0] - 2026-10-11
 
