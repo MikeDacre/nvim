@@ -12,6 +12,8 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-11
+
 ### Added
 - Statusbar shows spellcheck/autocorrect state and time since last save while write mode is active (vim-airline in Vim, lualine in Neovim).
 - Undo-safe autosave: on an idle pause (CursorHold/CursorHoldI) the buffer is snapshotted to a sidecar file under `~/.temp/autosave`, named after its full path. It never writes the real file, flips `'modified'`, runs `BufWrite*` autocmds, or touches the undo tree — the sidecar is just a crash-recovery copy, removed the instant the file is actually saved with `:w`. `:MikevimAutosaveRestore` reloads a buffer from its sidecar if one still exists. Works identically in Vim and Neovim.
@@ -23,6 +25,10 @@ February 2018 and was adopted as a managed project in September 2026.
 - :MdPreview (\mp in markdown buffers) renders the current file with glow in a terminal split; glow added to heavy-mode installs.
 - rainbow_csv for CSV column highlighting and RainbowQuery, dual Vim/Neovim, lazy-loaded on filetype=csv.
 - :WikiVaultStatus command to show whether the current buffer is inside an Obsidian vault and which detection path found it.
+- add rainbow_csv for CSV viewing/editing (f6dd04a).
+- recognize *.todotxt extension, gated by vim_minimal (9e13f4c).
+- add :Note{TemplateName} commands for note creation (5c07bf6).
+- nowrap markdown by default, tagbar outline, glow preview (2f16625).
 
 ### Changed
 - Write-mode statusbar indicators are now compact icons (✓sp ✓ac ↻2m) instead of full words.
@@ -38,6 +44,7 @@ February 2018 and was adopted as a managed project in September 2026.
 - 'make init' could not repair a .venv whose base interpreter had been removed — a plain 'python3 -m venv .venv' rewrites pyvenv.cfg but leaves a dangling bin/python3 untouched, so the venv stayed dead and UltiSnips disabled itself at startup (which also suppressed the vim-startify start screen). It now delegates to scripts/venv.sh.
 - Vim theme: wombatmikemod now loads under any *-256color terminal (e.g. tmux-256color) instead of falling back to plain wombat; also detects 256-color support by capability (`t_Co`/`$COLORTERM`) as a second, independent check alongside the TERM-name match.
 - Note creation from Obsidian templates: :Note{TemplateName} {title} (e.g. :NoteSimple) generates one command per template file in g:mikevim_notes_template_dir (default ~/Ansetl/z99_Assets/Templates/Notes), fills in id/created/title and saves immediately. :NotesRescan picks up new templates mid-session. A BufWritePre hook keeps any markdown file's updated: frontmatter field current on every save.
+- detect 256-color terminals by capability, not TERM whitelist (f82b074).
 
 ## [0.3.0] - 2026-09-15
 
@@ -110,9 +117,10 @@ February 2018 and was adopted as a managed project in September 2026.
 
 - Nothing yet. Editor behaviour is deliberately untouched in this release.
 
-[Unreleased]: https://github.com/MikeDacre/nvim/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/MikeDacre/nvim/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/MikeDacre/nvim/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/MikeDacre/nvim/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/MikeDacre/nvim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MikeDacre/nvim/releases/tag/v0.1.0
 
-<!-- changelog-synced: ec56cff -->
+<!-- changelog-synced: 181602a -->
