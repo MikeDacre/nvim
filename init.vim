@@ -543,6 +543,8 @@ if g:vim_minimal == 0
     autocmd BufRead,BufNewFile *.md call s:VaultEnable()
     autocmd BufWritePost * let b:mikevim_last_save = localtime()
     autocmd FileType markdown nnoremap <buffer> <leader>mp :MdPreview<CR>
+    " Folds exist but start disabled: zi toggles them, zM/zc fold on demand.
+    autocmd FileType markdown setlocal nofoldenable
   augroup END
 
   " vim-airline reads these through custom parts — 'spell' is overridden
