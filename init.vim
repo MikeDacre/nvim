@@ -38,7 +38,7 @@ if has('nvim')
 else
 	set ttymouse=xterm2
   set viminfo='100,\"1000,:200,%,n~/.temp/viminfo"'
-  if has("gui_running") || &term =~# '256color$'
+  if has("gui_running") || &term =~# '256color$' || &t_Co >= 256 || $COLORTERM ==? 'truecolor' || $COLORTERM ==? '24bit'
     set t_Co=256
     set guifont=DejaVuSansMNFM:w12
     colo wombatmikemod
@@ -361,8 +361,22 @@ if g:vim_minimal == 0
     endif
   endfunction
 
+  " Vault detection is invisible otherwise — this is the "am I in a vault?"
+  " check for when \k mappings seem to do nothing.
+  function! s:WikiVaultStatus() abort
+    let l:marker = finddir('.obsidian', expand('%:p:h') . ';')
+    if !empty(l:marker)
+      echo 'Obsidian vault: ' . fnamemodify(l:marker, ':p:h:h') . ' (.obsidian/ marker found)'
+    elseif !empty($OBSIDIAN_VAULT) && isdirectory($OBSIDIAN_VAULT)
+      echo 'Obsidian vault: ' . $OBSIDIAN_VAULT . ' ($OBSIDIAN_VAULT fallback)'
+    else
+      echo 'No Obsidian vault detected for this buffer — wiki.vim mappings are inactive'
+    endif
+  endfunction
+  command! WikiVaultStatus call s:WikiVaultStatus()
+
   function! s:ProseInit() abort
-    call pencil#init({'wrap': 'soft'})
+    call pencil#init({'wrap': 'off'})
     call litecorrect#init()
     let b:mikevim_autocorrect = 1
     setlocal spell spelllang=en_us
@@ -381,6 +395,20 @@ if g:vim_minimal == 0
   command! WriteOn  call s:WriteOn()
   command! WriteOff call s:WriteOff()
   command! Write    WriteOn
+
+  " Full markdown render in a pane: glow(1) in a :terminal split. Vim 9's
+  " :terminal takes the same split modifiers as Neovim's, so one command
+  " works on both editors. Static render, not live-synced — rerun to refresh.
+  function! s:MdPreview() abort
+    if !executable('glow')
+      echohl WarningMsg
+      echomsg '[mikevim] glow not found — brew install glow (see scripts/install.sh heavy)'
+      echohl None
+      return
+    endif
+    execute 'vertical botright terminal glow --style=auto ' . shellescape(expand('%:p'))
+  endfunction
+  command! MdPreview call s:MdPreview()
 
   function! s:SpellOn() abort
     setlocal spell spelllang=en_us
@@ -485,6 +513,7 @@ if g:vim_minimal == 0
     autocmd FileType markdown,rst,text,mail call s:ProseInit()
     autocmd BufRead,BufNewFile *.md call s:VaultEnable()
     autocmd BufWritePost * let b:mikevim_last_save = localtime()
+    autocmd FileType markdown nnoremap <buffer> <leader>mp :MdPreview<CR>
   augroup END
 
   " vim-airline reads these through custom parts — 'spell' is overridden
@@ -543,6 +572,9 @@ if g:vim_minimal == 0
   nnoremap <leader>z  :Goyo<CR>
   nnoremap <leader>ss :setlocal spell!<CR>:setlocal spell?<CR>
   nnoremap <leader>sa :AutoCorrectToggle<CR>
+
+  " Obsidian note creation from templates — :Note{TemplateName} {title}
+  exec "source " . g:vimdir_path . "/notes.vim"
 
   " Indent guides
   let g:indent_guides_enable_on_vim_startup = 1
@@ -625,6 +657,11 @@ if g:vim_minimal == 0
   " than faked.
   noremap <F6> :TagbarToggle<CR>
   let g:tagbar_autofocus = 0
+  " Left sidebar so it works as a clickable heading/symbol outline next to
+  " the file tree. universal-ctags' built-in Markdown parser (chapters/
+  " sections/subsections, document order) makes this a markdown heading
+  " list for free — no markdown-specific plugin needed.
+  let g:tagbar_position = 'left'
 
   " Toggle error window
   let g:toggle_list_no_mappings = 1

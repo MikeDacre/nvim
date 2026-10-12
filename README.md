@@ -31,7 +31,7 @@ Three modes:
 |---|---|---|
 | `light` | Symlinks, data dir, minimal plugin set (`VIM_MINIMAL=true`). No venv, no fonts. | No |
 | `normal` (default) | Everything `light` does, plus the full plugin set, the Python venv (`pynvim`), and a Nerd Font for icons/glyphs. | No |
-| `heavy` | Everything `normal` does, plus system packages — vim, neovim, ripgrep, fd, universal-ctags, pandoc, a C toolchain — via Homebrew (macOS) or the system package manager (Linux). | Yes |
+| `heavy` | Everything `normal` does, plus system packages — vim, neovim, ripgrep, fd, universal-ctags, pandoc, glow, a C toolchain — via Homebrew (macOS) or the system package manager (Linux). | Yes |
 
 ```shell
 bash scripts/install.sh light             # remote boxes, containers
@@ -114,12 +114,12 @@ local leader is also `\`. Read `\dd` below as backslash, d, d.
 | Mapping | Does |
 |---|---|
 | `\be` | BufExplorer |
-| `\nt` / `\nf` | File tree toggle / focus (NvimTree on nvim, NERDTree on vim) |
+| `\nt` / `\nf` | File tree toggle / focus (NERDTree — the single dual-editor file tree, nvim-tree.lua was dropped) |
 | `\ns` | Reveal current file in the tree (vim) |
 | `\nnt` | Mirror and focus the tree (vim) |
 | `<F5>` | Open NERDTree (vim) |
 | `<C-n>` | Mirror and focus NERDTree (vim) |
-| `<F6>` | Toggle the tag list |
+| `<F6>` | Toggle the tag/outline list — left sidebar, document order. For markdown this is a clickable heading outline for free, via universal-ctags' built-in Markdown parser; no markdown-specific plugin needed. |
 | `\to` / `\ts` | Tag list session load / save |
 | `\ll` / `\lq` | Toggle the location list / quickfix list |
 | `<BS>` | Navigate tmux pane left |
@@ -151,8 +151,10 @@ editor and whether tmux is running (Iron on nvim, Vimux or raw tmux on vim).
 ### Prose and notes
 
 Markdown, reStructuredText, plain text and mail buffers open in prose mode:
-soft wrap via vim-pencil, spellcheck on (`spelllang=en_us`), and vim-litecorrect
-autocorrecting the usual typos.
+spellcheck on (`spelllang=en_us`) and vim-litecorrect autocorrecting the usual
+typos. Soft wrap (vim-pencil) is opt-in, not on by default — `:WriteOn` turns
+it on for the buffer, `:WriteOff` (or just opening a new prose buffer) leaves
+it off.
 
 While write mode is active the statusbar (vim-airline in Vim, lualine in
 Neovim) shows spellcheck and autocorrect as Nerd Font glyphs — book/pencil
@@ -167,18 +169,60 @@ sitting next to it. It disappears outside write mode. Needs a Nerd Font
 | `\z` | Zen mode — Goyo, with Limelight dimming everything but the current paragraph |
 | `\ss` | Toggle spellcheck for this buffer |
 | `\sa` | Toggle autocorrect (litecorrect's abbreviations) for this buffer |
-| `\kw` | Open the wiki index (vault only) |
-| `\kk` | Open today's journal page (vault only) |
+| `\mp` | Render the current markdown file with `glow` in a terminal split (markdown buffers only). Static render, not live-synced — rerun to refresh. Needs `glow`: `scripts/install.sh heavy`. |
 
-`\k` is wiki.vim's whole mapping prefix — `:help wiki-mappings` lists the rest.
-`\w` is not used for it, because `\ww` is the wrap toggle.
+`:WriteOn` / `:WriteOff` (alias `:Write` for `:WriteOn`) toggle soft wrap
+explicitly; `:SpellOn` / `:SpellOff` and `:AutoCorrectOn` / `:AutoCorrectOff`
+do the same for spellcheck and autocorrect independently of each other.
+
+**Creating notes.** `:Note{TemplateName} {title}` creates a note from
+`{TemplateName}.md` and opens it, already saved — no save step needed before
+you start editing. A command is generated for every template file found at
+startup in `g:mikevim_notes_template_dir` (default:
+`~/Ansetl/z99_Assets/Templates/Notes`); run `:NotesRescan` after adding a
+template mid-session. Templates use the Obsidian Templater tokens
+`{{date:YYYYMMDDHHmm}}` (creation timestamp, for `id`/`created`/etc.) and
+`{{cursor}}` (where the cursor lands). The note is written to
+`g:mikevim_notes_dir` (default: cwd) as `{title_lowercased_with_underscores}-{id}.md`,
+with `title:` set to the given title in title case. `updated:` is kept
+current by a `BufWritePre` hook on every save of any markdown file that has
+that frontmatter key — not just notes created this way.
 
 **Obsidian.** `lervag/wiki.vim` loads only on Vim 9.1+ / Neovim 0.10+, and even
 then it activates only for files that sit inside an Obsidian vault — detected by
-searching upward from the file for a `.obsidian/` directory. `$OBSIDIAN_VAULT`
-is the per-machine fallback when the marker is not found; set it in your shell
-rc, not in this repo. Outside a vault, markdown files stay plain markdown: no
-wiki mappings, no `<CR>` or `<Tab>` takeover.
+searching upward from the current file for a `.obsidian/` directory.
+`$OBSIDIAN_VAULT` is the per-machine fallback when no marker is found (set it
+in your shell rc, not in this repo — see `CLAUDE/workorders/2026-09-08-writing-stack.md`
+for why it can't live here). Outside a vault, markdown files stay plain
+markdown: no wiki mappings, no `<CR>` or `<Tab>` takeover.
+
+Vault detection is otherwise invisible — if a mapping below seems to do
+nothing, run `:WikiVaultStatus` to see whether the current buffer was
+recognised as being inside a vault, and which detection path (`.obsidian/` or
+`$OBSIDIAN_VAULT`) found it.
+
+`\k` is wiki.vim's whole mapping prefix (`\w` is taken by the wrap toggle).
+The mappings below are the ones worth remembering day to day; the rest —
+tags, related-page graphs, journal week/month navigation — are the same
+prefix, listed in full by `:help wiki-mappings-default`.
+
+| Mapping | Does |
+|---|---|
+| `\kw` | Open the wiki index |
+| `\k\k` | Open today's journal entry |
+| `<CR>` | Follow the link under the cursor |
+| `<Tab>` / `<S-Tab>` | Jump to the next / previous link in the buffer |
+| `<BS>` | Jump back to where you followed a link from |
+| `\ka` | Insert a link, picking the target page from a list |
+| `\kn` | Open (or create) a page by name |
+| `\kr` | Rename the current page, updating links to it |
+| `\kd` | Delete the current page |
+| `\kgb` | Show backlinks to the current page |
+| `\kgc` | Check the current page for broken links |
+| `\kt` | Generate a table of contents for the current page |
+
+`:WikiVaultStatus` works everywhere `wiki.vim` is available, even outside a
+vault, so it doubles as a quick "is wiki.vim even loaded here" check.
 
 ### tmux
 
