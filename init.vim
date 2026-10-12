@@ -392,7 +392,8 @@ if g:vim_minimal == 0
   command! WikiVaultStatus call s:WikiVaultStatus()
 
   function! s:ProseInit() abort
-    call pencil#init({'wrap': 'off'})
+    " Markdown soft-wraps by default; other prose types stay unwrapped.
+    call pencil#init({'wrap': &filetype ==# 'markdown' ? 'soft' : 'off'})
     call litecorrect#init()
     let b:mikevim_autocorrect = 1
     setlocal spell spelllang=en_us

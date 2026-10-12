@@ -18,6 +18,7 @@ February 2018 and was adopted as a managed project in September 2026.
 - :MdPreview uses a compact glow style (glow/compact.json) with no document margins or heading padding, and disables glow's hard wrapping.
 - :MdPreview wraps glow five columns narrower than the pane.
 - Markdown buffers open with folds disabled (zi toggles, zM/zc fold on demand).
+- Markdown buffers open soft-wrapped (vim-pencil); other prose filetypes stay unwrapped.
 
 ### Fixed
 - MacVim finds a local Python 3 when its built-in pythonthreedll path is missing, so UltiSnips no longer reports Python 3 unavailable.
