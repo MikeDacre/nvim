@@ -425,13 +425,16 @@ if g:vim_minimal == 0
     " List form: no shell quoting, so paths with spaces stay one argument
     " (Vim's :terminal does not understand shellescape()'s single quotes).
     " glow/compact.json is glamour's dark style minus the document margins
-    " and heading padding; -w 0 turns off glow's own hard wrapping.
-    let l:cmd = ['glow', '-s', g:vimdir_path . '/glow/compact.json', '-w', '0', expand('%:p')]
+    " and heading padding. Open the pane first and word-wrap glow at its
+    " real width: -w 0 makes the terminal itself break lines mid-word.
+    let l:file = expand('%:p')
+    vertical botright new
+    let l:cmd = ['glow', '-s', g:vimdir_path . '/glow/compact.json',
+          \ '-w', string(max([20, winwidth(0) - 1])), l:file]
     if has('nvim')
-      vertical botright new
       call termopen(l:cmd)
     else
-      call term_start(l:cmd, {'vertical': 1})
+      call term_start(l:cmd, {'curwin': 1})
     endif
   endfunction
   command! MdPreview call s:MdPreview()
