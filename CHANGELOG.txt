@@ -21,6 +21,7 @@ February 2018 and was adopted as a managed project in September 2026.
 - check.sh now gates the python3 provider venv: a dangling .venv/bin/python3 or a missing pynvim is a FAIL naming the dead interpreter, instead of surfacing later as a disabled UltiSnips and a vanished start screen. No .venv at all (light/VIM_MINIMAL install) is a SKIP.
 - Tagbar repositioned as a left sidebar; markdown files get a clickable, document-ordered heading outline for free via universal-ctags' built-in Markdown parser.
 - :MdPreview (\mp in markdown buffers) renders the current file with glow in a terminal split; glow added to heavy-mode installs.
+- rainbow_csv for CSV column highlighting and RainbowQuery, dual Vim/Neovim, lazy-loaded on filetype=csv.
 
 ### Changed
 - Write-mode statusbar indicators are now compact icons (✓sp ✓ac ↻2m) instead of full words.
