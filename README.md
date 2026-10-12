@@ -31,7 +31,7 @@ Three modes:
 |---|---|---|
 | `light` | Symlinks, data dir, minimal plugin set (`VIM_MINIMAL=true`). No venv, no fonts. | No |
 | `normal` (default) | Everything `light` does, plus the full plugin set, the Python venv (`pynvim`), and a Nerd Font for icons/glyphs. | No |
-| `heavy` | Everything `normal` does, plus system packages — vim, neovim, ripgrep, fd, universal-ctags, pandoc, glow, a C toolchain — via Homebrew (macOS) or the system package manager (Linux). | Yes |
+| `heavy` | Everything `normal` does, plus system packages — vim, neovim, ripgrep, fd, universal-ctags, pandoc, glow, a C toolchain — via MacPorts (Intel Macs), Homebrew (Apple Silicon), the distro package manager (Linux) or winget (Windows). Only what is missing or insufficient is installed — vim must be Vim 9+ with working python3 (UltiSnips needs it); nothing missing means no sudo prompt. | Yes (not on Windows) |
 
 ```shell
 bash scripts/install.sh light             # remote boxes, containers
@@ -41,8 +41,9 @@ bash scripts/install.sh heavy --yes       # same, non-interactive
 bash scripts/install.sh normal --no-font  # skip the font install
 ```
 
-Windows: run this from WSL2 — it's treated as Linux. There is no native
-PowerShell path.
+Windows: from WSL2 it is treated as Linux. From Git Bash or MSYS2 it links
+`~/vimfiles`, `~/_vimrc` and `%LOCALAPPDATA%\nvim` (symlinks need Developer
+Mode or an elevated shell) and `heavy` installs through winget.
 
 `make init` (what the installer calls internally) runs `:PlugInstall`
 headlessly for both editors. Some plugins compile (`YouCompleteMe` on vim,
