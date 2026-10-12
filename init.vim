@@ -424,7 +424,9 @@ if g:vim_minimal == 0
     endif
     " List form: no shell quoting, so paths with spaces stay one argument
     " (Vim's :terminal does not understand shellescape()'s single quotes).
-    let l:cmd = ['glow', '--style=auto', expand('%:p')]
+    " glow/compact.json is glamour's dark style minus the document margins
+    " and heading padding; -w 0 turns off glow's own hard wrapping.
+    let l:cmd = ['glow', '-s', g:vimdir_path . '/glow/compact.json', '-w', '0', expand('%:p')]
     if has('nvim')
       vertical botright new
       call termopen(l:cmd)

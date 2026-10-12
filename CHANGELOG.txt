@@ -15,6 +15,7 @@ February 2018 and was adopted as a managed project in September 2026.
 ### Changed
 - install.sh heavy: MacPorts on Intel Macs, python3-enabled vim on Linux (vim-nox/vim-enhanced), winget on native Windows; warns when vim lacks python3.
 - install.sh heavy installs only missing or insufficient tools (Vim 9+ with python3, Neovim 0.9+, Universal Ctags) and skips the sudo prompt when nothing is missing; MacPorts vim without python is rebuilt with --enforce-variants.
+- :MdPreview uses a compact glow style (glow/compact.json) with no document margins or heading padding, and disables glow's hard wrapping.
 
 ### Fixed
 - MacVim finds a local Python 3 when its built-in pythonthreedll path is missing, so UltiSnips no longer reports Python 3 unavailable.
