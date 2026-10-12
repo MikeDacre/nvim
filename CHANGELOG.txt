@@ -22,6 +22,7 @@ February 2018 and was adopted as a managed project in September 2026.
 - Tagbar repositioned as a left sidebar; markdown files get a clickable, document-ordered heading outline for free via universal-ctags' built-in Markdown parser.
 - :MdPreview (\mp in markdown buffers) renders the current file with glow in a terminal split; glow added to heavy-mode installs.
 - rainbow_csv for CSV column highlighting and RainbowQuery, dual Vim/Neovim, lazy-loaded on filetype=csv.
+- :WikiVaultStatus command to show whether the current buffer is inside an Obsidian vault and which detection path found it.
 
 ### Changed
 - Write-mode statusbar indicators are now compact icons (✓sp ✓ac ↻2m) instead of full words.
