@@ -23,6 +23,7 @@ February 2018 and was adopted as a managed project in September 2026.
 - :MdPreview no longer fails with 'accepts at most 1 arg(s)' on file paths containing spaces; glow is launched with a argument list instead of a quoted string.
 - Trailing-whitespace highlighting is skipped in terminal buffers, so :MdPreview (glow) no longer shows red padding.
 - :MdPreview word-wraps glow at the actual pane width instead of letting the terminal break lines mid-word.
+- Markdown/prose buffers open with wrapping and auto-wrap-while-typing forced off; \ww or :WriteOn enable it.
 
 ## [0.4.0] - 2026-10-11
 
