@@ -218,3 +218,34 @@ fix if it is ever reinstated.
 the message but not `v:errmsg`, so `check.sh` reports **E216: No such group or
 event: pencil_autoformat** as a WARN after opening a prose buffer. Cosmetic,
 pre-existing, and upstream's. Do **not** "fix" it by flipping `autoformat` on.
+
+## Markdown navigation / preview — applied 2026-10-06
+
+No new `plugins.vim` entries — `plugins.vim` itself was not touched.
+
+- **Wrap-on-open flipped to opt-in.** `s:ProseInit()` called
+  `pencil#init({'wrap': 'soft'})` on every `FileType markdown,rst,text,mail`,
+  so prose buffers always opened soft-wrapped. Changed to
+  `pencil#init({'wrap': 'off'})`; `:WriteOn` (shipped 2026-09-08, see the
+  `5a6f6ea` commit) still turns soft wrap on when wanted.
+- **Heading outline: `preservim/tagbar`, repositioned, no new plugin.**
+  `universal-ctags` (already a `heavy`-tier system dependency, for tagbar's own
+  sake) ships a built-in Markdown parser — `ctags --list-kinds=Markdown` shows
+  chapters/sections/subsections — and tagbar's `autoload/tagbar/types/uctags.vim`
+  already declares `type_markdown` with `sort = 0` (document order). So a
+  clickable, nested, document-ordered heading list for markdown was already
+  one `TagbarToggle` away; the only change was `g:tagbar_position = 'left'` so
+  it sits next to NERDTree as a sidebar instead of opening on the right. This
+  repositions tagbar for every filetype, not just markdown — that's the
+  intended tradeoff, not an oversight.
+- **Full preview: `glow` CLI, not a vim plugin.** Considered
+  `iamcco/markdown-preview.nvim` (Neovim-only, live-synced, renders in the
+  browser, needs Node/Yarn to build) against `glow` in a `:terminal` split
+  (dual-editor — Vim 9's `:terminal` takes the same split modifiers as
+  Neovim's; renders inside an actual editor pane; static, not live-synced).
+  Picked `glow`: stays dual-editor and adds a system binary instead of a
+  plugin dependency. Added to `heavy`-mode installs
+  (`scripts/install.sh`) alongside `ctags`/`pandoc`; `\mp` in markdown buffers
+  runs it via the new `:MdPreview` command (`init.vim`, inside the
+  `mikevim_prose` augroup). No preview without `glow` on `$PATH` — the mapping
+  warns rather than erroring.

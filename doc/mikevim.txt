@@ -59,10 +59,11 @@ Three modes:
                           plus system packages —  
                           vim, neovim, ripgrep,   
                           fd, universal-ctags,    
-                          pandoc, a C toolchain — 
-                          via Homebrew (macOS) or 
-                          the system package      
-                          manager (Linux).        
+                          pandoc, glow, a C       
+                          toolchain — via         
+                          Homebrew (macOS) or the 
+                          system package manager  
+                          (Linux).                
   -----------------------------------------------------------------------
 >shell
     bash scripts/install.sh light             # remote boxes, containers
@@ -169,8 +170,9 @@ FILES AND NAVIGATION ~
   ----------------------------------- -----------------------------------
   \be                                 BufExplorer
 
-  \nt / \nf                           File tree toggle / focus (NvimTree
-                                      on nvim, NERDTree on vim)
+  \nt / \nf                           File tree toggle / focus (NERDTree
+                                      — the single dual-editor file tree,
+                                      nvim-tree.lua was dropped)
 
   \ns                                 Reveal current file in the tree
                                       (vim)
@@ -181,7 +183,13 @@ FILES AND NAVIGATION ~
 
   <C-n>                               Mirror and focus NERDTree (vim)
 
-  <F6>                                Toggle the tag list
+  <F6>                                Toggle the tag/outline list — left
+                                      sidebar, document order. For
+                                      markdown this is a clickable
+                                      heading outline for free, via
+                                      universal-ctags’ built-in Markdown
+                                      parser; no markdown-specific plugin
+                                      needed.
 
   \to / \ts                           Tag list session load / save
 
@@ -230,8 +238,10 @@ LINTING ~
 PROSE AND NOTES ~
 
 Markdown, reStructuredText, plain text and mail buffers open in prose mode:
-soft wrap via vim-pencil, spellcheck on (`spelllang=en_us`), and
-vim-litecorrect autocorrecting the usual typos.
+spellcheck on (`spelllang=en_us`) and vim-litecorrect autocorrecting the usual
+typos. Soft wrap (vim-pencil) is opt-in, not on by default — `:WriteOn` turns
+it on for the buffer, `:WriteOff` (or just opening a new prose buffer) leaves
+it off.
 
 While write mode is active the statusbar (vim-airline in Vim, lualine in
 Neovim) shows spellcheck and autocorrect as Nerd Font glyphs — book/pencil
@@ -253,11 +263,22 @@ normal`, the default, installs one).
   \sa                                 Toggle autocorrect (litecorrect’s
                                       abbreviations) for this buffer
 
+  \mp                                 Render the current markdown file
+                                      with glow in a terminal split
+                                      (markdown buffers only). Static
+                                      render, not live-synced — rerun to
+                                      refresh. Needs
+                                      glowscripts/install.sh heavy.
+
   \kw                                 Open the wiki index (vault only)
 
   \kk                                 Open today’s journal page (vault
                                       only)
   -----------------------------------------------------------------------
+`:WriteOn` / `:WriteOff` (alias `:Write` for `:WriteOn`) toggle soft wrap
+explicitly; `:SpellOn` / `:SpellOff` and `:AutoCorrectOn` / `:AutoCorrectOff`
+do the same for spellcheck and autocorrect independently of each other.
+
 `\k` is wiki.vim’s whole mapping prefix — `:help wiki-mappings` lists the
 rest. `\w` is not used for it, because `\ww` is the wrap toggle.
 
