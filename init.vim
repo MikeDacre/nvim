@@ -430,7 +430,7 @@ if g:vim_minimal == 0
     let l:file = expand('%:p')
     vertical botright new
     let l:cmd = ['glow', '-s', g:vimdir_path . '/glow/compact.json',
-          \ '-w', string(max([20, winwidth(0) - 1])), l:file]
+          \ '-w', string(max([20, winwidth(0) - 5])), l:file]
     if has('nvim')
       call termopen(l:cmd)
     else
