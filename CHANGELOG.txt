@@ -12,6 +12,12 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+### Changed
+- install.sh heavy: MacPorts on Intel Macs, python3-enabled vim on Linux (vim-nox/vim-enhanced), winget on native Windows; warns when vim lacks python3.
+
+### Fixed
+- MacVim finds a local Python 3 when its built-in pythonthreedll path is missing, so UltiSnips no longer reports Python 3 unavailable.
+
 ## [0.4.0] - 2026-10-11
 
 ### Added

@@ -11,15 +11,23 @@
 #           Python venv (pynvim), and a Nerd Font for icons/glyphs — all
 #           user-space, no sudo, no system package manager touched.
 #   heavy   everything normal does, plus system packages via sudo: an
-#           up-to-date vim/neovim, ripgrep, fd, universal-ctags, pandoc, glow
-#           and a C toolchain. The only mode that asks for a password.
+#           up-to-date vim (always with +python3, which UltiSnips needs)
+#           and neovim, ripgrep, fd, universal-ctags, pandoc, glow and a C
+#           toolchain. The only mode that asks for a password.
+#
+# Package source per platform (heavy mode):
+#   macOS Intel          MacPorts (vim/macvim get the newest +python3XX variant)
+#   macOS Apple Silicon  Homebrew
+#   Linux                the distro's package manager, python3-enabled vim
+#                        (vim-nox on apt, vim-enhanced on dnf/yum)
+#   Windows              winget, from Git Bash / MSYS2 (no sudo). WSL2 is Linux.
 #
 # Idempotent — safe to re-run in any mode at any time; every step checks
 # current state before changing anything, and nothing pre-existing is ever
 # deleted (old symlinks/dirs are moved aside with a timestamped suffix).
 #
-# Windows: run this from WSL2 — it is treated as Linux. There is no native
-# PowerShell path; a bare Windows shell is out of scope.
+# Windows natively (Git Bash / MSYS2): symlinks need Developer Mode or an
+# elevated shell; config goes to ~/vimfiles, ~/_vimrc and %LOCALAPPDATA%\nvim.
 set -euo pipefail
 
 MODE="normal"
@@ -32,7 +40,9 @@ usage: install.sh [light|normal|heavy] [-y|--yes] [--no-font] [-h|--help]
 
   light   minimal plugin set, no venv, no fonts — remote boxes/containers
   normal  full plugin set + venv + fonts, no sudo (default)
-  heavy   normal, plus system packages (vim/nvim/ripgrep/fd/ctags/pandoc/glow) via sudo
+  heavy   normal, plus system packages (vim+python3/nvim/ripgrep/fd/ctags/pandoc/glow):
+          MacPorts on Intel Macs, Homebrew on Apple Silicon, the distro manager
+          on Linux, winget on Windows (Git Bash/MSYS2)
 
   -y, --yes   don't pause for confirmation before heavy mode's sudo installs
   --no-font   skip the Nerd Font install even in normal/heavy mode
@@ -72,9 +82,20 @@ case "$(uname -s)" in
     elif command -v apk      >/dev/null 2>&1; then PKG="apk"
     fi
     ;;
+  MINGW*|MSYS*|CYGWIN*)
+    OS="windows"
+    command -v winget >/dev/null 2>&1 && PKG="winget"
+    # make `ln -s` create real Windows symlinks instead of silent copies
+    export MSYS=winsymlinks:nativestrict CYGWIN=winsymlinks:nativestrict
+    ;;
   *) warn "unrecognised OS '$(uname -s)' — proceeding as generic Linux/POSIX" ; OS="linux" ;;
 esac
-log "mode=$MODE os=$OS pkg=$PKG wsl=$IS_WSL repo=$repo_root"
+ARCH="$(uname -m)"
+if [ "$OS" = darwin ]; then
+  # Intel Macs use MacPorts, Apple Silicon uses Homebrew
+  if [ "$ARCH" = x86_64 ]; then PKG="port"; else PKG="brew"; fi
+fi
+log "mode=$MODE os=$OS arch=$ARCH pkg=$PKG wsl=$IS_WSL repo=$repo_root"
 
 # ---- symlinks ---------------------------------------------------------------
 # link <target> <source>: make target -> source. Never overwrite pre-existing
@@ -99,6 +120,13 @@ link() {
 
 step_symlinks() {
   log "symlinks"
+  if [ "$OS" = windows ]; then
+    local appdata="${LOCALAPPDATA:-$HOME/AppData/Local}"
+    link "$(cygpath -u "$appdata" 2>/dev/null || echo "$appdata")/nvim" "$repo_root"
+    link "$HOME/vimfiles" "$repo_root"
+    link "$HOME/_vimrc" "$repo_root/init.vim"
+    return
+  fi
   link "$HOME/.config/nvim" "$repo_root"
   link "$HOME/.vim" "$repo_root"
   link "$HOME/.vimrc" "$repo_root/init.vim"
@@ -138,6 +166,9 @@ step_fonts() {
   log "fonts ($FONT_NAME)"
   local dest
   case "$OS" in
+    windows)
+      warn "fonts: native Windows — install the .ttf files from $FONT_URL by hand (right-click → Install for all users)."
+      return ;;
     darwin) dest="$HOME/Library/Fonts" ;;
     linux)  dest="$HOME/.local/share/fonts" ;;
     *) warn "fonts: unknown OS, skipping"; return ;;
@@ -170,6 +201,8 @@ step_fonts() {
 pkg_name() {
   local generic="$1"
   case "$PKG:$generic" in
+    apt:vim) echo "vim-nox" ;;  # plain `vim` on Debian/Ubuntu has no +python3
+    dnf:vim|yum:vim) echo "vim-enhanced" ;;
     apt:fd) echo "fd-find" ;;
     apt:ctags) echo "universal-ctags" ;;
     apt:build) echo "build-essential" ;;
@@ -204,27 +237,91 @@ ensure_brew() {
   fi
 }
 
+# MacPorts has no unattended bootstrap (its installer is a .pkg per macOS
+# release), so a missing install is a stop-and-tell, not a silent fallback.
+ensure_port() {
+  command -v port >/dev/null 2>&1 && return 0
+  if [ -x /opt/local/bin/port ]; then
+    export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
+    return 0
+  fi
+  warn "MacPorts not found — install it from https://www.macports.org/install.php, then re-run heavy mode"
+  return 1
+}
+
+# newest pythonNNN variant a port offers, e.g. python314
+port_python_variant() {
+  port variants "$1" 2>/dev/null | grep -oE 'python3[0-9]+' | sed 's/^python//' | sort -un | tail -1 | sed 's/^/python/'
+}
+
+# does this vim binary actually load python3? (has() also catches +python3/dyn
+# builds whose DLL is missing, which `vim --version` would report as fine)
+vim_has_python3() {
+  local bin="${1:-vim}"
+  command -v "$bin" >/dev/null 2>&1 || return 1
+  "$bin" -Nu NONE -es -c 'if has("python3") | qall! | else | cquit! | endif' </dev/null >/dev/null 2>&1
+}
+
+heavy_port() {
+  ensure_port || return
+  local pyvar; pyvar="$(port_python_variant vim)"
+  [ -n "$pyvar" ] || { warn "could not read vim's python variants from MacPorts"; pyvar="python314"; }
+  if vim_has_python3 /opt/local/bin/vim; then
+    echo "   ok: MacPorts vim already has +python3"
+  else
+    sudo port -N install vim +huge +"$pyvar" || warn "MacPorts vim +huge+$pyvar install failed"
+  fi
+  sudo port -N install neovim ripgrep fd universal-ctags pandoc glow || warn "some MacPorts installs failed — check output above"
+  if [ -d /Applications/MacVim.app ] || [ -d "$HOME/Applications/MacVim.app" ]; then
+    echo "   ok: MacVim.app already present"
+  else
+    sudo port -N install macvim +"$(port_python_variant macvim)" || warn "MacPorts macvim install failed"
+  fi
+}
+
+heavy_brew() {
+  ensure_brew
+  brew install vim neovim ripgrep fd universal-ctags pandoc glow || warn "some brew installs failed — check output above"
+  brew install --cask macvim || warn "macvim cask failed (already installed, or no cask access)"
+}
+
+# winget ids; vim.vim is the vim-win32-installer build (+python3/dyn), which
+# needs a matching Python on PATH, hence Python.Python.3.
+heavy_winget() {
+  if [ "$PKG" != winget ]; then
+    warn "winget not found — install App Installer from the Microsoft Store, then re-run heavy mode"
+    return
+  fi
+  local id
+  for id in vim.vim Neovim.Neovim Python.Python.3.13 BurntSushi.ripgrep.MSVC sharkdp.fd \
+            UniversalCtags.Ctags JohnMacFarlane.Pandoc charmbracelet.glow ezwinports.make; do
+    winget install --id "$id" -e --silent --accept-source-agreements --accept-package-agreements \
+      || warn "winget install $id failed (already installed counts as failure on some winget versions)"
+  done
+  warn "open a new shell so PATH picks up the winget installs before running vim"
+}
+
 step_heavy_packages() {
   log "heavy: system packages (sudo)"
   if [ "$ASSUME_YES" != 1 ]; then
-    printf 'heavy mode will use sudo/Homebrew to install/update system packages. Continue? [y/N] '
+    printf 'heavy mode will use $PKG (sudo where needed) to install/update system packages. Continue? [y/N] '
     read -r reply
     case "$reply" in y|Y|yes|YES) ;; *) warn "heavy packages skipped"; return ;; esac
   fi
-  if [ "$OS" = darwin ]; then
-    ensure_brew
-    brew install vim neovim ripgrep fd universal-ctags pandoc glow || warn "some brew installs failed — check output above"
-    brew install --cask macvim || warn "macvim cask failed (already installed, or no cask access)"
-    return
-  fi
+  case "$PKG" in
+    port)   heavy_port;   check_vim_python; return ;;
+    brew)   heavy_brew;   check_vim_python; return ;;
+    winget) heavy_winget; return ;;
+  esac
+  if [ "$OS" = windows ]; then heavy_winget; return; fi
   if [ "$PKG" = none ]; then
     warn "no recognised package manager on this Linux — skipping system packages"
     return
   fi
   local build_pkgs; read -r -a build_pkgs <<< "$(pkg_name build)"
-  local fd_pkg ctags_pkg
-  fd_pkg="$(pkg_name fd)"; ctags_pkg="$(pkg_name ctags)"
-  pkg_install vim neovim ripgrep pandoc "${build_pkgs[@]}" || warn "core package install had failures"
+  local vim_pkg fd_pkg ctags_pkg
+  vim_pkg="$(pkg_name vim)"; fd_pkg="$(pkg_name fd)"; ctags_pkg="$(pkg_name ctags)"
+  pkg_install "$vim_pkg" neovim ripgrep pandoc "${build_pkgs[@]}" || warn "core package install had failures"
   pkg_install "$fd_pkg" || warn "fd install failed (package name may differ on this distro)"
   pkg_install "$ctags_pkg" || pkg_install ctags || warn "ctags install failed (package name may differ on this distro)"
   pkg_install glow || warn "glow install failed (package name may differ on, or be absent from, this distro's repos — see https://github.com/charmbracelet/glow)"
@@ -235,6 +332,17 @@ step_heavy_packages() {
   fi
   if [ "$PKG" = apt ]; then
     pkg_install python3-venv || warn "python3-venv install failed"
+  fi
+  check_vim_python
+}
+
+check_vim_python() {
+  hash -r 2>/dev/null || true
+  if vim_has_python3 vim; then
+    echo "   ok: $(command -v vim) has +python3"
+  else
+    warn "$(command -v vim || echo vim) has no working python3 — UltiSnips will be disabled in vim."
+    warn "  Check that the package manager's vim comes first on PATH (vim --version | grep python3)."
   fi
 }
 
