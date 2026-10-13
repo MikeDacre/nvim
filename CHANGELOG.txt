@@ -12,12 +12,21 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-13
+
 ### Changed
 - install.sh heavy: MacPorts on Intel Macs, python3-enabled vim on Linux (vim-nox/vim-enhanced), winget on native Windows; warns when vim lacks python3.
 - install.sh heavy installs only missing or insufficient tools (Vim 9+ with python3, Neovim 0.9+, Universal Ctags) and skips the sudo prompt when nothing is missing; MacPorts vim without python is rebuilt with --enforce-variants.
+- :MdPreview uses a compact glow style (glow/compact.json) with no document margins or heading padding, and disables glow's hard wrapping.
+- :MdPreview wraps glow five columns narrower than the pane.
+- Markdown buffers open with folds disabled (zi toggles, zM/zc fold on demand).
+- Markdown buffers open soft-wrapped (vim-pencil); other prose filetypes stay unwrapped.
 
 ### Fixed
 - MacVim finds a local Python 3 when its built-in pythonthreedll path is missing, so UltiSnips no longer reports Python 3 unavailable.
+- :MdPreview no longer fails with 'accepts at most 1 arg(s)' on file paths containing spaces; glow is launched with a argument list instead of a quoted string.
+- Trailing-whitespace highlighting is skipped in terminal buffers, so :MdPreview (glow) no longer shows red padding.
+- :MdPreview word-wraps glow at the actual pane width instead of letting the terminal break lines mid-word.
 
 ## [0.4.0] - 2026-10-11
 
@@ -124,10 +133,11 @@ February 2018 and was adopted as a managed project in September 2026.
 
 - Nothing yet. Editor behaviour is deliberately untouched in this release.
 
-[Unreleased]: https://github.com/MikeDacre/nvim/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/MikeDacre/nvim/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/MikeDacre/nvim/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/MikeDacre/nvim/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/MikeDacre/nvim/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/MikeDacre/nvim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MikeDacre/nvim/releases/tag/v0.1.0
 
-<!-- changelog-synced: 181602a -->
+<!-- changelog-synced: b81985b -->

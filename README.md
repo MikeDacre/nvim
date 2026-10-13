@@ -153,9 +153,9 @@ editor and whether tmux is running (Iron on nvim, Vimux or raw tmux on vim).
 
 Markdown, reStructuredText, plain text and mail buffers open in prose mode:
 spellcheck on (`spelllang=en_us`) and vim-litecorrect autocorrecting the usual
-typos. Soft wrap (vim-pencil) is opt-in, not on by default — `:WriteOn` turns
-it on for the buffer, `:WriteOff` (or just opening a new prose buffer) leaves
-it off.
+typos. Soft wrap (vim-pencil) is on by default in markdown buffers and opt-in
+elsewhere — `:WriteOn` turns it on for the buffer, `:WriteOff` (or `\ww`)
+turns it off.
 
 While write mode is active the statusbar (vim-airline in Vim, lualine in
 Neovim) shows spellcheck and autocorrect as Nerd Font glyphs — book/pencil

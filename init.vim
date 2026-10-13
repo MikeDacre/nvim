@@ -392,7 +392,8 @@ if g:vim_minimal == 0
   command! WikiVaultStatus call s:WikiVaultStatus()
 
   function! s:ProseInit() abort
-    call pencil#init({'wrap': 'off'})
+    " Markdown soft-wraps by default; other prose types stay unwrapped.
+    call pencil#init({'wrap': &filetype ==# 'markdown' ? 'soft' : 'off'})
     call litecorrect#init()
     let b:mikevim_autocorrect = 1
     setlocal spell spelllang=en_us
@@ -422,7 +423,20 @@ if g:vim_minimal == 0
       echohl None
       return
     endif
-    execute 'vertical botright terminal glow --style=auto ' . shellescape(expand('%:p'))
+    " List form: no shell quoting, so paths with spaces stay one argument
+    " (Vim's :terminal does not understand shellescape()'s single quotes).
+    " glow/compact.json is glamour's dark style minus the document margins
+    " and heading padding. Open the pane first and word-wrap glow at its
+    " real width: -w 0 makes the terminal itself break lines mid-word.
+    let l:file = expand('%:p')
+    vertical botright new
+    let l:cmd = ['glow', '-s', g:vimdir_path . '/glow/compact.json',
+          \ '-w', string(max([20, winwidth(0) - 5])), l:file]
+    if has('nvim')
+      call termopen(l:cmd)
+    else
+      call term_start(l:cmd, {'curwin': 1})
+    endif
   endfunction
   command! MdPreview call s:MdPreview()
 
@@ -530,6 +544,8 @@ if g:vim_minimal == 0
     autocmd BufRead,BufNewFile *.md call s:VaultEnable()
     autocmd BufWritePost * let b:mikevim_last_save = localtime()
     autocmd FileType markdown nnoremap <buffer> <leader>mp :MdPreview<CR>
+    " Folds exist but start disabled: zi toggles them, zM/zc fold on demand.
+    autocmd FileType markdown setlocal nofoldenable
   augroup END
 
   " vim-airline reads these through custom parts — 'spell' is overridden

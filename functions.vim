@@ -66,10 +66,24 @@ map <leader>PP :set nopaste<CR>:set expandtab<CR>
 " Highlight whitespace
 autocmd Syntax * syn match ExtraWhitespace /\s\+$\| \+\ze\t/
 highlight ExtraWhitespace ctermbg=red guibg=red
-match ExtraWhitespace /\s\+$/
-autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
-autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
-autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+" Terminal buffers (e.g. :MdPreview's glow pane) pad lines with spaces; skip them.
+function! s:WsMatch(pat) abort
+  if &buftype ==# 'terminal'
+    match none
+  else
+    execute 'match ExtraWhitespace ' . a:pat
+  endif
+endfunction
+call s:WsMatch('/\s\+$/')
+autocmd BufWinEnter * call s:WsMatch('/\s\+$/')
+autocmd InsertEnter * call s:WsMatch('/\s\+\%#\@<!$/')
+autocmd InsertLeave * call s:WsMatch('/\s\+$/')
+if exists('##TerminalOpen')
+  autocmd TerminalOpen * match none
+endif
+if exists('##TermOpen')
+  autocmd TermOpen * match none
+endif
 autocmd BufWinLeave * call clearmatches()
 
 " Delete whitespace
