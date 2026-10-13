@@ -12,6 +12,8 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-13
+
 ### Changed
 - install.sh heavy: MacPorts on Intel Macs, python3-enabled vim on Linux (vim-nox/vim-enhanced), winget on native Windows; warns when vim lacks python3.
 - install.sh heavy installs only missing or insufficient tools (Vim 9+ with python3, Neovim 0.9+, Universal Ctags) and skips the sudo prompt when nothing is missing; MacPorts vim without python is rebuilt with --enforce-variants.
@@ -131,10 +133,11 @@ February 2018 and was adopted as a managed project in September 2026.
 
 - Nothing yet. Editor behaviour is deliberately untouched in this release.
 
-[Unreleased]: https://github.com/MikeDacre/nvim/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/MikeDacre/nvim/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/MikeDacre/nvim/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/MikeDacre/nvim/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/MikeDacre/nvim/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/MikeDacre/nvim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MikeDacre/nvim/releases/tag/v0.1.0
 
-<!-- changelog-synced: 181602a -->
+<!-- changelog-synced: b81985b -->
