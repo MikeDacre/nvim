@@ -12,6 +12,9 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+### Added
+- Markdown: YAML frontmatter is its own fold and starts closed; heading folds stay open.
+
 ## [0.5.0] - 2026-10-13
 
 ### Changed
