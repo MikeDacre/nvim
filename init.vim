@@ -563,7 +563,7 @@ if g:vim_minimal == 0
     if l:end == 0 || a:lnum > l:end + 1
       return l:r
     elseif a:lnum <= l:end
-      return a:lnum == 1 ? '>1' : '1'
+      return a:lnum == 1 ? '>1' : a:lnum == l:end ? '<1' : '1'
     endif
     " First line after the block must not inherit the frontmatter's level.
     return (l:r ==# '=' || l:r ==# '-1') ? 0 : l:r
