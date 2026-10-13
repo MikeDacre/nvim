@@ -12,8 +12,13 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-10-13
+
 ### Added
 - Markdown: YAML frontmatter is its own fold and starts closed; heading folds stay open.
+
+### Fixed
+- end frontmatter fold at closing dashes (9cf2bab).
 
 ## [0.5.0] - 2026-10-13
 
@@ -136,11 +141,12 @@ February 2018 and was adopted as a managed project in September 2026.
 
 - Nothing yet. Editor behaviour is deliberately untouched in this release.
 
-[Unreleased]: https://github.com/MikeDacre/nvim/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/MikeDacre/nvim/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/MikeDacre/nvim/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/MikeDacre/nvim/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/MikeDacre/nvim/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/MikeDacre/nvim/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/MikeDacre/nvim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MikeDacre/nvim/releases/tag/v0.1.0
 
-<!-- changelog-synced: b81985b -->
+<!-- changelog-synced: d881588 -->
