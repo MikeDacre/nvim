@@ -235,7 +235,7 @@
     "permissions": "allow scripts/, git status/diff/log/add/commit, make, vim/nvim headless; deny force-push, history rewrite, PlugClean, edits to priv/, generated doc/, CLAUDE.md"
   },
   "schema": 2,
-  "version": "0.5.0",
+  "version": "0.5.1",
   "claude_repo": {
     "mode": "tracked",
     "path": "CLAUDE",

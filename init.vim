@@ -341,6 +341,9 @@ if g:vim_minimal == 0
   let g:pencil#autoformat = 0
   let g:pencil#wrapModeDefault = 'soft'
   let g:vim_markdown_frontmatter = 1
+  " vim-markdown re-applies its own foldexpr on every InsertLeave/CursorHold;
+  " MikevimMdFoldexpr (below) wraps it instead.
+  let g:vim_markdown_folding_disabled = 1
   let g:vim_markdown_toc_autofit = 1
 
   " Obsidian: wiki.vim activates iff the file sits under a .obsidian/ vault.
@@ -538,14 +541,62 @@ if g:vim_minimal == 0
     return join([MikevimSpellAutoCorrectStatus(), MikevimLastSaveStatus()], ' ')
   endfunction
 
+  " Last line of a leading `---` frontmatter block, 0 if there is none.
+  function! s:FrontmatterEnd() abort
+    if getline(1) !=# '---'
+      return 0
+    endif
+    for l:i in range(2, min([line('$'), 200]))
+      if getline(l:i) ==# '---'
+        return l:i
+      endif
+    endfor
+    return 0
+  endfunction
+
+  " vim-markdown's foldexpr plus one extra fold covering the frontmatter. The
+  " plugin's function is still called for every line: it tracks fenced-block
+  " and frontmatter state across consecutive lnums.
+  function! MikevimMdFoldexpr(lnum) abort
+    let l:r = Foldexpr_markdown(a:lnum)
+    let l:end = s:FrontmatterEnd()
+    if l:end == 0 || a:lnum > l:end + 1
+      return l:r
+    elseif a:lnum <= l:end
+      return a:lnum == 1 ? '>1' : a:lnum == l:end ? '<1' : '1'
+    endif
+    " First line after the block must not inherit the frontmatter's level.
+    return (l:r ==# '=' || l:r ==# '-1') ? 0 : l:r
+  endfunction
+
+  function! s:MarkdownFoldInit() abort
+    if exists('*Foldexpr_markdown')
+      setlocal foldmethod=expr foldexpr=MikevimMdFoldexpr(v:lnum)
+    endif
+    setlocal foldenable foldlevel=99
+  endfunction
+
+  " Close the frontmatter fold once per buffer, on first display.
+  function! s:FoldFrontmatter() abort
+    if &filetype !=# 'markdown' || get(b:, 'mikevim_fm_folded', 0)
+      return
+    endif
+    let b:mikevim_fm_folded = 1
+    if s:FrontmatterEnd() > 0
+      silent! 1foldclose
+    endif
+  endfunction
+
   augroup mikevim_prose
     autocmd!
     autocmd FileType markdown,rst,text,mail call s:ProseInit()
     autocmd BufRead,BufNewFile *.md call s:VaultEnable()
     autocmd BufWritePost * let b:mikevim_last_save = localtime()
     autocmd FileType markdown nnoremap <buffer> <leader>mp :MdPreview<CR>
-    " Folds exist but start disabled: zi toggles them, zM/zc fold on demand.
-    autocmd FileType markdown setlocal nofoldenable
+    " Heading folds stay open (foldlevel=99); only the YAML frontmatter starts
+    " closed. zi toggles folding, zM/zc fold on demand.
+    autocmd FileType markdown call s:MarkdownFoldInit()
+    autocmd BufWinEnter *.md,*.markdown call s:FoldFrontmatter()
   augroup END
 
   " vim-airline reads these through custom parts — 'spell' is overridden
