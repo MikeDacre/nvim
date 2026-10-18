@@ -186,6 +186,29 @@ augroup mikevim_autosave
   autocmd BufWritePost * call s:MikevimAutosaveClear()
 augroup END
 
+" Zero-width characters (U+200B-200D, U+2060, U+FEFF) ride along invisibly on
+" text copied from chat apps, web pages and some terminals, and vim shows them
+" as <200b>. Strip them from whatever was just inserted or pasted ('[ to '])
+" so they never land in a buffer, whichever way the text arrived.
+function! s:MikevimStripZeroWidth() abort
+  if !&modifiable || &readonly || &buftype !=# ''
+    return
+  endif
+  let l:first = line("'[")
+  let l:last = line("']")
+  if l:first < 1 || l:last < l:first || l:last > line('$')
+    return
+  endif
+  let l:view = winsaveview()
+  silent! keeppatterns execute l:first . ',' . l:last . 's/\%u200b\|\%u200c\|\%u200d\|\%u2060\|\%ufeff//ge'
+  call winrestview(l:view)
+endfunction
+
+augroup mikevim_zerowidth
+  autocmd!
+  autocmd InsertLeave,TextChanged * call s:MikevimStripZeroWidth()
+augroup END
+
 " Remember last position
 autocmd BufReadPost * if @% !~# '\.git[\/\\]COMMIT_EDITMSG$' && line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
 
