@@ -151,7 +151,43 @@ function! s:UpdateFrontmatterTimestamp() abort
   endfor
 endfunction
 
+" Same idea for any file type: a comment in the first 10 lines containing
+" `Updated:` or `updated:` gets its value replaced with the save timestamp,
+" e.g. `# Updated: 202610211142` or `<!-- updated: 2026-10-21 -->`. A comment
+" leader is the buffer's 'commentstring' or one of the common ones below (so
+" `"` comments are only recognised in filetypes whose 'commentstring' uses it).
+let s:comment_leaders = ['#', '//', '--', ';', '/*', '<!--', '%', '*']
+
+function! s:UpdateCommentTimestamp() abort
+  if &buftype !=# '' || !&modifiable || &binary
+    return
+  endif
+  let l:leaders = copy(s:comment_leaders)
+  let l:cs = substitute(matchstr(&commentstring, '^.\{-}\ze%s'), '\s\+$', '', '')
+  if l:cs !=# ''
+    call add(l:leaders, l:cs)
+  endif
+  let l:lead = '\V\%(' . join(map(l:leaders, 'escape(v:val, "\\")'), '\|') . '\)\v'
+  " Replaces an existing date/time value (digits plus - : / . T and spaces);
+  " with none, inserts the stamp straight after the colon.
+  let l:pat = '\v^(.{-}' . l:lead . '.{-}<[Uu]pdated:\s*)(\d[-0-9:/.T ]*\d|\d)?'
+  let l:stamp = strftime('%Y%m%d%H%M')
+  for l:i in range(1, min([line('$'), 10]))
+    let l:line = getline(l:i)
+    if l:line =~# l:pat
+      let l:new = substitute(l:line, l:pat,
+            \ '\=submatch(1) . (submatch(2) ==# "" && submatch(1) =~# ":$" ? " " : "")
+            \ . l:stamp . (submatch(2) ==# "" ? " " : "")', '')
+      let l:new = substitute(l:new, '\s\+$', '', '')
+      if l:new !=# l:line
+        call setline(l:i, l:new)
+      endif
+    endif
+  endfor
+endfunction
+
 augroup mikevim_notes
   autocmd!
   autocmd BufWritePre *.md call s:UpdateFrontmatterTimestamp()
+  autocmd BufWritePre * call s:UpdateCommentTimestamp()
 augroup END

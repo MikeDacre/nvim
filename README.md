@@ -187,7 +187,10 @@ template mid-session. Templates use the Obsidian Templater tokens
 `g:mikevim_notes_dir` (default: cwd) as `{title_lowercased_with_underscores}-{id}.md`,
 with `title:` set to the given title in title case. `updated:` is kept
 current by a `BufWritePre` hook on every save of any markdown file that has
-that frontmatter key — not just notes created this way.
+that frontmatter key — not just notes created this way. Any file type also
+gets this on save: a comment in the first 10 lines containing `Updated:` or
+`updated:` (e.g. `# Updated: 202610211142`) has its value replaced with the
+same `YYYYMMDDHHmm` timestamp.
 
 **Obsidian.** `lervag/wiki.vim` loads only on Vim 9.1+ / Neovim 0.10+, and even
 then it activates only for files that sit inside an Obsidian vault — detected by

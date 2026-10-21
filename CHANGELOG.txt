@@ -12,6 +12,9 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ## [Unreleased]
 
+### Added
+- On save, any comment in the first 10 lines of any file containing Updated:/updated: gets a YYYYMMDDHHmm timestamp (notes.vim).
+
 ### Fixed
 - strip zero-width characters from inserted and pasted text (9172765).
 
