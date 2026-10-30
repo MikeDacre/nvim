@@ -276,7 +276,8 @@ au FileType snakemake setlocal tw=79 tabstop=4 shiftwidth=4 softtabstop=4
 
 " Text
 au FileType tex setlocal textwidth=80
-au BufNewFile,BufRead *.txt setlocal textwidth=80
+" Not todo.txt: one task per line, hard wrapping breaks the format.
+au BufNewFile,BufRead *.txt if &filetype !=# 'todo' | setlocal textwidth=80 | endif
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "                            Plugin Configuration                             "

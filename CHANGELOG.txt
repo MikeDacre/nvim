@@ -17,6 +17,7 @@ February 2018 and was adopted as a managed project in September 2026.
 
 ### Fixed
 - strip zero-width characters from inserted and pasted text (9172765).
+- todo.txt files no longer hard-wrap at 80 columns; the *.txt textwidth autocmd now skips filetype todo (init.vim).
 
 ## [0.5.1] - 2026-10-13
 
