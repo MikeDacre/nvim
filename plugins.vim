@@ -3,6 +3,7 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 let g:vim_minimal = $VIM_MINIMAL ==# 'true' ? 1 : 0
+let g:marked_app = "/Applications/Marked 2.app"
 
 " Plugins with [vim-plug](https://github.com/junegunn/vim-plug)
 call plug#begin(g:vimdir_path . '/plugged')
@@ -68,7 +69,8 @@ if g:vim_minimal == 0
   Plug 'preservim/vim-litecorrect'
   Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
   Plug 'junegunn/limelight.vim', { 'on': 'Limelight' }
-  Plug 'preservim/vim-markdown', { 'for': 'markdown' }  " plasticboy transferred here
+  Plug 'preservim/vim-markdown', { 'for': 'markdown' }
+  Plug 'itspriddle/vim-marked', { 'for': 'markdown' }
   if has('nvim-0.10') || has('patch-9.1.0')
     Plug 'lervag/wiki.vim'
   endif
